@@ -86,6 +86,8 @@ if __name__ == '__main__':
 
     print(beam.K**-1*F)
 
+    # mi
+
 
 
 
