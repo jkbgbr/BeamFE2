@@ -129,20 +129,35 @@ class HermitianBeam2D(object):
 
     @property
     def Ke(self):
-        # full stiffness matrix in the element coordinate system
+        # full stiffness matrix of the beam element in the element coordinate system
         return np.bmat([[self.ul, self.ur], [self.ll, self.lr]])
 
     @property
     def direction(self):
         # the direction of the beam in the global coordinate system
+        # this is a crucial point for the transfer from the local to the global systems
+
         _dy = self.j.y - self.i.y
         _dx = self.j.x - self.i.x
-        return np.arctan2(_dy, _dx)
+
+        # if _dy != 0:
+        #     print(self.i)
+        #     print(self.j)
+        #     print(_dx)
+        #     print(_dy)
+        #     print(math.degrees(np.arctan2(_dx, _dy)))
+        #     exit()
+
+        _ret = np.arctan2(_dy, _dx)
+        if _ret < 0:
+            _ret += 2 * math.pi
+
+        return _ret
 
     @property
     def Kg(self):
-        # full stiffness matrix in the global coordinate system
-        return self.rotation * self.Ke * self.rotation.T
+        # full stiffness matrix of the Beam element in the global coordinate system
+        return self.transfer_matrix * self.Ke * self.transfer_matrix.T
 
     @property
     def Kg_ul(self):
@@ -165,19 +180,9 @@ class HermitianBeam2D(object):
         return self.Kg[self.dof:, self.dof:]
 
     @property
-    def rotation(self):
+    def transfer_matrix(self):
         # matrix to rotate the stiffness matrix for compilation
-        _alpha = self.direction
-        cs = math.cos(_alpha)
-        ss = math.sin(_alpha)
-        return np.matrix([
-            [cs, ss, 0, 0, 0, 0],
-            [-ss, cs, 0, 0, 0, 0],
-            [0, 0, 1, 0, 0, 0],
-            [0, 0, 0, cs, ss, 0],
-            [0, 0, 0, -ss, cs, 0],
-            [0, 0, 0, 0, 0, 1]]
-        )
+        return transfer_matrix(alpha=self.direction, asdegree=False, dof=self.dof, blocks=2)
 
     # def remove_DOF(self, node=None, ux=False, uy=False, rotz=False):
     #     print(np.transpose(np.nonzero(k)))  # nonzero elements
@@ -278,6 +283,8 @@ class Structure(object):
                         self._load_vector[0, _sti: _sti + 1] = 0
                     self._load_vector[0, _sti: _sti + 1] += v
 
+        # self._load_vector *= self.transfer_matrix
+
     @property
     def stiffness_matrix_is_symmetric(self):
         # checks if the global stiffness matrix (without BCs) is symmetric. MUST be.
@@ -331,15 +338,36 @@ class Structure(object):
         return _empty
 
 
+def transfer_matrix(alpha, asdegree=False, blocks=2, dof=3):
+    # matrix to rotate the stiffness matrix for compilation
+    if asdegree:
+        alpha = math.radians(alpha)
+    cs = math.cos(alpha)
+    ss = math.sin(alpha)
+    _block = np.matrix([[cs,    -ss,     0],
+                        [ss,   cs,     0],
+                        [0,     0,      1]])
+    _sumdof = blocks * dof
+    _empty = np.zeros(_sumdof ** 2)
+    _empty = np.matrix(_empty.reshape(_sumdof, _sumdof))
+
+    for b in range(blocks):
+        _sti = b * dof  # starting element of the block for node i
+        _eni = _sti + dof  # end element for the block if node i
+        _empty[_sti:_eni, _sti:_eni] += _block
+
+    return _empty
+
+
 if __name__ == '__main__':
 
     n1 = Node(ID=1, coords=(0, 0))
     n2 = Node(ID=2, coords=(100, 0))
     n3 = Node(ID=3, coords=(200, 0))
     n4 = Node(ID=4, coords=(300, 0))
-    b1 = HermitianBeam2D(ID=1, I=833.33, A=100., i=n1, j=n2)
-    b2 = HermitianBeam2D(ID=2, I=833.33, A=100., i=n2, j=n3)
-    b3 = HermitianBeam2D(ID=3, I=833.33, A=100., i=n3, j=n4)
+    b1 = HermitianBeam2D(E=21000., ID=1, I=833.33, A=100., i=n1, j=n2)
+    b2 = HermitianBeam2D(E=21000., ID=2, I=833.33, A=100., i=n2, j=n3)
+    b3 = HermitianBeam2D(E=21000., ID=3, I=833.33, A=100., i=n3, j=n4)
 
     structure = Structure(beams=[b1, b2, b3], BCs=None)
 
