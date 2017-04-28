@@ -687,7 +687,7 @@ begin
 //ideiglenesen: az geom adatok ki?rat?sa
    Assign(f,'geom.txt');
    ReWrite(f);
-   Writeln(f,'CSOM?PONTI KOORDIN?T?K');
+   Writeln(f,'CSOM?PONTI KOORDIN?rotation?Ke');
    Writeln(f,'sorsz?m, x [mm],   y[mm]');
    for i:=1 to nnode do
       Writeln(f,i:5,nodes[i,1]:12:5,nodes[i,2]:12:5);
@@ -698,7 +698,7 @@ begin
    for i:=1 to nbeam do
       Writeln(f,i:5,beamtop[i,1]:5,beamtop[i,2]:5,Av[i]:12:1,Iv[i]:12:0,E:12:0);
    Writeln(f);
-   Writeln(f,'T?MASZOK (rug?kkal defini?lva)');
+   Writeln(f,'rotation?MASZOK (rug?kkal defini?lva)');
    Writeln(f,'sorsz, csom?pont,       r_x,           r_y,          r_fi');
    Writeln(f,'                       [N/mm]         [N/mm]         [N/mm]');
    for i:=1 to nsup do
@@ -1454,8 +1454,8 @@ begin
                      intf[3]:=intf[3]+mx;
                   end; //for j
 
-               //store N-T-M
-                 //note, minus sign at N and T is to cosider engineering sign convention
+               //store N-rotation-M
+                 //note, minus sign at N and rotation is to cosider engineering sign convention
                Nel[ilc,ip]:=-(fend[1]+intf[1]);
                Tel[ilc,ip]:=-(fend[2]+intf[2]);
                Mel[ilc,ip]:=(fend[3]*(L-x)/L-fend[6]*x/L+intf[3]);
@@ -2454,7 +2454,7 @@ begin
                end; //load comb
          WriteLn(f,'  Min N, simultaneous V and M:   ',' N=',Nmax/1000:7:2,' kN, ',' V=',Tmax/1000:7:2,' kN, ',' M=',Mmax/1000000:7:2,' kNm');
 
-         //max T
+         //max rotation
          Tmax:=-1000000000;
          for ilc:=KombKezd to KombVeg do
             if aLCOrComb[ilc].uls then
@@ -2467,7 +2467,7 @@ begin
                       end;
                end; //load comb
          WriteLn(f,'  Max V, simultaneous N and M:   ',' N=',Nmax/1000:7:2,' kN, ',' V=',Tmax/1000:7:2,' kN, ',' M=',Mmax/1000000:7:2,' kNm');
-         //min T
+         //min rotation
          for ilc:=KombKezd to KombVeg do
             if aLCOrComb[ilc].uls then
                begin
@@ -2569,7 +2569,7 @@ begin
                      end; //load comb
                WriteLn(f,'    Min N, simultaneous V and M:   ',' N=',Nmax/1000:7:2,' kN, ',' V=',Tmax/1000:7:2,' kN, ',' M=',Mmax/1000000:7:2,' kNm');
 
-               //max T
+               //max rotation
                Tmax:=-1000000000;
                for ilc:=KombKezd to KombVeg do
                   if aLCOrComb[ilc].uls then
@@ -2582,7 +2582,7 @@ begin
                             end;
                      end; //load comb
                WriteLn(f,'    Max V, simultaneous N and M:   ',' N=',Nmax/1000:7:2,' kN, ',' V=',Tmax/1000:7:2,' kN, ',' M=',Mmax/1000000:7:2,' kNm');
-               //min T
+               //min rotation
                for ilc:=KombKezd to KombVeg do
                   if aLCOrComb[ilc].uls then
                      begin
@@ -2706,7 +2706,7 @@ begin
                            end; //load comb
                      WriteLn(f,'    Min N, simultaneous V and M:   ',' N=',Nmax/1000:7:2,' kN, ',' V=',Tmax/1000:7:2,' kN, ',' M=',Mmax/1000000:7:2,' kNm');
 
-                     //max T
+                     //max rotation
                      Tmax:=-1000000000;
                      for ilc:=KombKezd to KombVeg do
                         if aLCOrComb[ilc].uls then
@@ -2719,7 +2719,7 @@ begin
                                   end;
                            end; //load comb
                      WriteLn(f,'    Max V, simultaneous N and M:   ',' N=',Nmax/1000:7:2,' kN, ',' V=',Tmax/1000:7:2,' kN, ',' M=',Mmax/1000000:7:2,' kNm');
-                     //min T
+                     //min rotation
                      for ilc:=KombKezd to KombVeg do
                         if aLCOrComb[ilc].uls then
                            begin
@@ -3497,7 +3497,7 @@ begin
                end; //load comb
          WriteLn(f,'  Min N, simultaneous V and M:   ',' N=',Nmax/1000:7:2,' kN, ',' V=',Tmax/1000:7:2,' kN, ',' M=',Mmax/1000000:7:2,' kNm');
 
-         //max T
+         //max rotation
          Tmax:=-1000000000;
          for ilc:=KombKezd to KombVeg do
             if aLCOrComb[ilc].uls then
@@ -3510,7 +3510,7 @@ begin
                       end;
                end; //load comb
          WriteLn(f,'  Max V, simultaneous N and M:   ',' N=',Nmax/1000:7:2,' kN, ',' V=',Tmax/1000:7:2,' kN, ',' M=',Mmax/1000000:7:2,' kNm');
-         //min T
+         //min rotation
          for ilc:=KombKezd to KombVeg do
             if aLCOrComb[ilc].uls then
                begin
@@ -3612,7 +3612,7 @@ begin
                      end; //load comb
                WriteLn(f,'    Min N, simultaneous V and M:   ',' N=',Nmax/1000:7:2,' kN, ',' V=',Tmax/1000:7:2,' kN, ',' M=',Mmax/1000000:7:2,' kNm');
 
-               //max T
+               //max rotation
                Tmax:=-1000000000;
                for ilc:=KombKezd to KombVeg do
                   if aLCOrComb[ilc].uls then
@@ -3625,7 +3625,7 @@ begin
                             end;
                      end; //load comb
                WriteLn(f,'    Max V, simultaneous N and M:   ',' N=',Nmax/1000:7:2,' kN, ',' V=',Tmax/1000:7:2,' kN, ',' M=',Mmax/1000000:7:2,' kNm');
-               //min T
+               //min rotation
                for ilc:=KombKezd to KombVeg do
                   if aLCOrComb[ilc].uls then
                      begin
@@ -3749,7 +3749,7 @@ begin
                            end; //load comb
                      WriteLn(f,'    Min N, simultaneous V and M:   ',' N=',Nmax/1000:7:2,' kN, ',' V=',Tmax/1000:7:2,' kN, ',' M=',Mmax/1000000:7:2,' kNm');
 
-                     //max T
+                     //max rotation
                      Tmax:=-1000000000;
                      for ilc:=KombKezd to KombVeg do
                         if aLCOrComb[ilc].uls then
@@ -3762,7 +3762,7 @@ begin
                                   end;
                            end; //load comb
                      WriteLn(f,'    Max V, simultaneous N and M:   ',' N=',Nmax/1000:7:2,' kN, ',' V=',Tmax/1000:7:2,' kN, ',' M=',Mmax/1000000:7:2,' kNm');
-                     //min T
+                     //min rotation
                      for ilc:=KombKezd to KombVeg do
                         if aLCOrComb[ilc].uls then
                            begin
@@ -3842,7 +3842,7 @@ procedure CalcStructure(var beamtop:beamtopoltype;var Av,Iv:realbeamtype;
 //Nel,Tel, Mel        3D matrices
 //                       1st dimension: number of beam element
 //                       2nd dimension: number of load case
-//                       3rd dimension: the value of internal force (N, T or M) in the checkpoints
+//                       3rd dimension: the value of internal force (N, rotation or M) in the checkpoints
 //                          (e.g., Nel[1,2,3] gives the
 //                                  - normal force
 //                                  - at the 3rd checkpoint
@@ -3921,8 +3921,8 @@ begin
    //             for j:=1 to nlc do
    //                begin
    //                   Writeln(f,'     Tehereset sorsz?ma: ',j:5);
-   //                   Writeln(f,'          Kezd?pont ig?nybev?telei (N,T,M): ',Nel[i,j,1]/1000:15:3,Tel[i,j,1]/1000:15:3,Mel[i,j,1]/1000000:15:3);
-   //                   Writeln(f,'          V?gpont ig?nybev?telei   (N,T,M): ',Nel[i,j,k]/1000:15:3,Tel[i,j,k]/1000:15:3,Mel[i,j,k]/1000000:15:3);
+   //                   Writeln(f,'          Kezd?pont ig?nybev?telei (N,rotation,M): ',Nel[i,j,1]/1000:15:3,Tel[i,j,1]/1000:15:3,Mel[i,j,1]/1000000:15:3);
+   //                   Writeln(f,'          V?gpont ig?nybev?telei   (N,rotation,M): ',Nel[i,j,k]/1000:15:3,Tel[i,j,k]/1000:15:3,Mel[i,j,k]/1000000:15:3);
    //                end;
    //          end;
 
