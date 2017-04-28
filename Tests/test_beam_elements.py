@@ -84,22 +84,19 @@ class Hermitian2D(unittest.TestCase):
     def test_nodal_displacements_11(self):
         # assertion #1: single Axial force on Node 2, the element is rotated
 
-        # setting the nodes back
+        # structure #1: 3 elements in a row along the global X axis
         _u = math.sqrt(2) / 2.  # unit
-        self.n2.set_coords(coords=(100 * _u, 100 * _u))
-        self.n3.set_coords(coords=(200 * _u, 200 * _u))
-        self.n4.set_coords(coords=(300 * _u, 300 * _u))
-
-        self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FX': _u}, clear=True)
-        self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FY': _u})
-        disps = self.structure_1.solve()
-
-        # setting the nodes back
-        _u = 1.0
-        self.n2.set_coords(coords=(100 * _u, 0))
-        self.n3.set_coords(coords=(200 * _u, 0))
-        self.n4.set_coords(coords=(300 * _u, 0))
-
+        n1 = HB.Node(ID=1, coords=(0, 0))
+        n2 = HB.Node(ID=2, coords=(100 * _u, 100 * _u))
+        n3 = HB.Node(ID=3, coords=(200 * _u, 200 * _u))
+        n4 = HB.Node(ID=4, coords=(300 * _u, 300 * _u))
+        b1 = HB.HermitianBeam2D(E=210000., ID=1, I=833.33, A=100., i=n1, j=n2)
+        b2 = HB.HermitianBeam2D(E=210000., ID=2, I=833.33, A=100., i=n2, j=n3)
+        b3 = HB.HermitianBeam2D(E=210000., ID=3, I=833.33, A=100., i=n3, j=n4)
+        structure = HB.Structure(beams=[b1, b2, b3], BCs=None)
+        structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': _u}, clear=True)
+        structure.add_single_dynam_to_node(nodeID=3, dynam={'FY': _u})
+        disps = structure.solve()
         print(disps)
         _expected = np.matrix([[4.76190476e-06],
                                [0.00000000e+00],
@@ -111,10 +108,6 @@ class Hermitian2D(unittest.TestCase):
                                [0.00000000e+00],
                                [0.00000000e+00]])
         self.assertTrue(np.allclose(disps, _expected))
-
-
-
-
 
 
     def test_nodal_displacements_2(self):
