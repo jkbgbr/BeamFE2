@@ -4,7 +4,7 @@ import math
 import itertools
 import copy
 
-EE = 210000
+EE = 210000.
 
 
 class Node(object):
@@ -127,8 +127,56 @@ class HermitianBeam2D(object):
         ])
 
     @property
-    def K(self):
+    def Ke(self):
+        # full stiffness matrix in the element coordinate system
         return np.bmat([[self.ul, self.ur], [self.ll, self.lr]])
+
+    @property
+    def direction(self):
+        # the direction of the beam in the global coordinate system
+        _dy = self.j.y - self.i.y
+        _dx = self.j.x - self.i.x
+        return np.arctan2(_dy, _dx)
+
+    @property
+    def Kg(self):
+        # full stiffness matrix in the global coordinate system
+        return self.rotation * self.Ke * self.rotation.T
+
+    @property
+    def Kg_ul(self):
+        # upper left block of the element stiffness matrix in the global coordinate system
+        return self.Kg[:self.dof, :self.dof]
+
+    @property
+    def Kg_ur(self):
+        # upper right block of the element stiffness matrix in the global coordinate system
+        return self.Kg[:self.dof, self.dof:]
+
+    @property
+    def Kg_ll(self):
+        # lower left block of the element stiffness matrix in the global coordinate system
+        return self.Kg[self.dof:, :self.dof]
+
+    @property
+    def Kg_lr(self):
+        # lower right block of the element stiffness matrix in the global coordinate system
+        return self.Kg[self.dof:, self.dof:]
+
+    @property
+    def rotation(self):
+        # matrix to rotate the stiffness matrix for compilation
+        _alpha = self.direction
+        cs = math.cos(_alpha)
+        ss = math.sin(_alpha)
+        return np.matrix([
+            [cs, ss, 0, 0, 0, 0],
+            [-ss, cs, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0],
+            [0, 0, 0, cs, ss, 0],
+            [0, 0, 0, -ss, cs, 0],
+            [0, 0, 0, 0, 0, 1]]
+        )
 
     # def remove_DOF(self, node=None, ux=False, uy=False, rotz=False):
     #     print(np.transpose(np.nonzero(k)))  # nonzero elements
@@ -272,13 +320,13 @@ class Structure(object):
             _stj = (b.j.ID - 1) * self.dof
             _enj = _stj + self.dof
             # upper left block
-            _empty[_sti:_eni, _sti:_eni] += b.ul[:]
+            _empty[_sti:_eni, _sti:_eni] += b.Kg_ul
             # left lower block
-            _empty[_stj:_enj, _sti:_eni] += b.ll[:]
+            _empty[_stj:_enj, _sti:_eni] += b.Kg_ll
             # upper right block
-            _empty[_sti:_eni, _stj:_enj] += b.ur[:]
+            _empty[_sti:_eni, _stj:_enj] += b.Kg_ur
             # lower right block
-            _empty[_stj:_enj, _stj:_enj] += b.lr[:]
+            _empty[_stj:_enj, _stj:_enj] += b.Kg_lr
         return _empty
 
 
@@ -348,7 +396,7 @@ if __name__ == '__main__':
 #         return GG
 #
 #     @property
-#     def K(self):
+#     def Ke(self):
 #         l = self.l
 #         E_x = self.E * self.A
 #         G_x = self.G * self.A
