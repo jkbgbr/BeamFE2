@@ -55,7 +55,7 @@ class HermitianBeam2D(object):
     """
     dof = 3  # degrees of freedom
 
-    def __init__(self, ID=None, i=None, j=None, E=None, I=None, A=None):
+    def __init__(self, ID=None, i=None, j=None, E=None, I=None, A=None, ro=None):
         """
         :param ID: ID of the beam
         :param i: Node i, a Node instance
@@ -70,6 +70,7 @@ class HermitianBeam2D(object):
         self.j = j
         self.A = A
         self.I = I
+        self.ro = ro
 
     def __repr__(self):
         return 'HermitianBeam2D(ID=%d, i=%r, j=%r, E=%d, I=%.2f, A=%.2f' \
@@ -90,6 +91,19 @@ class HermitianBeam2D(object):
     @property
     def EI(self):
         return self.E * self.I
+
+    @property
+    def M(self):
+        l = self.l
+        _ret = self.ro * self.A * self.l / 420 * np.matrix([
+            [140, 0, 0, 70, 0, 0],
+            [0, 156, 22*l, 0, 54, -13*l],
+            [0, 22*l, 4*l**2, 0, 13*l, -3*l**2],
+            [70, 0, 0, 140, 0, 0],
+            [0, 54, 13*l, 0, 156, -22*l],
+            [0, -13*l, -3*l**2, 0, -22*l, 4*l**2]])
+        return _ret
+
 
     @property
     def ul(self):
@@ -149,8 +163,8 @@ class HermitianBeam2D(object):
         #     exit()
 
         _ret = np.arctan2(_dy, _dx)
-        if _ret < 0:
-            _ret += 2 * math.pi
+        # if _ret < 0:
+        #     _ret += 2 * math.pi
 
         return _ret
 
@@ -344,8 +358,8 @@ def transfer_matrix(alpha, asdegree=False, blocks=2, dof=3):
         alpha = math.radians(alpha)
     cs = math.cos(alpha)
     ss = math.sin(alpha)
-    _block = np.matrix([[cs,    -ss,     0],
-                        [ss,   cs,     0],
+    _block = np.matrix([[cs,    -ss,    0],
+                        [ss,    cs,     0],
                         [0,     0,      1]])
     _sumdof = blocks * dof
     _empty = np.zeros(_sumdof ** 2)
@@ -365,11 +379,15 @@ if __name__ == '__main__':
     n2 = Node(ID=2, coords=(100, 0))
     n3 = Node(ID=3, coords=(200, 0))
     n4 = Node(ID=4, coords=(300, 0))
-    b1 = HermitianBeam2D(E=21000., ID=1, I=833.33, A=100., i=n1, j=n2)
-    b2 = HermitianBeam2D(E=21000., ID=2, I=833.33, A=100., i=n2, j=n3)
-    b3 = HermitianBeam2D(E=21000., ID=3, I=833.33, A=100., i=n3, j=n4)
+    b1 = HermitianBeam2D(E=21000., ID=1, I=833.33, A=100., i=n1, j=n2, ro=7850)
+    b2 = HermitianBeam2D(E=21000., ID=2, I=833.33, A=100., i=n2, j=n3, ro=7850)
+    b3 = HermitianBeam2D(E=21000., ID=3, I=833.33, A=100., i=n3, j=n4, ro=7850)
 
     structure = Structure(beams=[b1, b2, b3], BCs=None)
+
+    print(b1.M)
+
+    exit()
 
     # structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1})
     # structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': -1})
