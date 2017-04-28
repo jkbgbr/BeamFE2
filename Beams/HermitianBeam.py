@@ -4,8 +4,6 @@ import math
 import itertools
 import copy
 
-EE = 210000.
-
 
 class Node(object):
     """
@@ -19,6 +17,9 @@ class Node(object):
 
     def __repr__(self):
         return 'Node(ID=%d, coords=(%.2f, %.2f)' % (self.ID, self.x, self.y)
+
+    def set_coords(self, coords):
+        self.coords = coords
 
     @property
     def x(self):
@@ -54,7 +55,7 @@ class HermitianBeam2D(object):
     """
     dof = 3  # degrees of freedom
 
-    def __init__(self, ID=None, i=None, j=None, E=EE, I=None, A=None):
+    def __init__(self, ID=None, i=None, j=None, E=None, I=None, A=None):
         """
         :param ID: ID of the beam
         :param i: Node i, a Node instance

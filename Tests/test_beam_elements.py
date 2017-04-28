@@ -1,6 +1,7 @@
 import unittest
 from Beams import HermitianBeam as HB
 import numpy as np
+import math
 
 
 class Hermitian2D(unittest.TestCase):
@@ -11,25 +12,23 @@ class Hermitian2D(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.EE = 1.
-        cls.topol = {1: HB.Node(ID=1, coords=(0, 0)), 2: HB.Node(ID=2, coords=(1, 0)), 3: HB.Node(ID=3, coords=(2, 0))}
-        cls.beam1 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.topol[1], j=cls.topol[2])
-        cls.beam2 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.topol[2], j=cls.topol[3])
-        cls.Nx = np.matrix([-1, 0, 0, 1, 0, 0]).T  # unit axial Force
-        cls.Ny = np.matrix([0, -1, 0, 0, -1, 0]).T  # unit shear Force
-        cls.Mz = np.matrix([0, 0, -1, 0, 0, 1]).T  # unit bending moment
+        cls.nodes = {1: HB.Node(ID=1, coords=(0, 0)), 2: HB.Node(ID=2, coords=(1, 0)), 3: HB.Node(ID=3, coords=(2, 0))}
+        cls.beam1 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.nodes[1], j=cls.nodes[2])
+        cls.beam2 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.nodes[2], j=cls.nodes[3])
 
-        n1 = HB.Node(ID=1, coords=(0, 0))
-        n2 = HB.Node(ID=2, coords=(100, 0))
-        n3 = HB.Node(ID=3, coords=(200, 0))
-        n4 = HB.Node(ID=4, coords=(300, 0))
-        b1 = HB.HermitianBeam2D(ID=1, I=833.33, A=100., i=n1, j=n2)
-        b2 = HB.HermitianBeam2D(ID=2, I=833.33, A=100., i=n2, j=n3)
-        b3 = HB.HermitianBeam2D(ID=3, I=833.33, A=100., i=n3, j=n4)
+        # structure #1: 3 elements in a row along the global X axis
+        cls.n1 = HB.Node(ID=1, coords=(0, 0))
+        cls.n2 = HB.Node(ID=2, coords=(100, 0))
+        cls.n3 = HB.Node(ID=3, coords=(200, 0))
+        cls.n4 = HB.Node(ID=4, coords=(300, 0))
+        b1 = HB.HermitianBeam2D(E=210000., ID=1, I=833.33, A=100., i=cls.n1, j=cls.n2)
+        b2 = HB.HermitianBeam2D(E=210000., ID=2, I=833.33, A=100., i=cls.n2, j=cls.n3)
+        b3 = HB.HermitianBeam2D(E=210000., ID=3, I=833.33, A=100., i=cls.n3, j=cls.n4)
         cls.structure_1 = HB.Structure(beams=[b1, b2, b3], BCs=None)
 
         # the same structure, with the last node not inline. to test rotation.
-        n5 = HB.Node(ID=4, coords=(300, 100))
-        b4 = HB.HermitianBeam2D(ID=3, I=833.33, A=100., i=n3, j=n5)
+        cls.n5 = HB.Node(ID=4, coords=(300, 100))
+        b4 = HB.HermitianBeam2D(E=210000., ID=3, I=833.33, A=100., i=cls.n3, j=cls.n5)
         cls.structure_2 = HB.Structure(beams=[b1, b2, b4], BCs=None)
 
     def test_element_stiffness_matrix(self):
@@ -81,6 +80,42 @@ class Hermitian2D(unittest.TestCase):
                                [0.00000000e+00],
                                [0.00000000e+00]])
         self.assertTrue(np.allclose(disps, _expected))
+
+    def test_nodal_displacements_11(self):
+        # assertion #1: single Axial force on Node 2, the element is rotated
+
+        # setting the nodes back
+        _u = math.sqrt(2) / 2.  # unit
+        self.n2.set_coords(coords=(100 * _u, 100 * _u))
+        self.n3.set_coords(coords=(200 * _u, 200 * _u))
+        self.n4.set_coords(coords=(300 * _u, 300 * _u))
+
+        self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FX': _u}, clear=True)
+        self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FY': _u})
+        disps = self.structure_1.solve()
+
+        # setting the nodes back
+        _u = 1.0
+        self.n2.set_coords(coords=(100 * _u, 0))
+        self.n3.set_coords(coords=(200 * _u, 0))
+        self.n4.set_coords(coords=(300 * _u, 0))
+
+        print(disps)
+        _expected = np.matrix([[4.76190476e-06],
+                               [0.00000000e+00],
+                               [0.00000000e+00],
+                               [9.52380952e-06],
+                               [0.00000000e+00],
+                               [0.00000000e+00],
+                               [1.42857143e-05],
+                               [0.00000000e+00],
+                               [0.00000000e+00]])
+        self.assertTrue(np.allclose(disps, _expected))
+
+
+
+
+
 
     def test_nodal_displacements_2(self):
         # assertion #2: single shear load at Node 2
