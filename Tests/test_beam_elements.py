@@ -82,23 +82,29 @@ class Hermitian2D(unittest.TestCase):
         self.assertTrue(np.allclose(disps, _expected))
 
     def test_nodal_displacements_11(self):
-        # assertion #1: single Axial force on Node 2, the element is rotated
+        # assertion #1: single Axial force on Node 2, the element is rotated, so are the loads.
+        # but then at the end the resulting displacements are rotated back and we get the same results as in test _1
 
         # structure #1: 3 elements in a row along the global X axis
-        _u = math.sqrt(2) / 2.  # unit
+        _u = math.sqrt(2) / 2.  # unit; instead of 1 as unit we have cos(45) to account for the rotation
         n1 = HB.Node(ID=1, coords=(0, 0))
         n2 = HB.Node(ID=2, coords=(100 * _u, 100 * _u))
         n3 = HB.Node(ID=3, coords=(200 * _u, 200 * _u))
         n4 = HB.Node(ID=4, coords=(300 * _u, 300 * _u))
+
+        # definition of the beams is unchanged
         b1 = HB.HermitianBeam2D(E=210000., ID=1, I=833.33, A=100., i=n1, j=n2)
         b2 = HB.HermitianBeam2D(E=210000., ID=2, I=833.33, A=100., i=n2, j=n3)
         b3 = HB.HermitianBeam2D(E=210000., ID=3, I=833.33, A=100., i=n3, j=n4)
         structure = HB.Structure(beams=[b1, b2, b3], BCs=None)
+
+        # two loads instead of one as these are in the global system
         structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': _u}, clear=True)
         structure.add_single_dynam_to_node(nodeID=3, dynam={'FY': _u})
+
         disps = structure.solve()
-        print(disps)
-        _expected = np.matrix([[4.76190476e-06],
+        T = HB.transfer_matrix(-45, asdegree=True, blocks=3)
+        _expected = np.matrix([[4.76190476e-06],  # same as in _1
                                [0.00000000e+00],
                                [0.00000000e+00],
                                [9.52380952e-06],
@@ -107,7 +113,45 @@ class Hermitian2D(unittest.TestCase):
                                [1.42857143e-05],
                                [0.00000000e+00],
                                [0.00000000e+00]])
-        self.assertTrue(np.allclose(disps, _expected))
+        self.assertTrue(np.allclose(T * disps, _expected))
+
+    def test_nodal_displacements_12(self):
+        # same as _11, but the beams are rotated 60 degree clockwise
+        # assertion #1: single Axial force on Node 2, the element is rotated, so are the loads.
+        # but then at the end the resulting displacements are rotated back and we get the same results as in test _1
+
+        # structure #1: 3 elements in a row along the global X axis
+        _ux = 0.5  # unit in x direction; instead of 1 as unit we have cos(60) to account for the rotation
+        _uy = -math.sqrt(3) / 2.  # unit in x direction; instead of 1 as unit we have cos(60) to account for the rotation
+        n1 = HB.Node(ID=1, coords=(0, 0))
+        n2 = HB.Node(ID=2, coords=(100 * _ux, 100 * _uy))
+        n3 = HB.Node(ID=3, coords=(200 * _ux, 200 * _uy))
+        n4 = HB.Node(ID=4, coords=(300 * _ux, 300 * _uy))
+
+        # definition of the beams is unchanged
+        b1 = HB.HermitianBeam2D(E=210000., ID=1, I=833.33, A=100., i=n1, j=n2)
+        b2 = HB.HermitianBeam2D(E=210000., ID=2, I=833.33, A=100., i=n2, j=n3)
+        b3 = HB.HermitianBeam2D(E=210000., ID=3, I=833.33, A=100., i=n3, j=n4)
+        structure = HB.Structure(beams=[b1, b2, b3], BCs=None)
+
+        # two loads instead of one as these are in the global system
+        structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': _ux}, clear=True)
+        structure.add_single_dynam_to_node(nodeID=3, dynam={'FY': _uy})
+
+        disps = structure.solve()
+        for b in structure.beams:
+            print(math.degrees(b.direction))
+        T = HB.transfer_matrix(300, asdegree=True, blocks=3)
+        _expected = np.matrix([[4.76190476e-06],  # same as in _1
+                               [0.00000000e+00],
+                               [0.00000000e+00],
+                               [9.52380952e-06],
+                               [0.00000000e+00],
+                               [0.00000000e+00],
+                               [1.42857143e-05],
+                               [0.00000000e+00],
+                               [0.00000000e+00]])
+        self.assertTrue(np.allclose(T * disps, _expected))
 
 
     def test_nodal_displacements_2(self):
@@ -169,6 +213,11 @@ class Hermitian2D(unittest.TestCase):
                                [1.14286171e+01],
                                [2.66667733e+01],
                                [1.14286171e-01]])
+        print(disps)
+        print(_expected)
+        print(disps-_expected)
+        exit()
+
         self.assertTrue(np.allclose(disps, _expected))
 
     def test_nodal_displacements_6(self):
