@@ -55,7 +55,7 @@ class HermitianBeam2D(object):
     """
     dof = 3  # degrees of freedom
 
-    def __init__(self, ID=None, i=None, j=None, E=None, I=None, A=None, ro=None):
+    def __init__(self, ID=None, i=None, j=None, E=None, I=None, A=None, rho=None):
         """
         :param ID: ID of the beam
         :param i: Node i, a Node instance
@@ -70,7 +70,7 @@ class HermitianBeam2D(object):
         self.j = j
         self.A = A
         self.I = I
-        self.ro = ro
+        self.rho = rho
 
     def __repr__(self):
         return 'HermitianBeam2D(ID=%d, i=%r, j=%r, E=%d, I=%.2f, A=%.2f' \
@@ -95,7 +95,7 @@ class HermitianBeam2D(object):
     @property
     def M(self):
         l = self.l
-        _ret = self.ro * self.A * self.l / 420 * np.matrix([
+        _ret = self.rho * self.A * self.l / 420 * np.matrix([
             [140, 0, 0, 70, 0, 0],
             [0, 156, 22*l, 0, 54, -13*l],
             [0, 22*l, 4*l**2, 0, 13*l, -3*l**2],
@@ -379,9 +379,9 @@ if __name__ == '__main__':
     n2 = Node(ID=2, coords=(100, 0))
     n3 = Node(ID=3, coords=(200, 0))
     n4 = Node(ID=4, coords=(300, 0))
-    b1 = HermitianBeam2D(E=21000., ID=1, I=833.33, A=100., i=n1, j=n2, ro=7850)
-    b2 = HermitianBeam2D(E=21000., ID=2, I=833.33, A=100., i=n2, j=n3, ro=7850)
-    b3 = HermitianBeam2D(E=21000., ID=3, I=833.33, A=100., i=n3, j=n4, ro=7850)
+    b1 = HermitianBeam2D(E=21000., ID=1, I=833.33, A=100., i=n1, j=n2, rho=7850)
+    b2 = HermitianBeam2D(E=21000., ID=2, I=833.33, A=100., i=n2, j=n3, rho=7850)
+    b3 = HermitianBeam2D(E=21000., ID=3, I=833.33, A=100., i=n3, j=n4, rho=7850)
 
     structure = Structure(beams=[b1, b2, b3], BCs=None)
 
