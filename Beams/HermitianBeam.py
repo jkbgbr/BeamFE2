@@ -1,5 +1,7 @@
 from __future__ import division
 import numpy as np
+# print precision, no scientific notation, wide lines
+np.set_printoptions(precision=2, suppress=True, linewidth=140)
 import math
 import itertools
 import copy
@@ -93,7 +95,7 @@ class HermitianBeam2D(object):
         return self.E * self.I
 
     @property
-    def M(self):
+    def Me(self):
         l = self.l
         _ret = self.rho * self.A * self.l / 420 * np.matrix([
             [140, 0, 0, 70, 0, 0],
@@ -172,6 +174,11 @@ class HermitianBeam2D(object):
     def Kg(self):
         # full stiffness matrix of the Beam element in the global coordinate system
         return self.transfer_matrix * self.Ke * self.transfer_matrix.T
+
+    @property
+    def Mg(self):
+        # full stiffness matrix of the Beam element in the global coordinate system
+        return self.transfer_matrix * self.Me * self.transfer_matrix.T
 
     # @property
     # def Kg_ul(self):
@@ -393,17 +400,33 @@ def transfer_matrix(alpha, asdegree=False, blocks=2, dof=3):
     return _empty
 
 
-# if __name__ == '__main__':
-#
-#     n1 = Node(ID=1, coords=(0, 0))
-#     n2 = Node(ID=2, coords=(100, 0))
-#     n3 = Node(ID=3, coords=(200, 0))
-#     n4 = Node(ID=4, coords=(300, 0))
-#     b1 = HermitianBeam2D(E=21000., ID=1, I=833.33, A=100., i=n1, j=n2, rho=7850)
-#     b2 = HermitianBeam2D(E=21000., ID=2, I=833.33, A=100., i=n2, j=n3, rho=7850)
-#     b3 = HermitianBeam2D(E=21000., ID=3, I=833.33, A=100., i=n3, j=n4, rho=7850)
-#
-#     structure = Structure(beams=[b1, b2, b3], BCs=None)
+if __name__ == '__main__':
+
+    n1 = Node(ID=1, coords=(0, 0))
+    n2 = Node(ID=2, coords=(250, 0))
+    n3 = Node(ID=3, coords=(400, 0))
+    b1 = HermitianBeam2D(E=21000., ID=1, I=39760.78, A=706.5, i=n1, j=n2, rho=7.85e-5)
+    b2 = HermitianBeam2D(E=21000., ID=2, I=39760.78, A=706.5, i=n2, j=n3, rho=7.85e-5)
+
+    structure = Structure(beams=[b1, b2], BCs=None)
+
+    print(b1.Me)
+    Mg = compile_global_matrix(structure.beams, mass=True, stiffness=False)
+
+    for i in range(3):
+        Mg = np.delete(Mg, 0, axis=0)
+        Mg = np.delete(Mg, 0, axis=1)
+        Mg = np.delete(Mg, -1, axis=0)
+        Mg = np.delete(Mg, -1, axis=1)
+
+    print(Mg)
+
+
+
+
+
+
+    exit()
 #
 #     print(b1.M)
 #
