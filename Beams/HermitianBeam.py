@@ -173,25 +173,25 @@ class HermitianBeam2D(object):
         # full stiffness matrix of the Beam element in the global coordinate system
         return self.transfer_matrix * self.Ke * self.transfer_matrix.T
 
-    @property
-    def Kg_ul(self):
-        # upper left block of the element stiffness matrix in the global coordinate system
-        return self.Kg[:self.dof, :self.dof]
-
-    @property
-    def Kg_ur(self):
-        # upper right block of the element stiffness matrix in the global coordinate system
-        return self.Kg[:self.dof, self.dof:]
-
-    @property
-    def Kg_ll(self):
-        # lower left block of the element stiffness matrix in the global coordinate system
-        return self.Kg[self.dof:, :self.dof]
-
-    @property
-    def Kg_lr(self):
-        # lower right block of the element stiffness matrix in the global coordinate system
-        return self.Kg[self.dof:, self.dof:]
+    # @property
+    # def Kg_ul(self):
+    #     # upper left block of the element stiffness matrix in the global coordinate system
+    #     return self.Kg[:self.dof, :self.dof]
+    #
+    # @property
+    # def Kg_ur(self):
+    #     # upper right block of the element stiffness matrix in the global coordinate system
+    #     return self.Kg[:self.dof, self.dof:]
+    #
+    # @property
+    # def Kg_ll(self):
+    #     # lower left block of the element stiffness matrix in the global coordinate system
+    #     return self.Kg[self.dof:, :self.dof]
+    #
+    # @property
+    # def Kg_lr(self):
+    #     # lower right block of the element stiffness matrix in the global coordinate system
+    #     return self.Kg[self.dof:, self.dof:]
 
     @property
     def transfer_matrix(self):
@@ -333,23 +333,39 @@ class Structure(object):
         Compiles the global stiffness matrix from the element matrices.
         :return: 
         """
-        _sumdof = self.sumdof
-        _empty = np.zeros(_sumdof ** 2)
-        _empty = np.matrix(_empty.reshape(_sumdof, _sumdof))
-        for b in self.beams:
-            _sti = (b.i.ID - 1) * self.dof  # starting element of the block for node i
-            _eni = _sti + self.dof  # end element for the block if node i
-            _stj = (b.j.ID - 1) * self.dof
-            _enj = _stj + self.dof
-            # upper left block
-            _empty[_sti:_eni, _sti:_eni] += b.Kg_ul
-            # left lower block
-            _empty[_stj:_enj, _sti:_eni] += b.Kg_ll
-            # upper right block
-            _empty[_sti:_eni, _stj:_enj] += b.Kg_ur
-            # lower right block
-            _empty[_stj:_enj, _stj:_enj] += b.Kg_lr
-        return _empty
+        return compile_global_matrix(self.beams, stiffness=True, mass=False)
+
+
+def compile_global_matrix(beams, stiffness=True, mass=False):
+    """
+    Compiles the global stiffness matrix from the element matrices.
+    :return: 
+    """
+    assert stiffness is not mass  # either or
+
+    nodes = set(itertools.chain.from_iterable([x.nodes for x in beams]))  # nodes of the beams
+    dof = beams[0].dof  # nr. of dofs
+    _sumdof = len(nodes) * dof
+    _empty = np.zeros(_sumdof ** 2)
+    _empty = np.matrix(_empty.reshape(_sumdof, _sumdof))
+    for b in beams:
+        if stiffness:
+            mtrx = b.Kg
+        else:
+            mtrx = b.Mg
+        _sti = (b.i.ID - 1) * dof  # starting element of the block for node i
+        _eni = _sti + dof  # end element for the block if node i
+        _stj = (b.j.ID - 1) * dof
+        _enj = _stj + dof
+        # upper left block
+        _empty[_sti:_eni, _sti:_eni] += mtrx[:dof, :dof]
+        # left lower block
+        _empty[_stj:_enj, _sti:_eni] += mtrx[dof:, :dof]
+        # upper right block
+        _empty[_sti:_eni, _stj:_enj] += mtrx[:dof, dof:]
+        # lower right block
+        _empty[_stj:_enj, _stj:_enj] += mtrx[dof:, dof:]
+    return _empty
 
 
 def transfer_matrix(alpha, asdegree=False, blocks=2, dof=3):
