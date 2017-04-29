@@ -317,16 +317,20 @@ class Structure(object):
         except np.linalg.linalg.LinAlgError:
             return False
 
+    @property
+    def stiffness_matrix_is_ok(self):
+        if self.stiffness_matrix_is_nonsingular and self.stiffness_matrix_is_symmetric:
+            return True
+        else:
+            return False
+
     def solve(self):
         """
         solves the system, returns the vector of displacements.
         :return: 
         """
-        assert self.stiffness_matrix_is_nonsingular
-        try:
-            return np.linalg.inv(self.K_with_BC) * self.q_with_BC
-        except np.linalg.linalg.LinAlgError:
-            raise Exception('OK something went wrong')
+        assert self.stiffness_matrix_is_ok
+        return np.linalg.inv(self.K_with_BC) * self.q_with_BC
 
     def compile_global_stiffness_matrix(self):
         """
@@ -389,103 +393,103 @@ def transfer_matrix(alpha, asdegree=False, blocks=2, dof=3):
     return _empty
 
 
-if __name__ == '__main__':
-
-    n1 = Node(ID=1, coords=(0, 0))
-    n2 = Node(ID=2, coords=(100, 0))
-    n3 = Node(ID=3, coords=(200, 0))
-    n4 = Node(ID=4, coords=(300, 0))
-    b1 = HermitianBeam2D(E=21000., ID=1, I=833.33, A=100., i=n1, j=n2, rho=7850)
-    b2 = HermitianBeam2D(E=21000., ID=2, I=833.33, A=100., i=n2, j=n3, rho=7850)
-    b3 = HermitianBeam2D(E=21000., ID=3, I=833.33, A=100., i=n3, j=n4, rho=7850)
-
-    structure = Structure(beams=[b1, b2, b3], BCs=None)
-
-    print(b1.M)
-
-    exit()
-
-    # structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1})
-    # structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': -1})
-    # structure.add_single_dynam_to_node(nodeID=2, dynam={'MZ': 1000000})
-    structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 1000, 'FY': 1000, 'MZ': 1000000})
-    # structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': -1000, 'FY': -1000, 'MZ': -1000000})
-
-    disps = structure.solve()
-    print(disps)
-
-
-# class HermitianBeam3D(object):
-#     """
-#     A hermitian 3D FE Beam with 2 nodes and 6 DOFs each node: 3 translational, 3 rotational.
-#     A 2D version is also available with 3 DOFs each node: 2 translational, 1 rotational.
-#     Small deformations are assumed.
-#     Bernoulli-Euler beam theory (no shear deformations)
-#     Non-restrained torsion only (no warping)
+# if __name__ == '__main__':
 #
-#     Nodes: i, j with direction i -> j
-#     Element coordinate system is right-handed, thumb: X, pointing finger Y, middle finger Z
-#     Displacements are positive when going away from the origin.
-#     Rotations are positive when clockwise when looking away from the origin.
+#     n1 = Node(ID=1, coords=(0, 0))
+#     n2 = Node(ID=2, coords=(100, 0))
+#     n3 = Node(ID=3, coords=(200, 0))
+#     n4 = Node(ID=4, coords=(300, 0))
+#     b1 = HermitianBeam2D(E=21000., ID=1, I=833.33, A=100., i=n1, j=n2, rho=7850)
+#     b2 = HermitianBeam2D(E=21000., ID=2, I=833.33, A=100., i=n2, j=n3, rho=7850)
+#     b3 = HermitianBeam2D(E=21000., ID=3, I=833.33, A=100., i=n3, j=n4, rho=7850)
 #
-#     Displacement vector u:
-#     u1 : Node i, displacement in X direction
-#     u2 : Node i, displacement in Y direction
-#     u3 : Node i, displacement in Z direction
-#     u4 : Node i, rotation about X axis
-#     u5 : Node i, rotation about Y axis
-#     u6 : Node i, rotation about Z axis
-#     u7 - u12: same for Node j
+#     structure = Structure(beams=[b1, b2, b3], BCs=None)
 #
-#     """
+#     print(b1.M)
 #
-#     def __init__(self, ID=None, i=(0, 0), j=(1., 0.), dof=6, E=EE, nu=0.3, Iy=None, Iz=None, A=None):
-#         self.dof = dof
-#         self.ID = ID
-#         self.E = E
-#         self.nu = nu
-#         self.i = i
-#         self.j = j
-#         self.A = A
-#         self.Iy = Iy
-#         self.Iz = Iz
-#
-#     @property
-#     def l(self):
-#         return math.sqrt((self.i[0] - self.j[0]) ** 2 + (self.i[1] - self.j[1]) ** 2)
-#
-#     @property
-#     def G(self):
-#         return GG
-#
-#     @property
-#     def Ke(self):
-#         l = self.l
-#         E_x = self.E * self.A
-#         G_x = self.G * self.A
-#         EIz_1 = EIz_2 = self.E * self.Iz
-#         EIy_1 = EIy_2 = self.E * self.Iy
-#
-#         _ret = np.array([
-#             [E_x / l, 0, 0, 0, 0, 0, -E_x / l, 0, 0, 0, 0, 0],
-#             [0, 6 * (EIz_1 + EIz_2) / (l ** 3), 0, 0, 0, 2 * (2 * EIz_1 + EIz_2) / (l ** 2), 0,
-#              -6 * (EIz_1 + EIz_2) / (l ** 3), 0, 0, 0, 2 * (EIz_1 + 2 * EIz_2) / (l ** 2)],
-#             [0, 0, 6 * (EIy_1 + EIy_2) / (l ** 3), 0, -2 * (2 * EIy_1 + EIy_2) / (l ** 2), 0, 0, 0,
-#              -6 * (EIy_1 + EIy_2) / (l ** 3), 0, -2 * (EIy_1 + 2 * EIy_2) / (l ** 2), 0],
-#             [0, 0, 0, G_x / l, 0, 0, 0, 0, 0, -G_x / l, 0, 0],
-#             [0, 0, -2 * (2 * EIy_1 + EIy_2) / (l ** 2), 0, (3 * EIy_1 + EIy_2) / l, 0, 0, 0,
-#              2 * (2 * EIy_1 + EIy_2) / (l ** 2), 0, (EIy_1 + EIy_2) / l, 0],
-#             [0, 2 * (2 * EIz_1 + EIz_2) / (l ** 2), 0, 0, 0, (3 * EIz_1 + EIz_2) / l, 0,
-#              -2 * (2 * EIz_1 + EIz_2) / (l ** 2), 0, 0, 0, (EIz_1 + EIz_2) / l],
-#             [-E_x / l, 0, 0, 0, 0, 0, E_x / l, 0, 0, 0, 0, 0],
-#             [0, -6 * (EIz_1 + EIz_2) / (l ** 3), 0, 0, 0, -2 * (2 * EIz_1 + EIz_2) / (l ** 2), 0,
-#              6 * (EIz_1 + EIz_2) / (l ** 3), 0, 0, 0, -2 * (EIz_1 + 2 * EIz_2) / (l ** 2)],
-#             [0, 0, -6 * (EIy_1 + EIy_2) / (l ** 3), 0, 2 * (2 * EIy_1 + EIy_2) / (l ** 2), 0, 0, 0,
-#              6 * (EIy_1 + EIy_2) / (l ** 3), 0, 2 * (EIy_1 + 2 * EIy_2) / (l ** 2), 0],
-#             [0, 0, 0, -G_x / l, 0, 0, 0, 0, 0, G_x / l, 0, 0],
-#             [0, 0, -2 * (EIy_1 + 2 * EIy_2) / (l ** 2), 0, (EIy_1 + EIy_2) / l, 0, 0, 0,
-#              2 * (EIy_1 + 2 * EIy_2) / (l ** 2), 0, (EIy_1 + 3 * EIy_2) / l, 0],
-#             [0, 2 * (EIz_1 + 2 * EIz_2) / (l ** 2), 0, 0, 0, (EIz_1 + EIz_2) / l, 0,
-#              -2 * (EIz_1 + 2 * EIz_2) / (l ** 2), 0, 0, 0, (EIz_1 + 3 * EIz_2) / l]
-#         ])
-#         return _ret.astype(int)
+#     exit()
+
+    # # structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1})
+    # # structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': -1})
+    # # structure.add_single_dynam_to_node(nodeID=2, dynam={'MZ': 1000000})
+    # structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 1000, 'FY': 1000, 'MZ': 1000000})
+    # # structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': -1000, 'FY': -1000, 'MZ': -1000000})
+    #
+    # disps = structure.solve()
+    # print(disps)
+    #
+
+    # class HermitianBeam3D(object):
+    #     """
+    #     A hermitian 3D FE Beam with 2 nodes and 6 DOFs each node: 3 translational, 3 rotational.
+    #     A 2D version is also available with 3 DOFs each node: 2 translational, 1 rotational.
+    #     Small deformations are assumed.
+    #     Bernoulli-Euler beam theory (no shear deformations)
+    #     Non-restrained torsion only (no warping)
+    #
+    #     Nodes: i, j with direction i -> j
+    #     Element coordinate system is right-handed, thumb: X, pointing finger Y, middle finger Z
+    #     Displacements are positive when going away from the origin.
+    #     Rotations are positive when clockwise when looking away from the origin.
+    #
+    #     Displacement vector u:
+    #     u1 : Node i, displacement in X direction
+    #     u2 : Node i, displacement in Y direction
+    #     u3 : Node i, displacement in Z direction
+    #     u4 : Node i, rotation about X axis
+    #     u5 : Node i, rotation about Y axis
+    #     u6 : Node i, rotation about Z axis
+    #     u7 - u12: same for Node j
+    #
+    #     """
+    #
+    #     def __init__(self, ID=None, i=(0, 0), j=(1., 0.), dof=6, E=EE, nu=0.3, Iy=None, Iz=None, A=None):
+    #         self.dof = dof
+    #         self.ID = ID
+    #         self.E = E
+    #         self.nu = nu
+    #         self.i = i
+    #         self.j = j
+    #         self.A = A
+    #         self.Iy = Iy
+    #         self.Iz = Iz
+    #
+    #     @property
+    #     def l(self):
+    #         return math.sqrt((self.i[0] - self.j[0]) ** 2 + (self.i[1] - self.j[1]) ** 2)
+    #
+    #     @property
+    #     def G(self):
+    #         return GG
+    #
+    #     @property
+    #     def Ke(self):
+    #         l = self.l
+    #         E_x = self.E * self.A
+    #         G_x = self.G * self.A
+    #         EIz_1 = EIz_2 = self.E * self.Iz
+    #         EIy_1 = EIy_2 = self.E * self.Iy
+    #
+    #         _ret = np.array([
+    #             [E_x / l, 0, 0, 0, 0, 0, -E_x / l, 0, 0, 0, 0, 0],
+    #             [0, 6 * (EIz_1 + EIz_2) / (l ** 3), 0, 0, 0, 2 * (2 * EIz_1 + EIz_2) / (l ** 2), 0,
+    #              -6 * (EIz_1 + EIz_2) / (l ** 3), 0, 0, 0, 2 * (EIz_1 + 2 * EIz_2) / (l ** 2)],
+    #             [0, 0, 6 * (EIy_1 + EIy_2) / (l ** 3), 0, -2 * (2 * EIy_1 + EIy_2) / (l ** 2), 0, 0, 0,
+    #              -6 * (EIy_1 + EIy_2) / (l ** 3), 0, -2 * (EIy_1 + 2 * EIy_2) / (l ** 2), 0],
+    #             [0, 0, 0, G_x / l, 0, 0, 0, 0, 0, -G_x / l, 0, 0],
+    #             [0, 0, -2 * (2 * EIy_1 + EIy_2) / (l ** 2), 0, (3 * EIy_1 + EIy_2) / l, 0, 0, 0,
+    #              2 * (2 * EIy_1 + EIy_2) / (l ** 2), 0, (EIy_1 + EIy_2) / l, 0],
+    #             [0, 2 * (2 * EIz_1 + EIz_2) / (l ** 2), 0, 0, 0, (3 * EIz_1 + EIz_2) / l, 0,
+    #              -2 * (2 * EIz_1 + EIz_2) / (l ** 2), 0, 0, 0, (EIz_1 + EIz_2) / l],
+    #             [-E_x / l, 0, 0, 0, 0, 0, E_x / l, 0, 0, 0, 0, 0],
+    #             [0, -6 * (EIz_1 + EIz_2) / (l ** 3), 0, 0, 0, -2 * (2 * EIz_1 + EIz_2) / (l ** 2), 0,
+    #              6 * (EIz_1 + EIz_2) / (l ** 3), 0, 0, 0, -2 * (EIz_1 + 2 * EIz_2) / (l ** 2)],
+    #             [0, 0, -6 * (EIy_1 + EIy_2) / (l ** 3), 0, 2 * (2 * EIy_1 + EIy_2) / (l ** 2), 0, 0, 0,
+    #              6 * (EIy_1 + EIy_2) / (l ** 3), 0, 2 * (EIy_1 + 2 * EIy_2) / (l ** 2), 0],
+    #             [0, 0, 0, -G_x / l, 0, 0, 0, 0, 0, G_x / l, 0, 0],
+    #             [0, 0, -2 * (EIy_1 + 2 * EIy_2) / (l ** 2), 0, (EIy_1 + EIy_2) / l, 0, 0, 0,
+    #              2 * (EIy_1 + 2 * EIy_2) / (l ** 2), 0, (EIy_1 + 3 * EIy_2) / l, 0],
+    #             [0, 2 * (EIz_1 + 2 * EIz_2) / (l ** 2), 0, 0, 0, (EIz_1 + EIz_2) / l, 0,
+    #              -2 * (EIz_1 + 2 * EIz_2) / (l ** 2), 0, 0, 0, (EIz_1 + 3 * EIz_2) / l]
+    #         ])
+    #         return _ret.astype(int)
