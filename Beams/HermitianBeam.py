@@ -1,7 +1,7 @@
 from __future__ import division
 import numpy as np
 # print precision, no scientific notation, wide lines
-np.set_printoptions(precision=2, suppress=True, linewidth=140)
+np.set_printoptions(precision=6, suppress=False, linewidth=140)
 import math
 import itertools
 import copy
@@ -15,7 +15,8 @@ class Node(object):
     def __init__(self, ID=None, coords=()):
         self.ID = ID
         self.coords = coords
-        self.DOFs = {'ux': True, 'uy': True, 'uz': True}
+        self.DOFs = {'i': {'ux': True, 'uy': True, 'rotz': True},
+                     'j': {'ux': True, 'uy': True, 'rotz': True}}
 
     def __repr__(self):
         return 'Node(ID=%d, coords=(%.2f, %.2f)' % (self.ID, self.x, self.y)
@@ -215,19 +216,27 @@ class Structure(object):
     """
     The Structure, composed of the FE Beams.
     """
-    def __init__(self, beams, BCs):
-        self.BCs = BCs
+    def __init__(self, beams, supports=None):
         self.beams = beams
         self.dof = self.beams[0].dof
         self._load_vector = None
+        self.supports = supports
 
     @property
-    def dofnames(self):
+    def loadnames(self):
         assert self.dof in [3, 6]
         if self.dof == 3:
             return 'FX', 'FY', 'MZ'
         else:
             return 'FX', 'FY', 'FZ', 'MX', 'MY', 'MZ'
+
+    @property
+    def dofnames(self):
+        assert self.dof in [3, 6]
+        if self.dof == 3:
+            return 'ux', 'uy', 'rotz'
+        else:
+            return 'ux', 'uy', 'uz', 'rotx', 'roty', 'rotz'
 
     @property
     def dofnumbers(self):
@@ -254,13 +263,13 @@ class Structure(object):
 
     @property
     def K_with_BC(self):
-        # the stiffness matrix with the boundary conditions taken into account
-        # CURRENTLY: NODE 1 is clamped
-        glo = copy.deepcopy(self.K)
-        for i in range(self.dof):
-            glo = np.delete(glo, 0, axis=0)
-            glo = np.delete(glo, 0, axis=1)
-        return glo
+        # copy of the the stiffness matrix with the boundary conditions taken into account
+        _K = copy.deepcopy(self.K)
+        for k, v in self.supports.items():
+            for dof in v:
+                _pos = self.position_in_matrix(nodeID=k, DOF=dof)
+                _K[_pos, _pos] += 10e20
+        return _K
 
     @property
     def q(self):
@@ -269,11 +278,7 @@ class Structure(object):
 
     @property
     def q_with_BC(self):
-        # the load vector, changed to be usable with the BCs used in K_with_BC
-        _q = copy.deepcopy(self.q)
-        for i in range(self.dof):
-            _q = np.delete(_q, 0, axis=0)
-        return _q
+        return self.q
 
     def add_single_dynam_to_node(self, nodeID=None, dynam=None, clear=False):
         """
@@ -290,14 +295,13 @@ class Structure(object):
         #
 
         assert nodeID in [x.ID for x in self.nodes]
-        assert all([x in self.dofnames for x in dynam.keys()])
+        assert all([x in self.loadnames for x in dynam.keys()])
 
         if self._load_vector is None:
             self._load_vector = np.matrix(np.zeros(self.sumdof))
 
         for k, v in dynam.items():
-
-            for name, number in zip(self.dofnames, self.dofnumbers):  # pairs e.g. 'FX' with 0, 'FY' with 1 etc.
+            for name, number in zip(self.loadnames, range(self.dof)):  # pairs e.g. 'FX' with 0, 'FY' with 1 etc.
                 _sti = nodeID * self.dof + number  # starting index
                 if k == name:
                     if clear:
@@ -313,6 +317,7 @@ class Structure(object):
         if np.allclose(diff, np.zeros(self.sumdof)):
             return True
         else:
+            print('The stiffness matrix is not symmetric')
             return False
 
     @property
@@ -326,9 +331,10 @@ class Structure(object):
 
     @property
     def stiffness_matrix_is_ok(self):
-        if self.stiffness_matrix_is_nonsingular and self.stiffness_matrix_is_symmetric:
+        if self.stiffness_matrix_is_nonsingular:
             return True
         else:
+            print('The stiffness matrix is singular')
             return False
 
     def solve(self):
@@ -345,6 +351,19 @@ class Structure(object):
         :return: 
         """
         return compile_global_matrix(self.beams, stiffness=True, mass=False)
+
+    def position_in_matrix(self, nodeID=None, DOF=None):
+        """
+        Tells the index of the given nodeID, DOF in a global K or M matrix. 
+        :param nodeID: 
+        :param DOF: 
+        :return: 
+        """
+        # assert nodeID in [x.nodeID for x in self.nodes]
+        assert DOF in self.dofnames
+        _ret = nodeID * self.dof + self.dofnames.index(DOF)
+        print('Adding support to Node %d, DOF %s at index %d' % (nodeID, DOF, _ret))
+        return _ret
 
 
 def compile_global_matrix(beams, stiffness=True, mass=False):
@@ -408,9 +427,17 @@ if __name__ == '__main__':
     b1 = HermitianBeam2D(E=21000., ID=1, I=39760.78, A=706.5, i=n1, j=n2, rho=7.85e-5)
     b2 = HermitianBeam2D(E=21000., ID=2, I=39760.78, A=706.5, i=n2, j=n3, rho=7.85e-5)
 
-    structure = Structure(beams=[b1, b2], BCs=None)
+    _sad = {0: ['ux', 'uy', 'rotz']}  # supports as dict
+    structure = Structure(beams=[b1, b2], supports=_sad)
 
-    print(b1.Me)
+    structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1}, clear=True)
+
+    structure.solve()
+
+    exit()
+
+
+
     Mg = compile_global_matrix(structure.beams, mass=True, stiffness=False)
 
     for i in range(3):
