@@ -1,7 +1,7 @@
 from __future__ import division
 import numpy as np
 # print precision, no scientific notation, wide lines
-np.set_printoptions(precision=6, suppress=False, linewidth=140)
+# np.set_printoptions(precision=6, suppress=False, linewidth=140)
 import math
 import itertools
 import copy
@@ -15,8 +15,8 @@ class Node(object):
     def __init__(self, ID=None, coords=()):
         self.ID = ID
         self.coords = coords
-        self.DOFs = {'i': {'ux': True, 'uy': True, 'rotz': True},
-                     'j': {'ux': True, 'uy': True, 'rotz': True}}
+        # self.DOFs = {'i': {'ux': True, 'uy': True, 'rotz': True},
+        #              'j': {'ux': True, 'uy': True, 'rotz': True}}
 
     def __repr__(self):
         return 'Node(ID=%d, coords=(%.2f, %.2f)' % (self.ID, self.x, self.y)
@@ -156,20 +156,7 @@ class HermitianBeam2D(object):
 
         _dy = self.j.y - self.i.y
         _dx = self.j.x - self.i.x
-
-        # if _dy != 0:
-        #     print(self.i)
-        #     print(self.j)
-        #     print(_dx)
-        #     print(_dy)
-        #     print(math.degrees(np.arctan2(_dx, _dy)))
-        #     exit()
-
-        _ret = np.arctan2(_dy, _dx)
-        # if _ret < 0:
-        #     _ret += 2 * math.pi
-
-        return _ret
+        return np.arctan2(_dy, _dx)
 
     @property
     def Kg(self):
@@ -181,35 +168,10 @@ class HermitianBeam2D(object):
         # full stiffness matrix of the Beam element in the global coordinate system
         return self.transfer_matrix * self.Me * self.transfer_matrix.T
 
-    # @property
-    # def Kg_ul(self):
-    #     # upper left block of the element stiffness matrix in the global coordinate system
-    #     return self.Kg[:self.dof, :self.dof]
-    #
-    # @property
-    # def Kg_ur(self):
-    #     # upper right block of the element stiffness matrix in the global coordinate system
-    #     return self.Kg[:self.dof, self.dof:]
-    #
-    # @property
-    # def Kg_ll(self):
-    #     # lower left block of the element stiffness matrix in the global coordinate system
-    #     return self.Kg[self.dof:, :self.dof]
-    #
-    # @property
-    # def Kg_lr(self):
-    #     # lower right block of the element stiffness matrix in the global coordinate system
-    #     return self.Kg[self.dof:, self.dof:]
-
     @property
     def transfer_matrix(self):
         # matrix to rotate the stiffness matrix for compilation
         return transfer_matrix(alpha=self.direction, asdegree=False, dof=self.dof, blocks=2)
-
-    # def remove_DOF(self, node=None, ux=False, uy=False, rotz=False):
-    #     print(np.transpose(np.nonzero(k)))  # nonzero elements
-    #     print(np.transpose(np.where(k == 0)))  # zero elements
-    #     pass
 
 
 class Structure(object):
@@ -303,11 +265,17 @@ class Structure(object):
         for k, v in dynam.items():
             for name, number in zip(self.loadnames, range(self.dof)):  # pairs e.g. 'FX' with 0, 'FY' with 1 etc.
                 _sti = nodeID * self.dof + number  # starting index
+                # _sti = self.position_in_matrix(nodeID=nodeID, DOF=)
                 if k == name:
-                    if clear:
-                        self._load_vector[0, _sti: _sti + 1] = 0
-                    self._load_vector[0, _sti: _sti + 1] += v
-
+                    # if clear:
+                    #     print('loads cleared')
+                    #     self._load_vector[0, _sti: _sti + 1] = 0
+                    self._load_vector[0, _sti] += v
+                    print(_sti)
+                    print(_sti + 1)
+                    print('added: Node %d, dynam %s = %.2f' % (nodeID, k, v))
+        print(self._load_vector)
+        print(self.sumdof)
         # self._load_vector *= self.transfer_matrix
 
     @property
@@ -362,7 +330,7 @@ class Structure(object):
         # assert nodeID in [x.nodeID for x in self.nodes]
         assert DOF in self.dofnames
         _ret = nodeID * self.dof + self.dofnames.index(DOF)
-        print('Adding support to Node %d, DOF %s at index %d' % (nodeID, DOF, _ret))
+        # print('Adding support to Node %d, DOF %s at index %d' % (nodeID, DOF, _ret))
         return _ret
 
 
@@ -421,53 +389,32 @@ def transfer_matrix(alpha, asdegree=False, blocks=2, dof=3):
 
 if __name__ == '__main__':
 
+    # nodes
     n1 = Node(ID=1, coords=(0, 0))
     n2 = Node(ID=2, coords=(250, 0))
     n3 = Node(ID=3, coords=(400, 0))
+
+    # beams
     b1 = HermitianBeam2D(E=21000., ID=1, I=39760.78, A=706.5, i=n1, j=n2, rho=7.85e-5)
     b2 = HermitianBeam2D(E=21000., ID=2, I=39760.78, A=706.5, i=n2, j=n3, rho=7.85e-5)
 
-    _sad = {0: ['ux', 'uy', 'rotz']}  # supports as dict
-    structure = Structure(beams=[b1, b2], supports=_sad)
+    # supports
+    BCs = {0: ['ux', 'uy', 'rotz']}  # supports as dict
 
-    structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1}, clear=True)
+    # this is the structure
+    structure = Structure(beams=[b1, b2], supports=BCs)
 
-    structure.solve()
+    # adding loads
+    structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': 10000000}, clear=True)
 
-    exit()
+    print(structure.q_with_BC)
 
+    # solver :-)
+    disps = structure.solve()
 
+    # sorry, no postprocessng, however you can print the displacements
+    print(disps)
 
-    Mg = compile_global_matrix(structure.beams, mass=True, stiffness=False)
-
-    for i in range(3):
-        Mg = np.delete(Mg, 0, axis=0)
-        Mg = np.delete(Mg, 0, axis=1)
-        Mg = np.delete(Mg, -1, axis=0)
-        Mg = np.delete(Mg, -1, axis=1)
-
-    print(Mg)
-
-
-
-
-
-
-    exit()
-#
-#     print(b1.M)
-#
-#     exit()
-
-    # # structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1})
-    # # structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': -1})
-    # # structure.add_single_dynam_to_node(nodeID=2, dynam={'MZ': 1000000})
-    # structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 1000, 'FY': 1000, 'MZ': 1000000})
-    # # structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': -1000, 'FY': -1000, 'MZ': -1000000})
-    #
-    # disps = structure.solve()
-    # print(disps)
-    #
 
     # class HermitianBeam3D(object):
     #     """
