@@ -8,6 +8,9 @@ import copy
 from drawing import draw_beam
 
 
+# http://12000.org/my_notes/stiffness_matrix/stiffness_matrix_report.htm
+
+
 class Node(object):
     """
     Node objects to be used with the FE Model
