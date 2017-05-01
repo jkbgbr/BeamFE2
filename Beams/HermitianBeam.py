@@ -6,6 +6,7 @@ import math
 import itertools
 import copy
 from drawing import draw_beam
+import pprint as pp
 
 
 # http://12000.org/my_notes/stiffness_matrix/stiffness_matrix_report.htm
@@ -234,6 +235,23 @@ class Structure(object):
     #             HermitianBeam2D.from_dict(values)
     #         if added == 'BC':
     #
+
+    def displacements_as_dict(self, local=False):
+
+        uxs = self.displacement_component(component='ux')
+        uys = self.displacement_component(component='uy')
+        rotzs = self.displacement_component(component='rotz')
+
+        _ret = {}
+
+        for beam in self.beams:
+            _ret[beam.ID] = {'Node i': {'ux': uxs[beam.i.ID-1], 'uy': uys[beam.i.ID-1], 'rotz': rotzs[beam.i.ID-1]},
+                             'Node j': {'ux': uxs[beam.j.ID-1], 'uy': uys[beam.j.ID-1], 'rotz': rotzs[beam.j.ID-1]}
+                             }
+
+        return _ret
+
+
 
     def displacements_for_beams(self, local=False):
         """
@@ -513,13 +531,13 @@ if __name__ == '__main__':
     # structure = Structure()
 
     # nodes
-    n1 = Node.from_dict(adict={'ID': 1, 'coords': (0, 0)})
+    n1 = Node.from_dict(adict={'ID': 1, 'coords': (0, 0)})  # from dict
     n2 = Node.from_dict(adict={'ID': 2, 'coords': (250, 0)})
-    n3 = Node(ID=3, coords=(400, 0))
+    n3 = Node(ID=3, coords=(400, 0))  # direct
 
     # beams
-    b1 = HermitianBeam2D.from_dict(adict={'ID': 1, 'E': 210000., 'I': 39760.78, 'A': 706.5, 'rho': 7.85e-5, 'i': n1, 'j': n2})
-    b2 = HermitianBeam2D(E=21000., ID=2, I=39760.78, A=706.5, i=n2, j=n3, rho=7.85e-5)
+    b1 = HermitianBeam2D.from_dict(adict={'ID': 1, 'E': 210000., 'I': 39760.78, 'A': 706.5, 'rho': 7.85e-5, 'i': n1, 'j': n2})  # from dict
+    b2 = HermitianBeam2D(E=21000., ID=2, I=39760.78, A=706.5, i=n2, j=n3, rho=7.85e-5)  # direct
 
     # supports
     BCs = {1: ['ux', 'uy'], 3: ['uy']}  # supports as dict
@@ -529,14 +547,14 @@ if __name__ == '__main__':
     structure = Structure(beams=[b1, b2], supports=BCs)
 
     # adding loads
-    structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 10000}, clear=True)
-    structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': 1000})
+    structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 10000}, clear=True)  # clears previous loads
+    structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': 1000})  # no clearing, just adding
 
-    # solver :-)
+    # solver :-) whatever happens here is done by numpy.
     structure.solve()
 
-    # sorry, no postprocessng, however you can print the displacements
-
+    # sorry, no postprocessng, however you can only plot the displacements
+    pp.pprint(structure.displacements_as_dict())
     draw_beam.draw_structure(structure)
 
 

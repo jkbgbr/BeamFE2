@@ -51,7 +51,7 @@ def draw_structure(structure, show=True, deformed=True):
                 dys = beam.displacement_component(component='uy')
 
                 # changing the ticks on the y-axis
-                ticks = fig.get_yticks() / _scale
+                ticks = [x / _scale for x in fig.get_yticks()]
                 fig.set_yticklabels([round(x, 3) for x in ticks])
 
                 _xdata = [p.x + dx * _scale for p, dx in zip(beam.nodes, dxs)]
