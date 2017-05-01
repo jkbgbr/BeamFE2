@@ -1,10 +1,11 @@
 from __future__ import division
 import numpy as np
 # print precision, no scientific notation, wide lines
-# np.set_printoptions(precision=6, suppress=False, linewidth=140)
+np.set_printoptions(precision=6, suppress=False, linewidth=140)
 import math
 import itertools
 import copy
+from drawing import draw_beam
 
 
 class Node(object):
@@ -20,6 +21,18 @@ class Node(object):
 
     def __repr__(self):
         return 'Node(ID=%d, coords=(%.2f, %.2f)' % (self.ID, self.x, self.y)
+
+    @classmethod
+    def from_dict(cls, adict):
+        try:
+            node = Node(
+                ID=adict['ID'],
+                coords=adict['coords'],
+            )
+            assert all([hasattr(node, x) for x in adict.keys()])  # check if the dict is too long
+        except KeyError as e:  # check if the dict is too short
+            raise Exception('Missing key from dict when creating %s: %s' % (cls.__name__, e))
+        return node
 
     def set_coords(self, coords):
         self.coords = coords
@@ -41,6 +54,7 @@ class HermitianBeam2D(object):
     Non-restrained torsion only (no warping)
     
     Nodes: i, j with direction i -> j
+    Node numbering MUST start with 0 and MUST be sequential, without missing values. Renumber Ndes if necessary.
     Element coordinate system is right-handed, thumb: X, pointing finger Y, middle finger Z
     Displacements are positive when going away from the origin.
     Rotations are positive when clockwise when looking away from the origin. 
@@ -78,6 +92,24 @@ class HermitianBeam2D(object):
     def __repr__(self):
         return 'HermitianBeam2D(ID=%d, i=%r, j=%r, E=%d, I=%.2f, A=%.2f' \
                % (self.ID, self.i, self.j, self.E, self.I, self.A)
+
+    @classmethod
+    def from_dict(cls, adict):
+        try:
+            beam = HermitianBeam2D(
+                ID=adict['ID'],
+                i=adict['i'],
+                j=adict['j'],
+                E=adict['E'],
+                I=adict['I'],
+                A=adict['A'],
+                rho=adict['rho'],
+            )
+            assert all([hasattr(beam, x) for x in adict.keys()])  # check if the dict is too long
+        except KeyError as e:  # check if the dict is too short
+            raise Exception('Missing key from dict when creating %s: %s' % (cls.__name__, e))
+
+        return beam
 
     @property
     def nodes(self):
@@ -178,11 +210,26 @@ class Structure(object):
     """
     The Structure, composed of the FE Beams.
     """
-    def __init__(self, beams, supports=None):
+    def __init__(self, beams=None, supports=None):
         self.beams = beams
-        self.dof = self.beams[0].dof
         self._load_vector = None
         self.supports = supports
+    #
+    # @classmethod
+    # def from_dict(cls, adict):
+    #
+    #     _nodes = []
+    #     for added, values in adict.items():
+    #         if added == 'node':
+    #             _nodes.append(Node.from_dict(values))
+    #         if added == 'beams':
+    #             HermitianBeam2D.from_dict(values)
+    #         if added == 'BC':
+    #
+
+    @property
+    def dof(self):
+        return self.beams[0].dof
 
     @property
     def loadnames(self):
@@ -262,20 +309,20 @@ class Structure(object):
         if self._load_vector is None:
             self._load_vector = np.matrix(np.zeros(self.sumdof))
 
+        # clear all loads defined previously
+        if clear:
+            # print('loads cleared')
+            self._load_vector[0, :-1] = 0
+
         for k, v in dynam.items():
             for name, number in zip(self.loadnames, range(self.dof)):  # pairs e.g. 'FX' with 0, 'FY' with 1 etc.
-                _sti = nodeID * self.dof + number  # starting index
-                # _sti = self.position_in_matrix(nodeID=nodeID, DOF=)
+                # _sti = nodeID * self.dof + number  # starting index
                 if k == name:
-                    # if clear:
-                    #     print('loads cleared')
-                    #     self._load_vector[0, _sti: _sti + 1] = 0
+                    _sti = self.position_in_matrix(nodeID=nodeID, dynam=k)
                     self._load_vector[0, _sti] += v
-                    print(_sti)
-                    print(_sti + 1)
                     print('added: Node %d, dynam %s = %.2f' % (nodeID, k, v))
-        print(self._load_vector)
-        print(self.sumdof)
+        # print(self._load_vector)
+        # print(self.sumdof)
         # self._load_vector *= self.transfer_matrix
 
     @property
@@ -298,6 +345,15 @@ class Structure(object):
             return False
 
     @property
+    def node_numbering_is_ok(self):
+        # checks node numbering: they must be sequential, without missing values
+        if set([x.ID for x in self.nodes]) == set(range(1, len(self.nodes)+1)):
+            return True
+        else:
+            print('Node numbering is not ok')
+            return False
+
+    @property
     def stiffness_matrix_is_ok(self):
         if self.stiffness_matrix_is_nonsingular:
             return True
@@ -311,6 +367,7 @@ class Structure(object):
         :return: 
         """
         assert self.stiffness_matrix_is_ok
+        assert self.node_numbering_is_ok
         return np.linalg.inv(self.K_with_BC) * self.q_with_BC
 
     def compile_global_stiffness_matrix(self):
@@ -320,7 +377,7 @@ class Structure(object):
         """
         return compile_global_matrix(self.beams, stiffness=True, mass=False)
 
-    def position_in_matrix(self, nodeID=None, DOF=None):
+    def position_in_matrix(self, nodeID=None, DOF=None, dynam=None):
         """
         Tells the index of the given nodeID, DOF in a global K or M matrix. 
         :param nodeID: 
@@ -328,10 +385,15 @@ class Structure(object):
         :return: 
         """
         # assert nodeID in [x.nodeID for x in self.nodes]
-        assert DOF in self.dofnames
-        _ret = nodeID * self.dof + self.dofnames.index(DOF)
+        if DOF is not None:
+            assert DOF in self.dofnames
+            return (nodeID - 1) * self.dof + self.dofnames.index(DOF)
+
+        if dynam is not None:
+            assert dynam in self.loadnames
+            return (nodeID - 1) * self.dof + self.loadnames.index(dynam)
         # print('Adding support to Node %d, DOF %s at index %d' % (nodeID, DOF, _ret))
-        return _ret
+        # return _ret
 
 
 def compile_global_matrix(beams, stiffness=True, mass=False):
@@ -386,23 +448,31 @@ def transfer_matrix(alpha, asdegree=False, blocks=2, dof=3):
 
     return _empty
 
+#
+
 
 if __name__ == '__main__':
 
+    # structure = Structure()
+
     # nodes
-    n1 = Node(ID=1, coords=(0, 0))
-    n2 = Node(ID=2, coords=(250, 0))
+    n1 = Node.from_dict(adict={'ID': 1, 'coords': (0, 0)})
+    n2 = Node.from_dict(adict={'ID': 2, 'coords': (250, 0)})
     n3 = Node(ID=3, coords=(400, 0))
 
     # beams
-    b1 = HermitianBeam2D(E=21000., ID=1, I=39760.78, A=706.5, i=n1, j=n2, rho=7.85e-5)
+    b1 = HermitianBeam2D.from_dict(adict={'ID': 1, 'E': 210000., 'I': 39760.78, 'A': 706.5, 'rho': 7.85e-5, 'i': n1, 'j': n2})
     b2 = HermitianBeam2D(E=21000., ID=2, I=39760.78, A=706.5, i=n2, j=n3, rho=7.85e-5)
 
     # supports
-    BCs = {0: ['ux', 'uy', 'rotz']}  # supports as dict
+    BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
 
     # this is the structure
     structure = Structure(beams=[b1, b2], supports=BCs)
+
+    print(structure)
+
+    print(structure.K_with_BC)
 
     # adding loads
     structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': 10000000}, clear=True)
@@ -412,8 +482,12 @@ if __name__ == '__main__':
     # solver :-)
     disps = structure.solve()
 
+
+
     # sorry, no postprocessng, however you can print the displacements
     print(disps)
+
+    draw_beam.draw_structure(structure)
 
 
     # class HermitianBeam3D(object):
