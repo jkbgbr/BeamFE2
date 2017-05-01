@@ -130,65 +130,41 @@ class HermitianBeam2D(object):
     def EI(self):
         return self.E * self.I
 
-    @property
-    def Me(self):
+    def _Me(self):
         l = self.l
-        _ret = self.rho * self.A * self.l / 420 * np.matrix([
-            [140, 0, 0, 70, 0, 0],
-            [0, 156, 22*l, 0, 54, -13*l],
-            [0, 22*l, 4*l**2, 0, 13*l, -3*l**2],
-            [70, 0, 0, 140, 0, 0],
-            [0, 54, 13*l, 0, 156, -22*l],
-            [0, -13*l, -3*l**2, 0, -22*l, 4*l**2]])
+        _ret = self.rho * self.A * self.l / 420 * \
+               np.matrix([
+                   [140, 0, 0, 70, 0, 0],
+                   [0, 156, 22*l, 0, 54, -13*l],
+                   [0, 22*l, 4*l**2, 0, 13*l, -3*l**2],
+                   [70, 0, 0, 140, 0, 0],
+                   [0, 54, 13*l, 0, 156, -22*l],
+                   [0, -13*l, -3*l**2, 0, -22*l, 4*l**2]])
         return _ret
 
-
     @property
-    def ul(self):
-        # upper left block of the stiffness matrix
-        return np.matrix([
-            np.array([self.EA / self.l,     0,                                  0]),
-            np.array([0,                    12 * self.EI / (self.l ** 3),       6 * self.EI / (self.l ** 2)]),
-            np.array([0,                    6 * self.EI / (self.l ** 2),        4 * self.EI / self.l]),
-        ])
+    def Me(self):
+        return self._Me()
 
-    @property
-    def ur(self):
-        # upper right block of the stiffness matrix
+    def _Ke(self):
+        # full stiffness matrix of the beam element in the element coordinate system
         return np.matrix([
-            np.array([-self.EA / self.l,    0,                                  0]),
-            np.array([0,                    -12 * self.EI / (self.l ** 3),      6 * self.EI / (self.l ** 2)]),
-            np.array([0,                    -6 * self.EI / (self.l ** 2),        2 * self.EI / self.l]),
-        ])
-
-    @property
-    def ll(self):
-        # lower left block of the stiffness matrix
-        return np.matrix([
-            np.array([-self.EA / self.l,    0,                                  0]),
-            np.array([0,                    -12 * self.EI / (self.l ** 3),      -6 * self.EI / (self.l ** 2)]),
-            np.array([0,                    6 * self.EI / (self.l ** 2),        2 * self.EI / self.l]),
-        ])
-
-    @property
-    def lr(self):
-        # lower right block of the stiffness matrix
-        return np.matrix([
-            np.array([self.EA / self.l,     0,                                  0]),
-            np.array([0,                    12 * self.EI / (self.l ** 3),       -6 * self.EI / (self.l ** 2)]),
-            np.array([0,                    -6 * self.EI / (self.l ** 2),       4 * self.EI / self.l]),
-        ])
+            np.array([self.EA / self.l, 0, 0, -self.EA / self.l, 0, 0]),
+            np.array([0, 12 * self.EI / (self.l ** 3), 6 * self.EI / (self.l ** 2), 0, -12 * self.EI / (self.l ** 3), 6 * self.EI / (self.l ** 2)]),
+            np.array([0, 6 * self.EI / (self.l ** 2), 4 * self.EI / self.l, 0, -6 * self.EI / (self.l ** 2), 2 * self.EI / self.l]),
+            np.array([-self.EA / self.l, 0, 0, self.EA / self.l,  0, 0]),
+            np.array([0, -12 * self.EI / (self.l ** 3), -6 * self.EI / (self.l ** 2), 0, 12 * self.EI / (self.l ** 3), -6 * self.EI / (self.l ** 2)]),
+            np.array([0, 6 * self.EI / (self.l ** 2), 2 * self.EI / self.l, 0, -6 * self.EI / (self.l ** 2), 4 * self.EI / self.l]),
+            ])
 
     @property
     def Ke(self):
-        # full stiffness matrix of the beam element in the element coordinate system
-        return np.bmat([[self.ul, self.ur], [self.ll, self.lr]])
+        return self._Ke()
 
     @property
     def direction(self):
         # the direction of the beam in the global coordinate system
         # this is a crucial point for the transfer from the local to the global systems
-
         _dy = self.j.y - self.i.y
         _dx = self.j.x - self.i.x
         return np.arctan2(_dy, _dx)
