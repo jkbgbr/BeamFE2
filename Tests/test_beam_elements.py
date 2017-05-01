@@ -2,6 +2,7 @@ import unittest
 from Beams import HermitianBeam as HB
 import numpy as np
 import math
+from Tests import ATOL
 
 
 class Hermitian2D(unittest.TestCase):
@@ -29,7 +30,7 @@ class Hermitian2D(unittest.TestCase):
         # the same structure, with the last node not inline. to test rotation.
         cls.n5 = HB.Node(ID=4, coords=(300, 100))
         b4 = HB.HermitianBeam2D(E=210000., ID=3, I=833.33, A=100., i=cls.n3, j=cls.n5)
-        cls.structure_2 = HB.Structure(beams=[b1, b2, b4], supports={0: ['ux', 'uy', 'rotz']})
+        cls.structure_2 = HB.Structure(beams=[b1, b2, b4], supports={1: ['ux', 'uy', 'rotz']})
 
     def test_element_stiffness_matrix(self):
         k_asinteger = np.matrix([[1, 0, 0, -1, 0, 0],
@@ -68,9 +69,8 @@ class Hermitian2D(unittest.TestCase):
 
     def test_nodal_displacements_1(self):
         # assertion #1: single Axial force on Node 2
-        self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1}, clear=True)
+        self.structure_1.add_single_dynam_to_node(nodeID=4, dynam={'FX': 1}, clear=True)
         disps = self.structure_1.solve()
-        print(disps)
         _expected = np.matrix([[0.0],
                                [0.0],
                                [0.0],
@@ -83,7 +83,9 @@ class Hermitian2D(unittest.TestCase):
                                [1.42857143e-05],
                                [0.00000000e+00],
                                [0.00000000e+00]])
-        self.assertTrue(np.allclose(disps, _expected))
+        print(disps)
+        print(disps-_expected)
+        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
     def test_nodal_displacements_11(self):
         # assertion #1: single Axial force on Node 2, the element is rotated, so are the loads.
@@ -100,15 +102,15 @@ class Hermitian2D(unittest.TestCase):
         b1 = HB.HermitianBeam2D(E=210000., ID=1, I=833.33, A=100., i=n1, j=n2)
         b2 = HB.HermitianBeam2D(E=210000., ID=2, I=833.33, A=100., i=n2, j=n3)
         b3 = HB.HermitianBeam2D(E=210000., ID=3, I=833.33, A=100., i=n3, j=n4)
-        structure = HB.Structure(beams=[b1, b2, b3], supports={0: ['ux', 'uy', 'rotz']})
+        structure = HB.Structure(beams=[b1, b2, b3], supports={1: ['ux', 'uy', 'rotz']})
 
         # two loads instead of one as these are in the global system
-        structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': _u}, clear=True)
-        structure.add_single_dynam_to_node(nodeID=3, dynam={'FY': _u})
+        structure.add_single_dynam_to_node(nodeID=4, dynam={'FX': _u}, clear=True)
+        structure.add_single_dynam_to_node(nodeID=4, dynam={'FY': _u})
 
-        disps = structure.solve()
         # since the elements were previously rotated by 45 degrees, now we rotate the results by -45 degrees back...
         T = HB.transfer_matrix(-45, asdegree=True, blocks=len(structure.nodes))
+        disps = T * structure.solve()
         _expected = np.matrix([[0.0],
                                [0.0],
                                [0.0],
@@ -121,7 +123,11 @@ class Hermitian2D(unittest.TestCase):
                                [1.42857143e-05],
                                [0.00000000e+00],
                                [0.00000000e+00]])
-        self.assertTrue(np.allclose(T * disps, _expected))
+        print('_11')
+        print(disps)
+        print('')
+        print(disps-_expected)
+        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
     def test_nodal_displacements_12(self):
         # same as _11, but the beams are rotated 60 degree clockwise
@@ -140,15 +146,15 @@ class Hermitian2D(unittest.TestCase):
         b1 = HB.HermitianBeam2D(E=210000., ID=1, I=833.33, A=100., i=n1, j=n2)
         b2 = HB.HermitianBeam2D(E=210000., ID=2, I=833.33, A=100., i=n2, j=n3)
         b3 = HB.HermitianBeam2D(E=210000., ID=3, I=833.33, A=100., i=n3, j=n4)
-        structure = HB.Structure(beams=[b1, b2, b3], supports={0: ['ux', 'uy', 'rotz']})
+        structure = HB.Structure(beams=[b1, b2, b3], supports={1: ['ux', 'uy', 'rotz']})
 
         # two loads instead of one as these are in the global system
-        structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': _ux}, clear=True)
-        structure.add_single_dynam_to_node(nodeID=3, dynam={'FY': _uy})
-        disps = structure.solve()
+        structure.add_single_dynam_to_node(nodeID=4, dynam={'FX': _ux}, clear=True)
+        structure.add_single_dynam_to_node(nodeID=4, dynam={'FY': _uy})
 
         # since the elements were previously rotated by -60 degrees, now we rotate the results by 60 degrees back...
         T = HB.transfer_matrix(60, asdegree=True, blocks=len(structure.nodes))
+        disps = T * structure.solve()
         _expected = np.matrix([[0.0],
                                [0.0],
                                [0.0],
@@ -161,11 +167,15 @@ class Hermitian2D(unittest.TestCase):
                                [1.42857143e-05],
                                [0.00000000e+00],
                                [0.00000000e+00]])
-        self.assertTrue(np.allclose(T * disps, _expected))
+        print('_12')
+        print(disps)
+        print('')
+        print(disps-_expected)
+        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
     def test_nodal_displacements_2(self):
         # assertion #2: single shear load at Node 2
-        self.structure_1.add_single_dynam_to_node(nodeID=2, dynam={'FY': -1}, clear=True)
+        self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FY': -1}, clear=True)
         disps = self.structure_1.solve()
         _expected = np.matrix([[0.0],
                                [0.0],
@@ -179,11 +189,15 @@ class Hermitian2D(unittest.TestCase):
                                [1.42857143e-05],
                                [-2.66667733e-02],
                                [-1.14286171e-04]])
+        print('_2')
+        print(disps)
+        print('')
+        print(disps-_expected)
         self.assertTrue(np.allclose(disps, _expected))
 
     def test_nodal_displacements_3(self):
         # assertion #3: single concentrated moment at node 2
-        self.structure_1.add_single_dynam_to_node(nodeID=2, dynam={'MZ': 1000000}, clear=True)
+        self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'MZ': 1000000}, clear=True)
         disps = self.structure_1.solve()
         _expected = np.matrix([[0.0],
                                [0.0],
@@ -197,11 +211,15 @@ class Hermitian2D(unittest.TestCase):
                                [1.42857143e-05],
                                [2.28545676e+02],
                                [1.14274743e+00]])
-        self.assertTrue(np.allclose(disps, _expected))
+        print('_3')
+        print(disps)
+        print('')
+        print(disps-_expected)
+        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
     def test_nodal_displacements_4(self):
         # assertion #4: lots of loads at Node 2
-        self.structure_1.add_single_dynam_to_node(nodeID=2, dynam={'FX': 1000, 'FY': 1000, 'MZ': 1000000}, clear=True)
+        self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1000, 'FY': 1000, 'MZ': 1000000}, clear=True)
         disps = self.structure_1.solve()
         _expected = np.matrix([[0.0],
                                [0.0],
@@ -215,7 +233,11 @@ class Hermitian2D(unittest.TestCase):
                                [9.53809524e-03],
                                [2.55239116e+02],
                                [1.25714789e+00]])
-        self.assertTrue(np.allclose(disps, _expected))
+        print('_4')
+        print(disps)
+        print('')
+        print(disps-_expected)
+        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
     # todo:
     # test added supports on differet structures
@@ -224,7 +246,7 @@ class Hermitian2D(unittest.TestCase):
     # # non-inline structures
     # def test_nodal_displacements_5(self):
     #     # assertion #5: shear load on node 2
-    #     self.structure_2.add_single_dynam_to_node(nodeID=2, dynam={'FX': 0, 'FY': 1000, 'MZ': 0}, clear=True)
+    #     self.structure_2.add_single_dynam_to_node(nodeID=3, dynam={'FX': 0, 'FY': 1000, 'MZ': 0}, clear=True)
     #     disps = self.structure_2.solve()
     #     _expected = np.matrix([[6.32938743e-16],
     #                            [4.76192381e+00],
@@ -240,12 +262,12 @@ class Hermitian2D(unittest.TestCase):
     #     print(disps-_expected)
     #     exit()
     #
-    #     self.assertTrue(np.allclose(disps, _expected))
+    #     self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
     #
     # def test_nodal_displacements_6(self):
     #     # assertion #5: shear load on node 2 and node 3
-    #     self.structure_2.add_single_dynam_to_node(nodeID=2, dynam={'FX': 0, 'FY': 1000, 'MZ': 0}, clear=True)
-    #     self.structure_2.add_single_dynam_to_node(nodeID=3, dynam={'FX': 0, 'FY': 1000, 'MZ': 0})
+    #     self.structure_2.add_single_dynam_to_node(nodeID=3, dynam={'FX': 0, 'FY': 1000, 'MZ': 0}, clear=True)
+    #     self.structure_2.add_single_dynam_to_node(nodeID=4, dynam={'FX': 0, 'FY': 1000, 'MZ': 0})
     #     disps = self.structure_2.solve()
     #     _expected = np.matrix([[1.26587749e-15],
     #                            [1.23810019e+01],
@@ -256,12 +278,12 @@ class Hermitian2D(unittest.TestCase):
     #                            [3.69762351e+01],
     #                            [7.88878990e+01],
     #                            [3.83264778e-01]])
-    #     self.assertTrue(np.allclose(disps, _expected))
+    #     self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
     #
     # def test_nodal_displacements_7(self):
     #     # assertion #5: shear load on node 2 and node 3
-    #     self.structure_2.add_single_dynam_to_node(nodeID=2, dynam={'FX': 0, 'FY': 1000, 'MZ': 0}, clear=True)
-    #     self.structure_2.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1000, 'FY': 1000, 'MZ': 0})
+    #     self.structure_2.add_single_dynam_to_node(nodeID=3, dynam={'FX': 0, 'FY': 1000, 'MZ': 0}, clear=True)
+    #     self.structure_2.add_single_dynam_to_node(nodeID=4, dynam={'FX': 1000, 'FY': 1000, 'MZ': 0})
     #     disps = self.structure_2.solve()
     #     print(disps)
     #     # todo: this one fails, probably the transformation is not OK
@@ -274,4 +296,4 @@ class Hermitian2D(unittest.TestCase):
     #                            [3.69762351e+01],
     #                            [7.88878990e+01],
     #                            [3.83264778e-01]])
-    #     self.assertTrue(np.allclose(disps, _expected))
+    #     self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
