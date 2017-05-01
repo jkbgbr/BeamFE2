@@ -74,6 +74,7 @@ class HermitianBeam2D(object):
     
     """
     dof = 3  # degrees of freedom
+    dofnames = 'ux', 'uy', 'rotz'
 
     def __init__(self, ID=None, i=None, j=None, E=None, I=None, A=None, rho=None):
         """
@@ -91,11 +92,37 @@ class HermitianBeam2D(object):
         self.A = A
         self.I = I
         self.rho = rho
-        self.displacements = None
+        self.displacements = None  # displacements in the GLOBAL system
 
     def __repr__(self):
         return 'HermitianBeam2D(ID=%d, i=%r, j=%r, E=%d, I=%.2f, A=%.2f' \
                % (self.ID, self.i, self.j, self.E, self.I, self.A)
+
+    @property
+    def local_displacements(self):
+        """
+        calculates the nodal displacements in the elements local system.
+        :return: 
+        """
+        # de-rotating matrix to transfer the displacements from the global to the elements local system
+        T = transfer_matrix(-self.direction, asdegree=False, blocks=len(self.nodes))
+        return T * self.displacements
+
+    def displacement_component(self, component=None, localsystem=False):
+        """
+        Returns a list with the displacements of the component defined
+        These are the nodal displacements calculated 
+        :param localsystem: boolean telling if the results to be provided are in the global or in the local system
+        :param component: any value from the dofnames list
+        :return: 
+        """
+        assert component in self.dofnames
+        if localsystem:
+            _ret = self.local_displacements[self.dofnames.index(component)::self.dof]
+        else:
+            _ret = self.displacements[self.dofnames.index(component)::self.dof]
+        return np_matrix_tolist(_ret)
+        # return list(itertools.chain.from_iterable(_ret.tolist()))
 
     @classmethod
     def from_dict(cls, adict):
@@ -194,6 +221,7 @@ class Structure(object):
         self.beams = beams
         self._load_vector = None
         self.supports = supports
+        self.displacements = None  # global dispacements
     #
     # @classmethod
     # def from_dict(cls, adict):
@@ -206,6 +234,47 @@ class Structure(object):
     #             HermitianBeam2D.from_dict(values)
     #         if added == 'BC':
     #
+
+    def displacements_for_beams(self, local=False):
+        """
+        De-compiles the global displacement vector and assigns the results to the beams
+        :return: True, if succesful
+        """
+        uxs = self.displacement_component(component='ux')
+        uys = self.displacement_component(component='uy')
+        rotzs = self.displacement_component(component='rotz')
+
+        for beam in self.beams:
+            # displacements in the global system
+            beam.displacements = np.matrix([uxs[beam.i.ID-1], uys[beam.i.ID-1], rotzs[beam.i.ID-1],
+                                            uxs[beam.j.ID-1], uys[beam.j.ID-1], rotzs[beam.j.ID-1]]).T
+
+            # the beam displacements calculated
+            # beam.displacements = np_matrix_tolist(_displacements)
+            # beam.displacements = list(itertools.chain.from_iterable(_displacements.tolist()))
+
+        return True
+
+    def displacement_component(self, component=None):
+        """
+        Returns a list with the displacements of the component defined
+        These are the nodal displacements from the structure
+        :param component: any value from the dofnames list
+        :return: 
+        """
+        assert component in self.dofnames
+        _ret = self.displacements[self.dofnames.index(component)::self.dof]
+        return np_matrix_tolist(_ret)
+        # return list(itertools.chain.from_iterable(_ret.tolist()))
+
+    @property
+    def resulting_displacement(self):
+        _ux = self.displacement_component(component='ux')
+        _uy = self.displacement_component(component='uy')
+        return [math.sqrt(x ** 2 + y ** 2) for x, y in zip(_ux, _uy)]
+
+    def displacements_of_beam(self, beam):
+        pass
 
     @property
     def dof(self):
@@ -300,10 +369,7 @@ class Structure(object):
                 if k == name:
                     _sti = self.position_in_matrix(nodeID=nodeID, dynam=k)
                     self._load_vector[0, _sti] += v
-                    print('added: Node %d, dynam %s = %.2f' % (nodeID, k, v))
-        # print(self._load_vector)
-        # print(self.sumdof)
-        # self._load_vector *= self.transfer_matrix
+                    # print('added: Node %d, dynam %s = %.2f' % (nodeID, k, v))
 
     @property
     def stiffness_matrix_is_symmetric(self):
@@ -349,6 +415,7 @@ class Structure(object):
         assert self.stiffness_matrix_is_ok
         assert self.node_numbering_is_ok
         self.displacements = np.linalg.inv(self.K_with_BC) * self.q_with_BC
+        self.displacements_for_beams()
         return True
 
     def compile_global_stiffness_matrix(self):
@@ -429,6 +496,15 @@ def transfer_matrix(alpha, asdegree=False, blocks=2, dof=3):
 
     return _empty
 
+
+def np_matrix_tolist(mtrx):
+    """
+    casts a numpy matrix into a flat list
+    :param mtrx: 
+    :return: 
+    """
+    return list(itertools.chain.from_iterable(mtrx.tolist()))
+
 #
 
 
@@ -446,28 +522,20 @@ if __name__ == '__main__':
     b2 = HermitianBeam2D(E=21000., ID=2, I=39760.78, A=706.5, i=n2, j=n3, rho=7.85e-5)
 
     # supports
-    BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
+    BCs = {1: ['ux', 'uy'], 3: ['uy']}  # supports as dict
+    # BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
 
     # this is the structure
     structure = Structure(beams=[b1, b2], supports=BCs)
 
-    print(structure)
-
-    print(structure.K_with_BC)
-
     # adding loads
-    structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': 10000000}, clear=True)
-
-    print(structure.q_with_BC)
+    structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 10000}, clear=True)
+    structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': 1000})
 
     # solver :-)
     structure.solve()
-    disps = structure.displacements
-
-
 
     # sorry, no postprocessng, however you can print the displacements
-    print(disps)
 
     draw_beam.draw_structure(structure)
 
