@@ -13,8 +13,6 @@ def draw_structure(structure, show=True, deformed=True):
             plt.plot([p.x for p in beam.nodes], [p.y for p in beam.nodes], 'b-', linewidth=3, alpha=0.5, zorder=1)  # beams
             plt.scatter([p.x for p in beam.nodes], [p.y for p in beam.nodes], marker='s', color='r', alpha=0.5, s=50, zorder=2)  # nodes
 
-
-
         # plot supports
         # 1/scale will be the length of the bars representing the restricted translational degrees of freedom
         scale = 20
@@ -59,9 +57,6 @@ def draw_structure(structure, show=True, deformed=True):
 
                 plt.plot(_xdata, _ydata, 'k-', linewidth=1, zorder=4)  # beams
                 plt.scatter(_xdata, _ydata, marker='s', color='k', s=30, zorder=4)  # nodes
-
-                for xy in zip(_xdata, _ydata):
-                    fig.annotate('(%.3f, %.3f)' % (xy[0], xy[1] / _scale), xy=xy, textcoords='data', )
 
         if show:
             plt.axis('tight')

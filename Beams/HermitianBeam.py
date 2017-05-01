@@ -7,6 +7,7 @@ import itertools
 import copy
 from drawing import draw_beam
 import pprint as pp
+from drawing import _plotting_available, plt
 
 
 # http://12000.org/my_notes/stiffness_matrix/stiffness_matrix_report.htm
@@ -20,8 +21,6 @@ class Node(object):
     def __init__(self, ID=None, coords=()):
         self.ID = ID
         self.coords = coords
-        # self.DOFs = {'i': {'ux': True, 'uy': True, 'rotz': True},
-        #              'j': {'ux': True, 'uy': True, 'rotz': True}}
 
     def __repr__(self):
         return 'Node(ID=%d, coords=(%.2f, %.2f)' % (self.ID, self.x, self.y)
@@ -98,6 +97,26 @@ class HermitianBeam2D(object):
     def __repr__(self):
         return 'HermitianBeam2D(ID=%d, i=%r, j=%r, E=%d, I=%.2f, A=%.2f' \
                % (self.ID, self.i, self.j, self.E, self.I, self.A)
+
+    def N1(self, x):
+        L = self.l
+        x *= L
+        return (1 / (L ** 3)) * ((L ** 3) - 3 * L * (x ** 2) + 2 * (x ** 3))
+
+    def N2(self, x):
+        L = self.l
+        x *= L
+        return (1 / (L ** 2)) * ((L ** 2) * x - 2 * L * (x ** 2) + (x ** 3))
+
+    def N3(self, x):
+        L = self.l
+        x *= L
+        return (1 / (L ** 3)) * (3 * L * (x ** 2) - 2 * (x ** 3))
+
+    def N4(self, x):
+        L = self.l
+        x *= L
+        return (1 / (L ** 2)) * (-L * (x ** 2) + (x ** 3))
 
     @property
     def local_displacements(self):
@@ -223,18 +242,6 @@ class Structure(object):
         self._load_vector = None
         self.supports = supports
         self.displacements = None  # global dispacements
-    #
-    # @classmethod
-    # def from_dict(cls, adict):
-    #
-    #     _nodes = []
-    #     for added, values in adict.items():
-    #         if added == 'node':
-    #             _nodes.append(Node.from_dict(values))
-    #         if added == 'beams':
-    #             HermitianBeam2D.from_dict(values)
-    #         if added == 'BC':
-    #
 
     def displacements_as_dict(self, local=False):
 
@@ -250,7 +257,6 @@ class Structure(object):
                              }
 
         return _ret
-
 
 
     def displacements_for_beams(self, local=False):
@@ -528,34 +534,87 @@ def np_matrix_tolist(mtrx):
 
 if __name__ == '__main__':
 
-    # structure = Structure()
+    # # nodes
+    # n1 = Node.from_dict(adict={'ID': 1, 'coords': (0, 0)})  # from dict
+    # n2 = Node.from_dict(adict={'ID': 2, 'coords': (250, 0)})
+    # n3 = Node(ID=3, coords=(400, 0))  # direct
+    #
+    # # beams
+    # b1 = HermitianBeam2D.from_dict(adict={'ID': 1, 'E': 210000., 'I': 39760.78, 'A': 706.5, 'rho': 7.85e-5, 'i': n1, 'j': n2})  # from dict
+    # b2 = HermitianBeam2D(E=21000., ID=2, I=39760.78, A=706.5, i=n2, j=n3, rho=7.85e-5)  # direct
+    #
+    # # supports
+    # BCs = {1: ['ux', 'uy'], 3: ['uy']}  # supports as dict
+    # # BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
+    #
+    # # this is the structure
+    # structure = Structure(beams=[b1, b2], supports=BCs)
+    #
+    # # adding loads
+    # structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 10000}, clear=True)  # clears previous loads
+    # structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': 1000})  # no clearing, just adding
+    #
+    # # solver :-) whatever happens here is done by numpy.
+    # structure.solve()
+    #
+    # # sorry, no postprocessng, however you can only plot the displacements
+    # pp.pprint(structure.displacements_as_dict())
+    # draw_beam.draw_structure(structure)
 
+    import time
+    sta = time.time()
     # nodes
     n1 = Node.from_dict(adict={'ID': 1, 'coords': (0, 0)})  # from dict
-    n2 = Node.from_dict(adict={'ID': 2, 'coords': (250, 0)})
-    n3 = Node(ID=3, coords=(400, 0))  # direct
+    n2 = Node.from_dict(adict={'ID': 2, 'coords': (0, 1000)})
+    n3 = Node.from_dict(adict={'ID': 3, 'coords': (1000, 1000)})
+    n4 = Node(ID=4, coords=(1000, 0))  # direct
 
     # beams
     b1 = HermitianBeam2D.from_dict(adict={'ID': 1, 'E': 210000., 'I': 39760.78, 'A': 706.5, 'rho': 7.85e-5, 'i': n1, 'j': n2})  # from dict
-    b2 = HermitianBeam2D(E=21000., ID=2, I=39760.78, A=706.5, i=n2, j=n3, rho=7.85e-5)  # direct
+    b2 = HermitianBeam2D.from_dict(adict={'ID': 2, 'E': 210000., 'I': 39760.78, 'A': 706.5, 'rho': 7.85e-5, 'i': n2, 'j': n3})  # from dict
+    b3 = HermitianBeam2D.from_dict(adict={'ID': 3, 'E': 210000., 'I': 39760.78, 'A': 706.5, 'rho': 7.85e-5, 'i': n3, 'j': n4})  # from dict
 
     # supports
-    BCs = {1: ['ux', 'uy'], 3: ['uy']}  # supports as dict
+    BCs = {1: ['ux', 'uy'], 4: ['ux', 'uy']}  # supports as dict
     # BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
 
     # this is the structure
-    structure = Structure(beams=[b1, b2], supports=BCs)
+    structure = Structure(beams=[b1, b2, b3], supports=BCs)
 
     # adding loads
     structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 10000}, clear=True)  # clears previous loads
-    structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': 1000})  # no clearing, just adding
 
     # solver :-) whatever happens here is done by numpy.
     structure.solve()
 
+    _N1 = []
+    _N2 = []
+    _N3 = []
+    _N4 = []
+    for i in range(11):
+        _N1.append((i, b1.N1(x=i/10.)))
+        _N2.append((i, b1.N2(x=i/10.)))
+        _N3.append((i, b1.N3(x=i/10.)))
+        _N4.append((i, b1.N4(x=i/10.)))
+
+    for mi in [_N1, _N2, _N3, _N4]:
+        plt.plot([x[0] for x in mi], [x[1] for x in mi])
+
+    plt.show()
+
+    exit()
+
+
+
+    # plt.plot([p.x for p in beam.nodes], [p.y for p in beam.nodes], 'b-', linewidth=3, alpha=0.5, zorder=1)  # beams
+
+
     # sorry, no postprocessng, however you can only plot the displacements
     pp.pprint(structure.displacements_as_dict())
     draw_beam.draw_structure(structure)
+
+
+
 
 
     # class HermitianBeam3D(object):
