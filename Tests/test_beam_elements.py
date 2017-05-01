@@ -70,7 +70,8 @@ class Hermitian2D(unittest.TestCase):
     def test_nodal_displacements_1(self):
         # assertion #1: single Axial force on Node 2
         self.structure_1.add_single_dynam_to_node(nodeID=4, dynam={'FX': 1}, clear=True)
-        disps = self.structure_1.solve()
+        self.structure_1.solve()
+        disps = self.structure_1.displacements
         _expected = np.matrix([[0.0],
                                [0.0],
                                [0.0],
@@ -110,7 +111,9 @@ class Hermitian2D(unittest.TestCase):
 
         # since the elements were previously rotated by 45 degrees, now we rotate the results by -45 degrees back...
         T = HB.transfer_matrix(-45, asdegree=True, blocks=len(structure.nodes))
-        disps = T * structure.solve()
+        structure.solve()
+        disps = T * structure.displacements
+
         _expected = np.matrix([[0.0],
                                [0.0],
                                [0.0],
@@ -154,7 +157,8 @@ class Hermitian2D(unittest.TestCase):
 
         # since the elements were previously rotated by -60 degrees, now we rotate the results by 60 degrees back...
         T = HB.transfer_matrix(60, asdegree=True, blocks=len(structure.nodes))
-        disps = T * structure.solve()
+        structure.solve()
+        disps = T * structure.displacements
         _expected = np.matrix([[0.0],
                                [0.0],
                                [0.0],
@@ -176,7 +180,8 @@ class Hermitian2D(unittest.TestCase):
     def test_nodal_displacements_2(self):
         # assertion #2: single shear load at Node 2
         self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FY': -1}, clear=True)
-        disps = self.structure_1.solve()
+        self.structure_1.solve()
+        disps = self.structure_1.displacements
         _expected = np.matrix([[0.0],
                                [0.0],
                                [0.0],
@@ -220,7 +225,8 @@ class Hermitian2D(unittest.TestCase):
     def test_nodal_displacements_4(self):
         # assertion #4: lots of loads at Node 2
         self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1000, 'FY': 1000, 'MZ': 1000000}, clear=True)
-        disps = self.structure_1.solve()
+        self.structure_1.solve()
+        disps = self.structure_1.displacements
         _expected = np.matrix([[0.0],
                                [0.0],
                                [0.0],

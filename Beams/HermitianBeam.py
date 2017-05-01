@@ -91,6 +91,7 @@ class HermitianBeam2D(object):
         self.A = A
         self.I = I
         self.rho = rho
+        self.displacements = None
 
     def __repr__(self):
         return 'HermitianBeam2D(ID=%d, i=%r, j=%r, E=%d, I=%.2f, A=%.2f' \
@@ -347,7 +348,8 @@ class Structure(object):
         """
         assert self.stiffness_matrix_is_ok
         assert self.node_numbering_is_ok
-        return np.linalg.inv(self.K_with_BC) * self.q_with_BC
+        self.displacements = np.linalg.inv(self.K_with_BC) * self.q_with_BC
+        return True
 
     def compile_global_stiffness_matrix(self):
         """
@@ -459,7 +461,8 @@ if __name__ == '__main__':
     print(structure.q_with_BC)
 
     # solver :-)
-    disps = structure.solve()
+    structure.solve()
+    disps = structure.displacements
 
 
 
