@@ -8,7 +8,7 @@ import math
 from Tests import ATOL
 
 
-class Hermitian2D(unittest.TestCase):
+class Hermitian2D_Element(unittest.TestCase):
     """
     basic tests for the hermitian 2D beam
     """
@@ -16,10 +16,21 @@ class Hermitian2D(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.EE = 1.
-        cls.nodes = {1: HB.Node(ID=1, coords=(0, 0)), 2: HB.Node(ID=2, coords=(1, 0)), 3: HB.Node(ID=3, coords=(2, 0))}
-        cls.beam1 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.nodes[1], j=cls.nodes[2])
-        cls.beam2 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.nodes[2], j=cls.nodes[3])
+        cls.nodeset_1 = {1: HB.Node(ID=1, coords=(0, 0)), 2: HB.Node(ID=2, coords=(1, 0)), 3: HB.Node(ID=3, coords=(2, 0))}
+        cls.beam1 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.nodeset_1[1], j=cls.nodeset_1[2])
+        cls.beam2 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.nodeset_1[2], j=cls.nodeset_1[3])
         cls.beam_as_structure = HB.Structure(beams=[cls.beam1], supports={1: ['ux', 'uy', 'rotz']})
+
+        # the same beam but inclined by atan(0,5) ~= 26.56505 degrees degrees CCW.
+        # all tests are performed for these as well, results should reflect only the rotation
+        cls.rotation_angle = math.atan(0.5)
+        cls._r = 1 / math.sqrt(1.25)  # the lenght of the elements is modified to keep the beam length
+        cls.nodeset_2 = {1: HB.Node(ID=1, coords=(0, 0)),
+                         2: HB.Node(ID=2, coords=(1. * cls._r, 0.5 * cls._r)),
+                         3: HB.Node(ID=3, coords=(2. * cls._r, 1. * cls._r))}
+        cls.beam3 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.nodeset_2[1], j=cls.nodeset_2[2])
+        cls.beam4 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.nodeset_2[2], j=cls.nodeset_2[3])
+        cls.beam_as_structure_2 = HB.Structure(beams=[cls.beam3], supports={1: ['ux', 'uy', 'rotz']})
 
     def test_element_stiffness_matrix(self):
         k_asinteger = np.matrix([[1, 0, 0, -1, 0, 0],
@@ -101,6 +112,104 @@ class Hermitian2D(unittest.TestCase):
                                [(M * L ** 2) / (2 * EI)],  # vertical displacement at the end
                                [(M * L) / EI]])  # rotation at the end
         self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
+
+    # tests on the rotated structure
+
+    def test_element_stiffness_matrix_rotated(self):
+        k_asinteger = np.matrix([[1, 0, 0, -1, 0, 0],
+                                 [0, 12, 6, 0, -12, 6],
+                                 [0, 6, 4, 0, -6, 2],
+                                 [-1, 0, 0, 1, 0, 0],
+                                 [0, -12, -6, 0, 12, -6],
+                                 [0, 6, 2, 0, -6, 4]])
+
+        _tm = HB.transfer_matrix(alpha=self.rotation_angle, asdegree=False, blocks=2, dof=3)
+        k_asinteger = _tm * k_asinteger * _tm.T
+        self.assertTrue(np.allclose(k_asinteger, self.beam3.Kg))
+        self.assertTrue(np.allclose(self.beam3.Kg, self.beam4.Kg))
+
+    def test_element_stiffness_matrix_symmetry_rotated(self):
+        # tests if the matrix is symmetric
+        diff = self.beam3.Kg.transpose() - self.beam3.Kg
+        self.assertTrue(np.allclose(diff, np.zeros(6)))
+
+    def test_element_stiffness_matrix_positive_definite_rotated(self):
+        # tests if the matrix is positive definite. The element stiffness matrix without proper constraints is not.
+        self.assertRaises(np.linalg.linalg.LinAlgError, np.linalg.cholesky, self.beam3.Kg)
+
+    def test_FX_load_rotated(self):
+        self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'FX': 1., 'FY': 0.5}, clear=True)
+        self.beam_as_structure_2.solve()
+        # checking the global values
+        disps = self.beam_as_structure_2.displacements
+        _expected = np.matrix([[0.0],
+                               [0.0],
+                               [0.0],
+                               [1.0],
+                               [0.5],
+                               [0.0]])
+        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
+
+        # checking the local values
+        disps = self.beam_as_structure_2.beams[0].local_displacements
+        _expected = np.matrix([[0.0],
+                               [0.0],
+                               [0.0],
+                               [1.0 / self._r],
+                               [0.0],
+                               [0.0]])
+        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
+
+
+
+    # def test_FY_load_rotated(self):
+    #     # tests a clamped beam for vertical load at the tip
+    #     import random
+    #     # P = random.randrange(1, 200)
+    #     P = 1
+    #     L = self.beam3.l
+    #     EI = self.beam3.EI
+    #     _t = HB.transfer_matrix(alpha=-self.rotation_angle, asdegree=False, blocks=1, dof=2)
+    #     _load = _t * np.matrix([[0, P]]).T
+    #     self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'FX': _load[1], 'FY': _load[0]}, clear=True)
+    #     self.beam_as_structure_2.solve()
+    #     # disps = self.beam_as_structure_2.beams[0].local_displacements
+    #     disps = self.beam_as_structure_2.beams[0].displacements
+    #     print(disps)
+    #     _expected = np.matrix([[0.0],
+    #                            [0.0],
+    #                            [0.0],
+    #                            [0.0],
+    #                            [(P * L ** 3) / (3 * EI)],  # vertical displacement at the end
+    #                            [(P * L ** 2) / (2 * EI)]])  # rotation at the end
+    #     print(_expected)
+    #     # self.beam_as_structure_2.draw()
+    #     exit()
+    #     self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
+
+    def test_MZ_load_rotated(self):
+        # tests a clamped beam for bending moment at the tip
+        import random
+        M = random.randrange(1, 200)
+        L = self.beam3.l
+        EI = self.beam3.EI
+        self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'MZ': M}, clear=True)
+        self.beam_as_structure_2.solve()
+        disps = self.beam_as_structure_2.displacements
+        disps = self.beam_as_structure_2.beams[0].local_displacements
+        print(disps)
+        _expected = np.matrix([[0.0],
+                               [0.0],
+                               [0.0],
+                               [0.0],
+                               [(M * L ** 2) / (2 * EI)],  # vertical displacement at the end
+                               [(M * L) / EI]])  # rotation at the end
+        print(_expected)
+        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
+
+
+
+
 
 
 class Hermitian2D_Structure(unittest.TestCase):
@@ -364,3 +473,4 @@ class Hermitian2D_Structure(unittest.TestCase):
                                [-5.222093e-02],
                                [-2.689777e-04]])
         self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
+
