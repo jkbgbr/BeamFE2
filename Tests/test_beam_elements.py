@@ -314,10 +314,6 @@ class Hermitian2D_Structure(unittest.TestCase):
 
         self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
-    # todo:
-    # test added supports on differet structures
-
-
     # non-inline structures
     def test_nodal_displacements_6(self):
         # assertion #5: shear load on node 3
