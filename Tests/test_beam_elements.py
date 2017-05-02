@@ -1,5 +1,8 @@
 import unittest
 from Beams import HermitianBeam as HB
+from Beams import Sections as sections
+
+from drawing import draw_beam
 import numpy as np
 import math
 from Tests import ATOL
@@ -22,9 +25,11 @@ class Hermitian2D(unittest.TestCase):
         cls.n2 = HB.Node(ID=2, coords=(100, 0))
         cls.n3 = HB.Node(ID=3, coords=(200, 0))
         cls.n4 = HB.Node(ID=4, coords=(300, 0))
-        b1 = HB.HermitianBeam2D(E=210000., ID=1, I=833.33, A=100., i=cls.n1, j=cls.n2)
-        b2 = HB.HermitianBeam2D(E=210000., ID=2, I=833.33, A=100., i=cls.n2, j=cls.n3)
-        b3 = HB.HermitianBeam2D(E=210000., ID=3, I=833.33, A=100., i=cls.n3, j=cls.n4)
+
+        sect = sections.Recangle(a=10, b=10)
+        b1 = HB.HermitianBeam2D(E=210000., ID=1, crosssection=sect, i=cls.n1, j=cls.n2)
+        b2 = HB.HermitianBeam2D(E=210000., ID=2, crosssection=sect, i=cls.n2, j=cls.n3)
+        b3 = HB.HermitianBeam2D(E=210000., ID=3, crosssection=sect, i=cls.n3, j=cls.n4)
         cls.structure_1 = HB.Structure(beams=[b1, b2, b3], supports={1: ['ux', 'uy', 'rotz']})
 
         # the same structure, with the last node not inline. to test rotation.
@@ -84,8 +89,6 @@ class Hermitian2D(unittest.TestCase):
                                [1.42857143e-05],
                                [0.00000000e+00],
                                [0.00000000e+00]])
-        print(disps)
-        print(disps-_expected)
         self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
     def test_nodal_displacements_11(self):
@@ -179,7 +182,7 @@ class Hermitian2D(unittest.TestCase):
 
     def test_nodal_displacements_2(self):
         # assertion #2: single shear load at Node 2
-        self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FY': -1}, clear=True)
+        self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FY': 1}, clear=True)
         self.structure_1.solve()
         disps = self.structure_1.displacements
         _expected = np.matrix([[0.0],
@@ -197,7 +200,10 @@ class Hermitian2D(unittest.TestCase):
         print('_2')
         print(disps)
         print('')
+        print(_expected)
+        print('')
         print(disps-_expected)
+        draw_beam.draw_structure(self.structure_1)
         self.assertTrue(np.allclose(disps, _expected))
 
     def test_nodal_displacements_3(self):
