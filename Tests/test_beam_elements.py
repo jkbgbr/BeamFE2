@@ -253,26 +253,21 @@ class Hermitian2D_Structure(unittest.TestCase):
 
     def test_nodal_displacements_3(self):
         # assertion #3: single concentrated moment at node 3
-        self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'MZ': 1200000}, clear=True)
-        disps = self.structure_1.solve()
-        _expected = np.matrix([[0.0],
-                               [0.0],
-                               [0.0],
-                               [4.76190476e-06],
-                               [2.85667809e+01],
-                               [5.71345143e-01],
-                               [9.52380952e-06],
-                               [1.14270933e+02],
-                               [1.14274743e+00],
-                               [1.42857143e-05],
-                               [2.28545676e+02],
-                               [1.14274743e+00]])
-        # print(self.structure_1.draw())
-        # print('_3')
-        # print(disps)
-        # print('')
-        # print(disps-_expected)
-
+        self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'MZ': 1000000}, clear=True)
+        self.structure_1.solve()
+        disps = self.structure_1.displacements
+        _expected = np.matrix([[0.000000e+00],
+                               [-1.040834e-61],
+                               [1.000000e-45],
+                               [0.000000e+00],
+                               [2.857143e+01],
+                               [5.714286e-01],
+                               [0.000000e+00],
+                               [1.142857e+02],
+                               [1.142857e+00],
+                               [0.000000e+00],
+                               [2.285714e+02],
+                               [1.142857e+00]])
         self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
     def test_nodal_displacements_4(self):
@@ -351,7 +346,6 @@ class Hermitian2D_Structure(unittest.TestCase):
                                [-1.257048e+02],
                                [2.552381e+02],
                                [1.257143e+00]])
-        self.structure_2.draw()
         self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
     def test_nodal_displacements_8(self):
