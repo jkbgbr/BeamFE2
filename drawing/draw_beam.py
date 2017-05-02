@@ -33,7 +33,7 @@ def draw_structure(structure, show=True, deformed=True):
         # plot loads
         for lindex, load in enumerate(HB.np_matrix_tolist(structure.q)):
             if load != 0:
-                _node, component = structure.node_dof_from_position(position=lindex)
+                _node, component = structure.nodenr_dof_from_position(position=lindex)
                 mp = structure.node_by_ID(id=_node).coords
                 ax = plt.gca()
                 if component == 'FX':
