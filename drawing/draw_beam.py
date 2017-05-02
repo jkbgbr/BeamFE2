@@ -38,12 +38,12 @@ def draw_structure(structure, show=True, deformed=True):
                 ax = plt.gca()
                 if component == 'FX':
                     _norm = (load * supportsize / abs(load), 0,)
-                if component == 'FY':
+                elif component == 'FY':
                     _norm = (0, load * supportsize / abs(load))
-                if component == 'MZ':
-                    pass
-                ax.arrow(mp[0], mp[1], _norm[0], _norm[1], head_width=2*supportsize, head_length=2*supportsize, fc='k', ec='k')
-
+                else:
+                    _norm = False
+                if _norm:
+                    ax.arrow(mp[0], mp[1], _norm[0], _norm[1], head_width=supportsize, head_length=supportsize, fc='k', ec='k')
 
         # plot the deformed shape
         if deformed:
@@ -75,3 +75,8 @@ def draw_structure(structure, show=True, deformed=True):
             plt.axis('tight')
             plt.axis('equal')
             plt.show()
+
+        return True
+
+    else:
+        return False

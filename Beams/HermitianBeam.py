@@ -1,7 +1,7 @@
 from __future__ import division
 import numpy as np
 # print precision, no scientific notation, wide lines
-np.set_printoptions(precision=6, suppress=False, linewidth=140)
+np.set_printoptions(precision=6, suppress=False, linewidth=250)
 import math
 import itertools
 import copy
@@ -288,6 +288,8 @@ class Structure(object):
             # beam.displacements = np_matrix_tolist(_displacements)
             # beam.displacements = list(itertools.chain.from_iterable(_displacements.tolist()))
 
+
+
         return True
 
     def displacement_component(self, component=None):
@@ -367,7 +369,7 @@ class Structure(object):
         for k, v in self.supports.items():
             for dof in v:
                 _pos = self.position_in_matrix(nodeID=k, DOF=dof)
-                _K[_pos, _pos] += 10e20
+                _K[_pos, _pos] += 10e50
         return _K
 
     @property
