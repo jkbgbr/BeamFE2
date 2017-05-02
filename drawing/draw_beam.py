@@ -70,7 +70,7 @@ def draw_structure(structure, show=True, deformed=True):
                 # plotting, if there is a norm
                 ax = plt.gca()
                 if _norm:
-                    ax.arrow(mp[0], mp[1], _norm[0], _norm[1], head_width=supportsize, head_length=supportsize, fc='k', ec='k')
+                    ax.arrow(mp[0], mp[1], _norm[0], _norm[1], head_width=supportsize/20., head_length=supportsize/20., fc='k', ec='k')
 
         if show:
             plt.axis('tight')
