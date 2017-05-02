@@ -108,56 +108,109 @@ class HermitianBeam2D(object):
         return 'HermitianBeam2D(ID=%d, i=%r, j=%r, E=%d, I=%.2f, A=%.2f' \
                % (self.ID, self.i, self.j, self.E, self.I, self.A)
 
-    def N1(self, x):
-        L = self.l
+    # shape functions. the input argument x is the "running parameter", a value normalized with the beam length
+    def N1(self, x, L=1.):
+        # shape function for axial displacements, node 'i'
         x *= L
-        return (1 / (L ** 3)) * ((L ** 3) - 3 * L * (x ** 2) + 2 * (x ** 3))
+        return x / L
 
-    def N2(self, x):
-        L = self.l
+    def N2(self, x, L=1.):
+        # shape function for shear displacements, node 'i'
         x *= L
-        return (1 / (L ** 2)) * ((L ** 2) * x - 2 * L * (x ** 2) + (x ** 3))
+        return 1 - (3 * (x ** 2) / (L ** 2)) + (2 * (x ** 3) / (L ** 3))
 
-    def N3(self, x):
-        L = self.l
+    def N3(self, x, L=1.):
+        # shape function for bending, node 'i'
         x *= L
-        return (1 / (L ** 3)) * (3 * L * (x ** 2) - 2 * (x ** 3))
+        return x - (2 * (x ** 2) / L) + (x ** 3) / (L ** 2)
 
-    def N4(self, x):
-        L = self.l
+    def N4(self, x, L=1.):
+        # shape function for axial displacements, node 'j'
         x *= L
-        return (1 / (L ** 2)) * (-L * (x ** 2) + (x ** 3))
+        return 1 - x / L
+        # return -1 * self.N1(x, L=L) + 1
 
-    def remove_DOF(self, node=None, dof=None):
+    def N5(self, x, L=1.):
+        # shape function for shear displacements, node 'j'
+        x *= L
+        return (3 * (x ** 2) / (L ** 2)) - (2 * (x ** 3) / (L ** 3))
+        # return -1 * self.N2(x, L=L) + 1
+
+    def N6(self, x, L=1.):
+        # shape function for bending, node 'j'
+        x *= L
+        return - (x ** 2) / L + (x ** 3) / (L ** 2)
+
+    def N(self, x, L=1.):
+        # the N matrix, assembled. 2 x 6 matrix, multiplied with self.local_displacements yields the deflections
+        # for the internal points as a tuple with ux, uy values in the local system.
+        return np.matrix([[self.N1(x=x, L=L), 0,                    0,
+                           self.N4(x=x, L=L),  0,                  0],
+                          [0,                 self.N2(x=x, L=L),    self.N3(x=x, L=L),
+                           0,                  self.N5(x=x, L=L),  self.N6(x=x, L=L)]])
+
+    def deflected_shape(self, local=True, scale=1.):
         """
-        Releases a DOF at node i or j.
-        This will be used to modify the stiffness matrix stored in _Ke before providing it for calculation
-        :param node: 
-        :param dof: 
+        The deflected shape of the beam. based on the local_displacements, results are in the local coordinate system.
+        (ux, uy) = N * q
+        if local = False, the values are transferred in the global coordinate system
         :return: 
         """
-        assert node in ['i', 'j']
-        assert dof in self.dofnames
-        try:
-            self._end_DOFs[node].remove(dof)
-        except ValueError:
-            raise Exception('DOF already removed.')
+        _ip = self.number_internal_points
+        _deflected_shape = []
 
-    def restore_DOFs(self):
-        self._end_DOFs = {'i': list(copy.deepcopy(self.dofnames)), 'j': list(copy.deepcopy(self.dofnames))}
+        _t = transfer_matrix(-self.direction, asdegree=False, blocks=1, dof=2)  # 2x2 transform matrix
 
-    def add_DOF(self, node=None, dof=None):
-        """
-        Adds a DOF at node i or j.
-        e.g. if this was removed previously
-        :param node: 
-        :param dof: 
-        :return: 
-        """
-        assert node in ['i', 'j']
-        assert dof in self.dofnames
-        if dof not in self._end_DOFs[node]:
-            self._end_DOFs[node].append(dof)
+        for i in range(_ip + 1):
+            _val = np_matrix_tolist(self.N(x=i / _ip, L=self.l) * self.local_displacements)  # displacements in the local system
+            _val = [x * scale for x in _val]
+            if not local:
+                _val = ((i / _ip) * self.l + _val[0], _val[1])  # the deflected shape in the local coordinate system
+                # print(_val)
+                _val *= _t  # the deflected shape rotated
+                _val = np_matrix_tolist(_val)
+                # print('rotated')
+                # print(_val)
+                _val = (_val[0] + self.i.x, _val[1] + self.i.y)
+            _deflected_shape.append(_val)
+            # _deflected_shape.append((self.l * i / _ip, np_matrix_tolist(self.N(x=i / _ip, L=self.l) * self.local_displacements)))
+
+        return _deflected_shape
+
+    def nodal_reactions(self):
+        """ reactions in the local coordinate system of the beam """
+        return self.Ke * self.local_displacements
+
+    # def remove_DOF(self, node=None, dof=None):
+    #     """
+    #     Releases a DOF at node i or j.
+    #     This will be used to modify the stiffness matrix stored in _Ke before providing it for calculation
+    #     :param node:
+    #     :param dof:
+    #     :return:
+    #     """
+    #     assert node in ['i', 'j']
+    #     assert dof in self.dofnames
+    #     try:
+    #         self._end_DOFs[node].remove(dof)
+    #     except ValueError:
+    #         raise Exception('DOF already removed.')
+    #
+    # def restore_DOFs(self):
+    #     self._end_DOFs = {'i': list(copy.deepcopy(self.dofnames)), 'j': list(copy.deepcopy(self.dofnames))}
+    #
+    # def add_DOF(self, node=None, dof=None):
+    #     """
+    #     Adds a DOF at node i or j.
+    #     e.g. if this was removed previously
+    #     :param node:
+    #     :param dof:
+    #     :return:
+    #     """
+    #     assert node in ['i', 'j']
+    #     assert dof in self.dofnames
+    #     if dof not in self._end_DOFs[node]:
+    #         self._end_DOFs[node].append(dof)
 
     @property
     def local_displacements(self):
@@ -246,15 +299,15 @@ class HermitianBeam2D(object):
             np.array([0, 6 * self.EI / (self.l ** 2), 2 * self.EI / self.l, 0, -6 * self.EI / (self.l ** 2), 4 * self.EI / self.l]),
             ])
 
-        _sti = 0
-        for node in ['i', 'j']:
-            if node == 'j':
-                _sti += self.dof
-            _toremove = [x for x in self.dofnames if x not in self._end_DOFs[node]]
-            for _dof in _toremove:
-                _ret[_sti + self.dofnames.index(_dof), :] = 0
-                _ret[:, _sti + self.dofnames.index(_dof)] = 0
-                print('removed: node %s, DOF %s' % (node, _dof))
+        # _sti = 0
+        # for node in ['i', 'j']:
+        #     if node == 'j':
+        #         _sti += self.dof
+        #     _toremove = [x for x in self.dofnames if x not in self._end_DOFs[node]]
+        #     for _dof in _toremove:
+        #         _ret[_sti + self.dofnames.index(_dof), :] = 0
+        #         _ret[:, _sti + self.dofnames.index(_dof)] = 0
+        #         print('removed: nodeID %s, DOF %s' % (self.i.ID, _dof))
         return _ret
 
     @property
@@ -310,8 +363,8 @@ class Structure(object):
 
         return _ret
 
-    def draw(self):
-        draw_beam.draw_structure(self)
+    def draw(self, show=True):
+        draw_beam.draw_structure(self, show=show)
 
     def displacements_for_beams(self, local=False):
         """
@@ -407,10 +460,25 @@ class Structure(object):
     def K_with_BC(self):
         # copy of the the stiffness matrix with the boundary conditions taken into account
         _K = copy.deepcopy(self.K)
-        for k, v in self.supports.items():
-            for dof in v:
+        for k, v in self.supports.items():  # k is the nodeID that has support
+            for dof in v:  # dof to be fixed: 'ux', 'rotz' etc.
                 _pos = self.position_in_matrix(nodeID=k, DOF=dof)
-                _K[_pos, _pos] += 10e50
+                # check, if the DOF has been released previously
+                _add_support = True  # flag to know if the support gets the additional large term
+
+                # for beam in self.beams:  # check all beams
+                #     if any([x.ID == k for x in beam.nodes]):  # if their node has supports defined. if yes
+                #         _sti = 0
+                #         for node in ['i', 'j']:
+                #             if node == 'j':
+                #                 _sti += beam.dof
+                #             _toremove = [x for x in beam.dofnames if x not in beam._end_DOFs[node]]  # the DOF that was released
+                #             if dof in _toremove:
+                #                 _add_support = False
+
+                if _add_support:
+                    _K[_pos, _pos] += 10e20
+                    # print('added support: nodeID %d, DOF %s' % (k, dof))
         return _K
 
     @property
@@ -643,60 +711,35 @@ if __name__ == '__main__':
     # nodes
     n1 = Node.from_dict(adict={'ID': 1, 'coords': (0, 0)})  # from dict
     n2 = Node.from_dict(adict={'ID': 2, 'coords': (0, 1000)})
-    n3 = Node.from_dict(adict={'ID': 3, 'coords': (1000, 1000)})
-    n4 = Node(ID=4, coords=(1000, 0))  # direct
+    n3 = Node.from_dict(adict={'ID': 3, 'coords': (0, 2000)})
+    n4 = Node.from_dict(adict={'ID': 4, 'coords': (2000, 2000)})
+    n5 = Node.from_dict(adict={'ID': 5, 'coords': (2000, 1000)})
+    n6 = Node(ID=6, coords=(2000, 0))  # direct
 
     # beams
-    section = sections.Circle(r=15)
-    b1 = HermitianBeam2D.from_dict(adict={'ID': 1, 'E': 210000., 'I': section.I['x'], 'A': section.A, 'rho': 7.85e-5, 'i': n1, 'j': n2})  # from dict
-    b2 = HermitianBeam2D.from_dict(adict={'ID': 2, 'E': 210000., 'I': section.I['x'], 'A': section.A, 'rho': 7.85e-5, 'i': n2, 'j': n3})  # from dict
-    b3 = HermitianBeam2D.from_dict(adict={'ID': 3, 'E': 210000., 'I': section.I['x'], 'A': section.A, 'rho': 7.85e-5, 'i': n3, 'j': n4})  # from dict
+    section_column = sections.Circle(r=25)
+    section_beam = sections.Circle(r=15)
+    b1 = HermitianBeam2D.from_dict(adict={'ID': 1, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n1, 'j': n2})  # from dict
+    b2 = HermitianBeam2D.from_dict(adict={'ID': 2, 'E': 210000., 'I': section_beam.I['x'], 'A': section_beam.A, 'rho': 7.85e-5, 'i': n2, 'j': n3})  # from dict
+    b3 = HermitianBeam2D.from_dict(adict={'ID': 3, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n3, 'j': n4})  # from dict
+    b4 = HermitianBeam2D.from_dict(adict={'ID': 4, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n4, 'j': n5})  # from dict
+    b5 = HermitianBeam2D.from_dict(adict={'ID': 5, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n5, 'j': n6})  # from dict
+    b6 = HermitianBeam2D.from_dict(adict={'ID': 6, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n2, 'j': n5})  # from dict
 
     # supports
-    BCs = {1: ['ux', 'uy'], 4: ['ux', 'uy']}  # supports as dict
+    BCs = {1: ['ux', 'uy', 'rotz'], 6: ['ux', 'uy', 'rotz']}  # supports as dict
     # BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
 
     # this is the structure
-    structure = Structure(beams=[b1, b2, b3], supports=BCs)
+    structure = Structure(beams=[b1, b2, b3, b4, b5, b6], supports=BCs)
 
     # adding loads
     structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 10000}, clear=True)  # clears previous loads
-    structure.add_single_dynam_to_node(nodeID=3, dynam={'FY': -10000})
+    structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': 20000})
 
     # solver :-) whatever happens here is done by numpy.
     structure.solve()
-
-
-
-    # _N1 = []
-    # _N2 = []
-    # _N3 = []
-    # _N4 = []
-    # _ip = structure.beams[0].number_internal_points
-    # for i in range(_ip+1):
-    #     _N1.append((i, b1.N1(x=i/_ip)))
-    #     _N2.append((i, b1.N2(x=i/_ip) / b1.l))
-    #     _N3.append((i, b1.N3(x=i/_ip)))
-    #     _N4.append((i, b1.N4(x=i/_ip) / b1.l))
-    #
-    # for mi in [_N1, _N2, _N3, _N4]:
-    #     plt.plot([x[0] for x in mi], [x[1] for x in mi])
-    #
-    # plt.show()
-    #
-    # exit()
-
-
-
-    # plt.plot([p.x for p in beam.nodes], [p.y for p in beam.nodes], 'b-', linewidth=3, alpha=0.5, zorder=1)  # beams
-
-
-    # sorry, no postprocessng, however you can only plot the displacements
-    pp.pprint(structure.displacements_as_dict())
-    draw_beam.draw_structure(structure)
-
-
-
+    structure.draw()
 
 
     # class HermitianBeam3D(object):
