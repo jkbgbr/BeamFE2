@@ -6,6 +6,7 @@ import math
 import itertools
 import copy
 from drawing import draw_beam
+from Beams import Sections as sections
 import pprint as pp
 from drawing import _plotting_available, plt
 
@@ -75,9 +76,11 @@ class HermitianBeam2D(object):
     """
     dof = 3  # degrees of freedom
     dofnames = 'ux', 'uy', 'rotz'
+    number_internal_points = 20
 
-    def __init__(self, ID=None, i=None, j=None, E=None, I=None, A=None, rho=None):
+    def __init__(self, ID=None, i=None, j=None, E=None, crosssection=None, I=None, A=None, rho=None):
         """
+        :type crosssection: object
         :param ID: ID of the beam
         :param i: Node i, a Node instance
         :param j: Node j, a Node instance 
@@ -85,12 +88,18 @@ class HermitianBeam2D(object):
         :param I: Second moment of inertia of the cross-section
         :param A: cross-sectional area
         """
+
         self.ID = ID
         self.E = E
         self.i = i
         self.j = j
-        self.A = A
-        self.I = I
+        if crosssection is not None:
+            self.A = crosssection.A
+            self.I = crosssection.I['x']
+        else:
+            self.A = A
+            self.I = I
+
         self.rho = rho
         self.displacements = None  # displacements in the GLOBAL system
 
@@ -258,6 +267,8 @@ class Structure(object):
 
         return _ret
 
+    def draw(self):
+        draw_beam.draw_structure(self)
 
     def displacements_for_beams(self, local=False):
         """
@@ -299,6 +310,12 @@ class Structure(object):
 
     def displacements_of_beam(self, beam):
         pass
+
+    def node_by_ID(self, id=None):
+        # return the Node object that has the ID
+        _ret = [x for x in self.nodes if x.ID == id]
+        assert len(_ret) == 1
+        return _ret[0]
 
     @property
     def dof(self):
@@ -449,6 +466,15 @@ class Structure(object):
         """
         return compile_global_matrix(self.beams, stiffness=True, mass=False)
 
+    def nodenr_dof_from_position(self, position=None):
+        """
+        Tells the node number, DOF from the position provided.
+        :param position: 
+        :return: 
+        """
+        _nodeID, DOFnr = divmod(position, self.dof)
+        return _nodeID+1, self.loadnames[DOFnr]
+
     def position_in_matrix(self, nodeID=None, DOF=None, dynam=None):
         """
         Tells the index of the given nodeID, DOF in a global K or M matrix. 
@@ -570,9 +596,10 @@ if __name__ == '__main__':
     n4 = Node(ID=4, coords=(1000, 0))  # direct
 
     # beams
-    b1 = HermitianBeam2D.from_dict(adict={'ID': 1, 'E': 210000., 'I': 39760.78, 'A': 706.5, 'rho': 7.85e-5, 'i': n1, 'j': n2})  # from dict
-    b2 = HermitianBeam2D.from_dict(adict={'ID': 2, 'E': 210000., 'I': 39760.78, 'A': 706.5, 'rho': 7.85e-5, 'i': n2, 'j': n3})  # from dict
-    b3 = HermitianBeam2D.from_dict(adict={'ID': 3, 'E': 210000., 'I': 39760.78, 'A': 706.5, 'rho': 7.85e-5, 'i': n3, 'j': n4})  # from dict
+    section = sections.Circle(r=15)
+    b1 = HermitianBeam2D.from_dict(adict={'ID': 1, 'E': 210000., 'I': section.I['x'], 'A': section.A, 'rho': 7.85e-5, 'i': n1, 'j': n2})  # from dict
+    b2 = HermitianBeam2D.from_dict(adict={'ID': 2, 'E': 210000., 'I': section.I['x'], 'A': section.A, 'rho': 7.85e-5, 'i': n2, 'j': n3})  # from dict
+    b3 = HermitianBeam2D.from_dict(adict={'ID': 3, 'E': 210000., 'I': section.I['x'], 'A': section.A, 'rho': 7.85e-5, 'i': n3, 'j': n4})  # from dict
 
     # supports
     BCs = {1: ['ux', 'uy'], 4: ['ux', 'uy']}  # supports as dict
@@ -583,26 +610,30 @@ if __name__ == '__main__':
 
     # adding loads
     structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 10000}, clear=True)  # clears previous loads
+    structure.add_single_dynam_to_node(nodeID=3, dynam={'FY': -10000})
 
     # solver :-) whatever happens here is done by numpy.
     structure.solve()
 
-    _N1 = []
-    _N2 = []
-    _N3 = []
-    _N4 = []
-    for i in range(11):
-        _N1.append((i, b1.N1(x=i/10.)))
-        _N2.append((i, b1.N2(x=i/10.)))
-        _N3.append((i, b1.N3(x=i/10.)))
-        _N4.append((i, b1.N4(x=i/10.)))
 
-    for mi in [_N1, _N2, _N3, _N4]:
-        plt.plot([x[0] for x in mi], [x[1] for x in mi])
 
-    plt.show()
-
-    exit()
+    # _N1 = []
+    # _N2 = []
+    # _N3 = []
+    # _N4 = []
+    # _ip = structure.beams[0].number_internal_points
+    # for i in range(_ip+1):
+    #     _N1.append((i, b1.N1(x=i/_ip)))
+    #     _N2.append((i, b1.N2(x=i/_ip) / b1.l))
+    #     _N3.append((i, b1.N3(x=i/_ip)))
+    #     _N4.append((i, b1.N4(x=i/_ip) / b1.l))
+    #
+    # for mi in [_N1, _N2, _N3, _N4]:
+    #     plt.plot([x[0] for x in mi], [x[1] for x in mi])
+    #
+    # plt.show()
+    #
+    # exit()
 
 
 
