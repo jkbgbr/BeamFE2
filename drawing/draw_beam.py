@@ -9,8 +9,8 @@ def draw_structure(structure, show=True, deformed=True):
     if _plotting_available:
         for beam in structure.beams:
             # line width is in pixel
-            plt.plot([p.x for p in beam.nodes], [p.y for p in beam.nodes], 'b-', linewidth=3, alpha=0.5, zorder=1)  # beams
-            plt.scatter([p.x for p in beam.nodes], [p.y for p in beam.nodes], marker='s', color='r', alpha=0.5, s=50, zorder=2)  # nodes
+            plt.plot([p.x for p in beam.nodes], [p.y for p in beam.nodes], 'royalblue', linewidth=3, alpha=1, zorder=1)  # beams
+            plt.scatter([p.x for p in beam.nodes], [p.y for p in beam.nodes], marker='s', color='navy', alpha=0.5, s=30, zorder=2)  # nodes
 
         # plot supports
         # 1/scale will be the length of the bars representing the restricted translational degrees of freedom
@@ -22,13 +22,13 @@ def draw_structure(structure, show=True, deformed=True):
             _aktnode = [x for x in structure.nodes if x.ID == k][0]
             for dof in v:
                 if dof == 'ux':  # horizonatal
-                    plt.plot([_aktnode.x, _aktnode.x + supportsize], [_aktnode.y, _aktnode.y], 'g-', linewidth=4, zorder=3)  # a horizontal line
+                    plt.plot([_aktnode.x, _aktnode.x + supportsize], [_aktnode.y, _aktnode.y], 'g-', linewidth=4, zorder=6)  # a horizontal line
                 if dof == 'uy':  # vertical
-                    plt.plot([_aktnode.x, _aktnode.x], [_aktnode.y, _aktnode.y - supportsize], 'g-', linewidth=4, zorder=3)  # a horizontal line
+                    plt.plot([_aktnode.x, _aktnode.x], [_aktnode.y, _aktnode.y - supportsize], 'g-', linewidth=4, zorder=6)  # a horizontal line
                 if dof == 'rotz':  # rotation about Z
-                    plt.plot([_aktnode.x, _aktnode.x], [_aktnode.y, _aktnode.y], 'g.', markersize=16, zorder=3)  # a point
+                    plt.plot([_aktnode.x, _aktnode.x], [_aktnode.y, _aktnode.y], 'seagreen', markersize=16, zorder=7)  # a point
 
-        # plot the deformed shape
+        # plot the deformed shape - straight lines only
         if deformed:
             fig = plt.gca()
             # length of the longes beam - this will be the base for the scaling
@@ -52,8 +52,14 @@ def draw_structure(structure, show=True, deformed=True):
                 _xdata = [p.x + dx * _scale for p, dx in zip(beam.nodes, dxs)]
                 _ydata = [p.y + dy * _scale for p, dy in zip(beam.nodes, dys)]
 
-                plt.plot(_xdata, _ydata, 'k-', linewidth=1, zorder=4)  # beams
-                plt.scatter(_xdata, _ydata, marker='s', color='k', s=30, zorder=4)  # nodes
+                # the beams as straight lines
+                # plt.plot(_xdata, _ydata, 'k-', linewidth=1, zorder=4)
+                # the nodes as aquares
+                plt.scatter(_xdata, _ydata, marker='s', color='k', s=30, zorder=3)
+
+                # plot the deformed shape - with internal points
+                _deflected = beam.deflected_shape(local=False, scale=_scale)
+                plt.plot([x[0] for x in _deflected], [x[1] for x in _deflected], 'k-', zorder=3)
 
         # plot loads - concentrated forces only for now
         for lindex, load in enumerate(HeBe.np_matrix_tolist(structure.q)):
