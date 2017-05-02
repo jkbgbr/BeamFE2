@@ -27,6 +27,9 @@ class Recangle(Crossection):
     def __repr__(self):
         return 'Rectangle(a=%.2f, b=%.2f)' % (self.a, self.b)
 
+    def __str__(self):
+        return 'Rectangle %.2f x %.2f, A=%.2f, Ix=%.2f, Iy=%.2f' % (self.a, self.b, self.A, self.I['x'], self.I['y'])
+
     @property
     def A(self):
         return self.a * self.b
