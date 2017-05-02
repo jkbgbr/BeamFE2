@@ -189,16 +189,13 @@ class Hermitian2D_Element(unittest.TestCase):
         EI = self.beam3.EI
         self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'MZ': M}, clear=True)
         self.beam_as_structure_2.solve()
-        disps = self.beam_as_structure_2.displacements
         disps = self.beam_as_structure_2.beams[0].local_displacements
-        print(disps)
         _expected = np.matrix([[0.0],
                                [0.0],
                                [0.0],
                                [0.0],
                                [(M * L ** 2) / (2 * EI)],  # vertical displacement at the end
                                [(M * L) / EI]])  # rotation at the end
-        print(_expected)
         self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
 
