@@ -2,6 +2,7 @@
 __author__ = 'jakabgabor'
 
 from drawing import _plotting_available, plt
+from Beams import HermitianBeam as HB
 import itertools
 
 
@@ -18,18 +19,30 @@ def draw_structure(structure, show=True, deformed=True):
         scale = 20
         figsize = [plt.rcParams["figure.dpi"] * x for x in plt.rcParams["figure.figsize"]]  # width of the fig in pixels
         w_figsize = figsize[0]
-        h_figsize = figsize[1]
+        supportsize = w_figsize / scale
         for k, v in structure.supports.items():
             _aktnode = [x for x in structure.nodes if x.ID == k][0]
             for dof in v:
                 if dof == 'ux':  # horizonatal
-                    plt.plot([_aktnode.x, _aktnode.x + w_figsize / scale], [_aktnode.y, _aktnode.y], 'g-', linewidth=4, zorder=3)  # a horizontal line
+                    plt.plot([_aktnode.x, _aktnode.x + supportsize], [_aktnode.y, _aktnode.y], 'g-', linewidth=4, zorder=3)  # a horizontal line
                 if dof == 'uy':  # vertical
-                    plt.plot([_aktnode.x, _aktnode.x], [_aktnode.y, _aktnode.y - w_figsize / scale], 'g-', linewidth=4, zorder=3)  # a horizontal line
+                    plt.plot([_aktnode.x, _aktnode.x], [_aktnode.y, _aktnode.y - supportsize], 'g-', linewidth=4, zorder=3)  # a horizontal line
                 if dof == 'rotz':  # rotation about Z
                     plt.plot([_aktnode.x, _aktnode.x], [_aktnode.y, _aktnode.y], 'g.', markersize=16, zorder=3)  # a point
 
         # plot loads
+        for lindex, load in enumerate(HB.np_matrix_tolist(structure.q)):
+            if load != 0:
+                _node, component = structure.node_dof_from_position(position=lindex)
+                mp = structure.node_by_ID(id=_node).coords
+                ax = plt.gca()
+                if component == 'FX':
+                    _norm = (load * supportsize / abs(load), 0,)
+                if component == 'FY':
+                    _norm = (0, load * supportsize / abs(load))
+                if component == 'MZ':
+                    pass
+                ax.arrow(mp[0], mp[1], _norm[0], _norm[1], head_width=2*supportsize, head_length=2*supportsize, fc='k', ec='k')
 
 
         # plot the deformed shape
