@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-__author__ = 'jakabgabor'
 
 from drawing import _plotting_available, plt
-from Beams import HermitianBeam as HB
-import itertools
+from Beams import HermitianBeam as HeBe
 
 
 def draw_structure(structure, show=True, deformed=True):
@@ -30,21 +28,6 @@ def draw_structure(structure, show=True, deformed=True):
                 if dof == 'rotz':  # rotation about Z
                     plt.plot([_aktnode.x, _aktnode.x], [_aktnode.y, _aktnode.y], 'g.', markersize=16, zorder=3)  # a point
 
-        # plot loads
-        for lindex, load in enumerate(HB.np_matrix_tolist(structure.q)):
-            if load != 0:
-                _node, component = structure.nodenr_dof_from_position(position=lindex)
-                mp = structure.node_by_ID(id=_node).coords
-                ax = plt.gca()
-                if component == 'FX':
-                    _norm = (load * supportsize / abs(load), 0,)
-                elif component == 'FY':
-                    _norm = (0, load * supportsize / abs(load))
-                else:
-                    _norm = False
-                if _norm:
-                    ax.arrow(mp[0], mp[1], _norm[0], _norm[1], head_width=supportsize, head_length=supportsize, fc='k', ec='k')
-
         # plot the deformed shape
         if deformed:
             fig = plt.gca()
@@ -57,19 +40,37 @@ def draw_structure(structure, show=True, deformed=True):
             _scale = (_long / 10.) / max(dre)
 
             for beam in structure.beams:
-                # line width is in pixel
+                # beam displacements by component
                 dxs = beam.displacement_component(component='ux')
                 dys = beam.displacement_component(component='uy')
 
-                # changing the ticks on the y-axis
+                # changing the ticks on the y-axis to show the deflections
                 ticks = [x / _scale for x in fig.get_yticks()]
                 fig.set_yticklabels([round(x, 3) for x in ticks])
 
+                # data to plot: original positions + displacements
                 _xdata = [p.x + dx * _scale for p, dx in zip(beam.nodes, dxs)]
                 _ydata = [p.y + dy * _scale for p, dy in zip(beam.nodes, dys)]
 
                 plt.plot(_xdata, _ydata, 'k-', linewidth=1, zorder=4)  # beams
                 plt.scatter(_xdata, _ydata, marker='s', color='k', s=30, zorder=4)  # nodes
+
+        # plot loads - concentrated forces only for now
+        for lindex, load in enumerate(HeBe.np_matrix_tolist(structure.q)):
+            if load != 0:
+                _node, component = structure.nodenr_dof_from_position(position=lindex)
+                mp = structure.node_by_ID(id=_node).coords  # starting point of the arrow
+
+                if component == 'FX':
+                    _norm = (load * supportsize / abs(load), 0,)
+                elif component == 'FY':
+                    _norm = (0, load * supportsize / abs(load))
+                else:
+                    _norm = False
+                # plotting, if there is a norm
+                ax = plt.gca()
+                if _norm:
+                    ax.arrow(mp[0], mp[1], _norm[0], _norm[1], head_width=supportsize, head_length=supportsize, fc='k', ec='k')
 
         if show:
             plt.axis('tight')

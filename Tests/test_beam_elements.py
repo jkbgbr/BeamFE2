@@ -10,7 +10,7 @@ from Tests import ATOL
 
 class Hermitian2D(unittest.TestCase):
     """
-    tests for the hermitian 2D beam
+    basic tests for the hermitian 2D beam
     """
 
     @classmethod
@@ -105,15 +105,11 @@ class Hermitian2D(unittest.TestCase):
 
 class Hermitian2D_Structure(unittest.TestCase):
     """
-    tests for the hermitian 2D beam
+    advanced tests for the hermitian 2D beam
     """
 
     @classmethod
     def setUpClass(cls):
-        # cls.EE = 1.
-        # cls.nodes = {1: HB.Node(ID=1, coords=(0, 0)), 2: HB.Node(ID=2, coords=(1, 0)), 3: HB.Node(ID=3, coords=(2, 0))}
-        # cls.beam1 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.nodes[1], j=cls.nodes[2])
-        # cls.beam2 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.nodes[2], j=cls.nodes[3])
 
         # structure #1: 3 elements in a row along the global X axis
         cls.n1 = HB.Node(ID=1, coords=(0, 0))
@@ -121,6 +117,7 @@ class Hermitian2D_Structure(unittest.TestCase):
         cls.n3 = HB.Node(ID=3, coords=(200, 0))
         cls.n4 = HB.Node(ID=4, coords=(300, 0))
 
+        # section for the beams: 10 by 10 rectangle
         sect = sections.Recangle(a=10, b=10)
         b1 = HB.HermitianBeam2D(E=210000., ID=1, crosssection=sect, i=cls.n1, j=cls.n2)
         b2 = HB.HermitianBeam2D(E=210000., ID=2, crosssection=sect, i=cls.n2, j=cls.n3)

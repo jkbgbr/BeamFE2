@@ -1,7 +1,6 @@
 
 import math
 
-# general
 
 class Crossection(object):
     def __init__(self, shape=None, *args, **kwargs):
@@ -11,9 +10,6 @@ class Crossection(object):
         raise NotImplementedError
 
     def I(self):
-        raise NotImplementedError
-
-    def W(self):
         raise NotImplementedError
 
 
@@ -67,7 +63,7 @@ class HollowCircle(Crossection):
         self.r_in = s
 
     def __repr__(self):
-        return 'HollowCircle(r=%.2f, s=%.2f)' % (self.r, self.s)
+        return 'HollowCircle(r=%.2f, s=%.2f)' % (self.r_out, self.s)
 
     @property
     def A(self):
