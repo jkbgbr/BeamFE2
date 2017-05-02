@@ -1,7 +1,7 @@
 from __future__ import division
 import numpy as np
 # print precision, no scientific notation, wide lines
-np.set_printoptions(precision=6, suppress=False, linewidth=250)
+np.set_printoptions(precision=6, suppress=True, linewidth=250)
 import math
 import itertools
 import copy
@@ -99,6 +99,7 @@ class HermitianBeam2D(object):
         else:
             self.A = A
             self.I = I
+        self._end_DOFs = {'i': list(copy.deepcopy(self.dofnames)), 'j': list(copy.deepcopy(self.dofnames))}
 
         self.rho = rho
         self.displacements = None  # displacements in the GLOBAL system
@@ -126,6 +127,37 @@ class HermitianBeam2D(object):
         L = self.l
         x *= L
         return (1 / (L ** 2)) * (-L * (x ** 2) + (x ** 3))
+
+    def remove_DOF(self, node=None, dof=None):
+        """
+        Releases a DOF at node i or j.
+        This will be used to modify the stiffness matrix stored in _Ke before providing it for calculation
+        :param node: 
+        :param dof: 
+        :return: 
+        """
+        assert node in ['i', 'j']
+        assert dof in self.dofnames
+        try:
+            self._end_DOFs[node].remove(dof)
+        except ValueError:
+            raise Exception('DOF already removed.')
+
+    def restore_DOFs(self):
+        self._end_DOFs = {'i': list(copy.deepcopy(self.dofnames)), 'j': list(copy.deepcopy(self.dofnames))}
+
+    def add_DOF(self, node=None, dof=None):
+        """
+        Adds a DOF at node i or j.
+        e.g. if this was removed previously
+        :param node: 
+        :param dof: 
+        :return: 
+        """
+        assert node in ['i', 'j']
+        assert dof in self.dofnames
+        if dof not in self._end_DOFs[node]:
+            self._end_DOFs[node].append(dof)
 
     @property
     def local_displacements(self):
@@ -205,7 +237,7 @@ class HermitianBeam2D(object):
 
     def _Ke(self):
         # full stiffness matrix of the beam element in the element coordinate system
-        return np.matrix([
+        _ret = np.matrix([
             np.array([self.EA / self.l, 0, 0, -self.EA / self.l, 0, 0]),
             np.array([0, 12 * self.EI / (self.l ** 3), 6 * self.EI / (self.l ** 2), 0, -12 * self.EI / (self.l ** 3), 6 * self.EI / (self.l ** 2)]),
             np.array([0, 6 * self.EI / (self.l ** 2), 4 * self.EI / self.l, 0, -6 * self.EI / (self.l ** 2), 2 * self.EI / self.l]),
@@ -213,6 +245,17 @@ class HermitianBeam2D(object):
             np.array([0, -12 * self.EI / (self.l ** 3), -6 * self.EI / (self.l ** 2), 0, 12 * self.EI / (self.l ** 3), -6 * self.EI / (self.l ** 2)]),
             np.array([0, 6 * self.EI / (self.l ** 2), 2 * self.EI / self.l, 0, -6 * self.EI / (self.l ** 2), 4 * self.EI / self.l]),
             ])
+
+        _sti = 0
+        for node in ['i', 'j']:
+            if node == 'j':
+                _sti += self.dof
+            _toremove = [x for x in self.dofnames if x not in self._end_DOFs[node]]
+            for _dof in _toremove:
+                _ret[_sti + self.dofnames.index(_dof), :] = 0
+                _ret[:, _sti + self.dofnames.index(_dof)] = 0
+                print('removed: node %s, DOF %s' % (node, _dof))
+        return _ret
 
     @property
     def Ke(self):
