@@ -166,14 +166,10 @@ class HermitianBeam2D(object):
             _val = [x * scale for x in _val]
             if not local:
                 _val = ((i / _ip) * self.l + _val[0], _val[1])  # the deflected shape in the local coordinate system
-                # print(_val)
                 _val *= _t  # the deflected shape rotated
                 _val = np_matrix_tolist(_val)
-                # print('rotated')
-                # print(_val)
                 _val = (_val[0] + self.i.x, _val[1] + self.i.y)
             _deflected_shape.append(_val)
-            # _deflected_shape.append((self.l * i / _ip, np_matrix_tolist(self.N(x=i / _ip, L=self.l) * self.local_displacements)))
 
         return _deflected_shape
 
@@ -305,8 +301,10 @@ class HermitianBeam2D(object):
         #         _sti += self.dof
         #     _toremove = [x for x in self.dofnames if x not in self._end_DOFs[node]]
         #     for _dof in _toremove:
-        #         _ret[_sti + self.dofnames.index(_dof), :] = 0
-        #         _ret[:, _sti + self.dofnames.index(_dof)] = 0
+        #         pos = _sti + self.dofnames.index(_dof)
+        #         _ret[pos, pos] = 0
+        #         # _ret[_sti + self.dofnames.index(_dof), :] = 0
+        #         # _ret[:, _sti + self.dofnames.index(_dof)] = 0
         #         print('removed: nodeID %s, DOF %s' % (self.i.ID, _dof))
         return _ret
 
@@ -347,6 +345,8 @@ class Structure(object):
         self._load_vector = None
         self.supports = supports
         self.displacements = None  # global dispacements
+        self.criticals = None
+        self.buckling_shapes = None
 
     def displacements_as_dict(self, local=False):
 
@@ -364,9 +364,9 @@ class Structure(object):
         return _ret
 
     def draw(self, show=True):
-        draw_beam.draw_structure(self, show=show)
+        draw_beam.draw_structure(self, show=show, displacements=True)
 
-    def displacements_for_beams(self, local=False):
+    def displacements_for_beams(self):
         """
         De-compiles the global displacement vector and assigns the results to the beams
         :return: True, if succesful
@@ -379,10 +379,6 @@ class Structure(object):
             # displacements in the global system
             beam.displacements = np.matrix([uxs[beam.i.ID-1], uys[beam.i.ID-1], rotzs[beam.i.ID-1],
                                             uxs[beam.j.ID-1], uys[beam.j.ID-1], rotzs[beam.j.ID-1]]).T
-
-            # the beam displacements calculated
-            # beam.displacements = np_matrix_tolist(_displacements)
-            # beam.displacements = list(itertools.chain.from_iterable(_displacements.tolist()))
 
         return True
 
@@ -566,6 +562,7 @@ class Structure(object):
         """
         assert self.stiffness_matrix_is_ok
         assert self.node_numbering_is_ok
+        # linear static analysis
         self.displacements = np.linalg.inv(self.K_with_BC) * self.q_with_BC
         self.displacements_for_beams()
         return True
@@ -710,35 +707,37 @@ if __name__ == '__main__':
     sta = time.time()
     # nodes
     n1 = Node.from_dict(adict={'ID': 1, 'coords': (0, 0)})  # from dict
-    n2 = Node.from_dict(adict={'ID': 2, 'coords': (0, 1000)})
-    n3 = Node.from_dict(adict={'ID': 3, 'coords': (0, 2000)})
-    n4 = Node.from_dict(adict={'ID': 4, 'coords': (2000, 2000)})
-    n5 = Node.from_dict(adict={'ID': 5, 'coords': (2000, 1000)})
-    n6 = Node(ID=6, coords=(2000, 0))  # direct
+    n2 = Node.from_dict(adict={'ID': 2, 'coords': (0, 200)})
+    n3 = Node.from_dict(adict={'ID': 3, 'coords': (0, 400)})
+    n4 = Node.from_dict(adict={'ID': 4, 'coords': (0, 600)})
+    n5 = Node.from_dict(adict={'ID': 5, 'coords': (0, 800)})
+    n6 = Node.from_dict(adict={'ID': 6, 'coords': (0, 1000)})
 
     # beams
-    section_column = sections.Circle(r=25)
-    section_beam = sections.Circle(r=15)
+    section_column = sections.Circle(r=55)
+    section_beam = sections.Circle(r=0.15)
     b1 = HermitianBeam2D.from_dict(adict={'ID': 1, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n1, 'j': n2})  # from dict
-    b2 = HermitianBeam2D.from_dict(adict={'ID': 2, 'E': 210000., 'I': section_beam.I['x'], 'A': section_beam.A, 'rho': 7.85e-5, 'i': n2, 'j': n3})  # from dict
+    b2 = HermitianBeam2D.from_dict(adict={'ID': 2, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n2, 'j': n3})  # from dict
     b3 = HermitianBeam2D.from_dict(adict={'ID': 3, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n3, 'j': n4})  # from dict
     b4 = HermitianBeam2D.from_dict(adict={'ID': 4, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n4, 'j': n5})  # from dict
     b5 = HermitianBeam2D.from_dict(adict={'ID': 5, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n5, 'j': n6})  # from dict
-    b6 = HermitianBeam2D.from_dict(adict={'ID': 6, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n2, 'j': n5})  # from dict
 
     # supports
-    BCs = {1: ['ux', 'uy', 'rotz'], 6: ['ux', 'uy', 'rotz']}  # supports as dict
+    BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
     # BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
+    # b1.remove_DOF(node='i', dof='rotz')
 
     # this is the structure
-    structure = Structure(beams=[b1, b2, b3, b4, b5, b6], supports=BCs)
+    structure = Structure(beams=[b1, b2, b3, b4, b5], supports=BCs)
 
     # adding loads
-    structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 10000}, clear=True)  # clears previous loads
-    structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': 20000})
+    structure.add_single_dynam_to_node(nodeID=6, dynam={'MZ': -1000000}, clear=True)  # clears previous loads
+    structure.add_single_dynam_to_node(nodeID=4, dynam={'FX': -100000})  # clears previous loads
+    # structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': 20000})
 
     # solver :-) whatever happens here is done by numpy.
     structure.solve()
+    print(b1.EI * (math.pi ** 2) / ((2*1000) ** 2))
     structure.draw()
 
 

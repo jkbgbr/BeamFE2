@@ -4,7 +4,7 @@ from drawing import _plotting_available, plt
 from Beams import HermitianBeam as HeBe
 
 
-def draw_structure(structure, show=True, deformed=True):
+def draw_structure(structure, show=True, displacements=True, internal_actions=False):
 
     if _plotting_available:
         for beam in structure.beams:
@@ -29,8 +29,8 @@ def draw_structure(structure, show=True, deformed=True):
                     plt.plot([_aktnode.x, _aktnode.x], [_aktnode.y, _aktnode.y], 'seagreen', markersize=16, zorder=7)  # a point
 
         # plot the deformed shape - straight lines only
-        if deformed:
-            fig = plt.gca()
+        if displacements:
+            ax = plt.gca()
             # length of the longes beam - this will be the base for the scaling
             _long = sorted(structure.beams, key=lambda x: x.l)[-1].l
 
@@ -44,22 +44,19 @@ def draw_structure(structure, show=True, deformed=True):
                 dxs = beam.displacement_component(component='ux')
                 dys = beam.displacement_component(component='uy')
 
-                # changing the ticks on the y-axis to show the deflections
-                ticks = [x / _scale for x in fig.get_yticks()]
-                fig.set_yticklabels([round(x, 3) for x in ticks])
-
                 # data to plot: original positions + displacements
                 _xdata = [p.x + dx * _scale for p, dx in zip(beam.nodes, dxs)]
                 _ydata = [p.y + dy * _scale for p, dy in zip(beam.nodes, dys)]
 
-                # the beams as straight lines
-                # plt.plot(_xdata, _ydata, 'k-', linewidth=1, zorder=4)
-                # the nodes as aquares
+                # the nodes as squares
                 plt.scatter(_xdata, _ydata, marker='s', color='k', s=30, zorder=3)
 
-                # plot the deformed shape - with internal points
+                # plot the deformed shape - using the internal points from the shape functions
                 _deflected = beam.deflected_shape(local=False, scale=_scale)
                 plt.plot([x[0] for x in _deflected], [x[1] for x in _deflected], 'k-', zorder=3)
+
+        if internal_actions:
+            pass
 
         # plot loads - concentrated forces only for now
         for lindex, load in enumerate(HeBe.np_matrix_tolist(structure.q)):
