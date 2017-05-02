@@ -161,31 +161,25 @@ class Hermitian2D_Element(unittest.TestCase):
         self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
 
+    def test_FY_load_rotated(self):
+        # tests a clamped beam for vertical load at the tip
+        import random
+        P = random.randrange(1, 200)
+        L = self.beam3.l
+        EI = self.beam3.EI
+        _t = HB.transfer_matrix(alpha=self.rotation_angle, asdegree=False, blocks=1, dof=2)
+        _load = _t * np.matrix([[0, P]]).T
 
-    # def test_FY_load_rotated(self):
-    #     # tests a clamped beam for vertical load at the tip
-    #     import random
-    #     # P = random.randrange(1, 200)
-    #     P = 1
-    #     L = self.beam3.l
-    #     EI = self.beam3.EI
-    #     _t = HB.transfer_matrix(alpha=-self.rotation_angle, asdegree=False, blocks=1, dof=2)
-    #     _load = _t * np.matrix([[0, P]]).T
-    #     self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'FX': _load[1], 'FY': _load[0]}, clear=True)
-    #     self.beam_as_structure_2.solve()
-    #     # disps = self.beam_as_structure_2.beams[0].local_displacements
-    #     disps = self.beam_as_structure_2.beams[0].displacements
-    #     print(disps)
-    #     _expected = np.matrix([[0.0],
-    #                            [0.0],
-    #                            [0.0],
-    #                            [0.0],
-    #                            [(P * L ** 3) / (3 * EI)],  # vertical displacement at the end
-    #                            [(P * L ** 2) / (2 * EI)]])  # rotation at the end
-    #     print(_expected)
-    #     # self.beam_as_structure_2.draw()
-    #     exit()
-    #     self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
+        self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'FX': _load[0], 'FY': _load[1]}, clear=True)
+        self.beam_as_structure_2.solve()
+        disps = self.beam_as_structure_2.beams[0].local_displacements
+        _expected = np.matrix([[0.0],
+                               [0.0],
+                               [0.0],
+                               [0.0],
+                               [(P * L ** 3) / (3 * EI)],  # vertical displacement at the end
+                               [(P * L ** 2) / (2 * EI)]])  # rotation at the end
+        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
     def test_MZ_load_rotated(self):
         # tests a clamped beam for bending moment at the tip
@@ -206,10 +200,6 @@ class Hermitian2D_Element(unittest.TestCase):
                                [(M * L) / EI]])  # rotation at the end
         print(_expected)
         self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
-
-
-
-
 
 
 class Hermitian2D_Structure(unittest.TestCase):
