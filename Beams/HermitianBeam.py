@@ -288,8 +288,6 @@ class Structure(object):
             # beam.displacements = np_matrix_tolist(_displacements)
             # beam.displacements = list(itertools.chain.from_iterable(_displacements.tolist()))
 
-
-
         return True
 
     def displacement_component(self, component=None):
@@ -534,9 +532,17 @@ def transfer_matrix(alpha, asdegree=False, blocks=2, dof=3):
         alpha = math.radians(alpha)
     cs = math.cos(alpha)
     ss = math.sin(alpha)
-    _block = np.matrix([[cs,    -ss,    0],
-                        [ss,    cs,     0],
-                        [0,     0,      1]])
+    if dof == 3:
+        _block = np.matrix([[cs,    -ss,    0],
+                            [ss,    cs,     0],
+                            [0,     0,      1]])
+    elif dof == 2:
+        _block = np.matrix([[cs,    -ss],
+                            [ss,    cs]])
+
+    else:
+        raise Exception('not implementeds, dof should be 2 or 3')
+
     _sumdof = blocks * dof
     _empty = np.zeros(_sumdof ** 2)
     _empty = np.matrix(_empty.reshape(_sumdof, _sumdof))
