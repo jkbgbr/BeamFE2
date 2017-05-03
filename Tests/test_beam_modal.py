@@ -3,6 +3,7 @@ from Modell import HermitianBeam_2D as HB
 from Modell import BeamSections as sections
 from Modell import Structure
 from Modell import Node
+from Modell import Material
 
 from Tests import ATOL
 
@@ -14,8 +15,9 @@ class Hermitian2D_Model(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.rho = 7850000  # g/m3
-        cls.E = 2.1e11  # N/m2
+        steel = Material.Steel()
+        cls.rho = steel.rho
+        cls.E = steel.E
 
     def test_clamped_rod(self):
         """
