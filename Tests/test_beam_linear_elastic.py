@@ -1,8 +1,9 @@
 import unittest
-from Beams import HermitianBeam_2D as HB
-from Beams import Sections as sections
+from Modell import HermitianBeam_2D as HB
+from Modell import BeamSections as sections
+from Modell import Structure
+from Modell import Node
 
-from drawing import draw_beam
 import numpy as np
 import math
 from Tests import ATOL
@@ -16,21 +17,21 @@ class Hermitian2D_Element(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.EE = 1.
-        cls.nodeset_1 = {1: HB.Node(ID=1, coords=(0, 0)), 2: HB.Node(ID=2, coords=(1, 0)), 3: HB.Node(ID=3, coords=(2, 0))}
+        cls.nodeset_1 = {1: Node.Node(ID=1, coords=(0, 0)), 2: Node.Node(ID=2, coords=(1, 0)), 3: Node.Node(ID=3, coords=(2, 0))}
         cls.beam1 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.nodeset_1[1], j=cls.nodeset_1[2])
         cls.beam2 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.nodeset_1[2], j=cls.nodeset_1[3])
-        cls.beam_as_structure = HB.Structure(beams=[cls.beam1], supports={1: ['ux', 'uy', 'rotz']})
+        cls.beam_as_structure = Structure.Structure(beams=[cls.beam1], supports={1: ['ux', 'uy', 'rotz']})
 
         # the same beam but inclined by atan(0,5) ~= 26.56505 degrees degrees CCW.
         # all tests are performed for these as well, results should reflect only the rotation
         cls.rotation_angle = math.atan(0.5)
         cls._r = 1 / math.sqrt(1.25)  # the lenght of the elements is modified to keep the beam length
-        cls.nodeset_2 = {1: HB.Node(ID=1, coords=(0, 0)),
-                         2: HB.Node(ID=2, coords=(1. * cls._r, 0.5 * cls._r)),
-                         3: HB.Node(ID=3, coords=(2. * cls._r, 1. * cls._r))}
+        cls.nodeset_2 = {1: Node.Node(ID=1, coords=(0, 0)),
+                         2: Node.Node(ID=2, coords=(1. * cls._r, 0.5 * cls._r)),
+                         3: Node.Node(ID=3, coords=(2. * cls._r, 1. * cls._r))}
         cls.beam3 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.nodeset_2[1], j=cls.nodeset_2[2])
         cls.beam4 = HB.HermitianBeam2D(E=cls.EE, I=1., A=1., i=cls.nodeset_2[2], j=cls.nodeset_2[3])
-        cls.beam_as_structure_2 = HB.Structure(beams=[cls.beam3], supports={1: ['ux', 'uy', 'rotz']})
+        cls.beam_as_structure_2 = Structure.Structure(beams=[cls.beam3], supports={1: ['ux', 'uy', 'rotz']})
 
     def test_element_stiffness_matrix(self):
         k_asinteger = np.matrix([[1, 0, 0, -1, 0, 0],
@@ -227,22 +228,22 @@ class Hermitian2D_Structure(unittest.TestCase):
     def setUpClass(cls):
 
         # structure #1: 3 elements in a row along the global X axis
-        cls.n1 = HB.Node(ID=1, coords=(0, 0))
-        cls.n2 = HB.Node(ID=2, coords=(100, 0))
-        cls.n3 = HB.Node(ID=3, coords=(200, 0))
-        cls.n4 = HB.Node(ID=4, coords=(300, 0))
+        cls.n1 = Node.Node(ID=1, coords=(0, 0))
+        cls.n2 = Node.Node(ID=2, coords=(100, 0))
+        cls.n3 = Node.Node(ID=3, coords=(200, 0))
+        cls.n4 = Node.Node(ID=4, coords=(300, 0))
 
         # section for the beams: 10 by 10 rectangle
         sect = sections.Recangle(width=10, height=10)
         b1 = HB.HermitianBeam2D(E=210000., ID=1, crosssection=sect, i=cls.n1, j=cls.n2)
         b2 = HB.HermitianBeam2D(E=210000., ID=2, crosssection=sect, i=cls.n2, j=cls.n3)
         b3 = HB.HermitianBeam2D(E=210000., ID=3, crosssection=sect, i=cls.n3, j=cls.n4)
-        cls.structure_1 = HB.Structure(beams=[b1, b2, b3], supports={1: ['ux', 'uy', 'rotz']})
+        cls.structure_1 = Structure.Structure(beams=[b1, b2, b3], supports={1: ['ux', 'uy', 'rotz']})
 
         # the same structure, with the last node not inline. to test rotation.
-        cls.n5 = HB.Node(ID=4, coords=(300, 100))
+        cls.n5 = Node.Node(ID=4, coords=(300, 100))
         b4 = HB.HermitianBeam2D(E=210000., ID=3, I=833.33, A=100., i=cls.n3, j=cls.n5)
-        cls.structure_2 = HB.Structure(beams=[b1, b2, b4], supports={1: ['ux', 'uy', 'rotz']})
+        cls.structure_2 = Structure.Structure(beams=[b1, b2, b4], supports={1: ['ux', 'uy', 'rotz']})
 
     def test_nodal_displacements_1(self):
         # assertion #1: single Axial force on Node #4
@@ -269,16 +270,16 @@ class Hermitian2D_Structure(unittest.TestCase):
 
         # structure #1: 3 elements in a row along the global X axis
         _u = math.sqrt(2) / 2.  # unit; instead of 1 as unit we have cos(45) to account for the rotation
-        n1 = HB.Node(ID=1, coords=(0, 0))
-        n2 = HB.Node(ID=2, coords=(100 * _u, 100 * _u))
-        n3 = HB.Node(ID=3, coords=(200 * _u, 200 * _u))
-        n4 = HB.Node(ID=4, coords=(300 * _u, 300 * _u))
+        n1 = Node.Node(ID=1, coords=(0, 0))
+        n2 = Node.Node(ID=2, coords=(100 * _u, 100 * _u))
+        n3 = Node.Node(ID=3, coords=(200 * _u, 200 * _u))
+        n4 = Node.Node(ID=4, coords=(300 * _u, 300 * _u))
 
         # definition of the beams is unchanged
         b1 = HB.HermitianBeam2D(E=210000., ID=1, I=833.33, A=100., i=n1, j=n2)
         b2 = HB.HermitianBeam2D(E=210000., ID=2, I=833.33, A=100., i=n2, j=n3)
         b3 = HB.HermitianBeam2D(E=210000., ID=3, I=833.33, A=100., i=n3, j=n4)
-        structure = HB.Structure(beams=[b1, b2, b3], supports={1: ['ux', 'uy', 'rotz']})
+        structure = Structure.Structure(beams=[b1, b2, b3], supports={1: ['ux', 'uy', 'rotz']})
 
         # two loads instead of one as these are in the global system
         structure.add_single_dynam_to_node(nodeID=4, dynam={'FX': _u}, clear=True)
@@ -311,16 +312,16 @@ class Hermitian2D_Structure(unittest.TestCase):
         # structure #1: 3 elements in a row along the global X axis
         _ux = 0.5  # unit in x direction; instead of 1 as unit we have cos(60) to account for the rotation
         _uy = -math.sqrt(3) / 2.  # unit in x direction; instead of 1 as unit we have cos(60) to account for the rotation
-        n1 = HB.Node(ID=1, coords=(0, 0))
-        n2 = HB.Node(ID=2, coords=(100 * _ux, 100 * _uy))
-        n3 = HB.Node(ID=3, coords=(200 * _ux, 200 * _uy))
-        n4 = HB.Node(ID=4, coords=(300 * _ux, 300 * _uy))
+        n1 = Node.Node(ID=1, coords=(0, 0))
+        n2 = Node.Node(ID=2, coords=(100 * _ux, 100 * _uy))
+        n3 = Node.Node(ID=3, coords=(200 * _ux, 200 * _uy))
+        n4 = Node.Node(ID=4, coords=(300 * _ux, 300 * _uy))
 
         # definition of the beams is unchanged
         b1 = HB.HermitianBeam2D(E=210000., ID=1, I=833.33, A=100., i=n1, j=n2)
         b2 = HB.HermitianBeam2D(E=210000., ID=2, I=833.33, A=100., i=n2, j=n3)
         b3 = HB.HermitianBeam2D(E=210000., ID=3, I=833.33, A=100., i=n3, j=n4)
-        structure = HB.Structure(beams=[b1, b2, b3], supports={1: ['ux', 'uy', 'rotz']})
+        structure = Structure.Structure(beams=[b1, b2, b3], supports={1: ['ux', 'uy', 'rotz']})
 
         # two loads instead of one as these are in the global system
         structure.add_single_dynam_to_node(nodeID=4, dynam={'FX': _ux}, clear=True)
@@ -490,15 +491,15 @@ class Hermitian2D_Structure(unittest.TestCase):
 #     def setUpClass(cls):
 #
 #         # structure #1: 3 elements in a row along the global X axis
-#         cls.n1 = HB.Node(ID=1, coords=(0, 0))
-#         cls.n2 = HB.Node(ID=2, coords=(100, 0))
-#         cls.n3 = HB.Node(ID=3, coords=(200, 0))
+#         cls.n1 = Node.Node(ID=1, coords=(0, 0))
+#         cls.n2 = Node.Node(ID=2, coords=(100, 0))
+#         cls.n3 = Node.Node(ID=3, coords=(200, 0))
 #
 #         # section for the beams: 10 by 10 rectangle
 #         sect = sections.Recangle(a=30, b=30)
 #         b1 = HB.HermitianBeam2D(E=210000., ID=1, crosssection=sect, i=cls.n1, j=cls.n2)
 #         b2 = HB.HermitianBeam2D(E=210000., ID=2, crosssection=sect, i=cls.n2, j=cls.n3)
-#         cls.structure_1 = HB.Structure(beams=[b1, b2], supports={1: ['ux', 'uy', 'rotz'], 3: ['ux', 'uy', 'rotz']})
+#         cls.structure_1 = Structure.Structure(beams=[b1, b2], supports={1: ['ux', 'uy', 'rotz'], 3: ['ux', 'uy', 'rotz']})
 #
 #     def test_internal_deflections(self):
 #         # for beam in self.structure_1.beams:

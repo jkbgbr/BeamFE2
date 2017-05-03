@@ -1,16 +1,15 @@
 import unittest
-from Beams import HermitianBeam_2D as HB
-from Beams import Sections as sections
+from Modell import HermitianBeam_2D as HB
+from Modell import BeamSections as sections
+from Modell import Structure
+from Modell import Node
 
-from drawing import draw_beam
-import numpy as np
-import math
 from Tests import ATOL
 
 
 class Hermitian2D_Model(unittest.TestCase):
     """
-    tests for the modal analysis of the FE Beams
+    tests for the modal analysis of the FE Modell
     """
 
     @classmethod
@@ -32,7 +31,7 @@ class Hermitian2D_Model(unittest.TestCase):
         # nodes
         _nodes = []
         for i in range(_pieces + 1):
-            _nodes.append(HB.Node.from_dict(adict={'ID': i + 1, 'coords': (i * _length / _pieces, 0)}))
+            _nodes.append(Node.Node.from_dict(adict={'ID': i + 1, 'coords': (i * _length / _pieces, 0)}))
 
         # beams
         section_column = sections.Circle(r=55)
@@ -46,7 +45,7 @@ class Hermitian2D_Model(unittest.TestCase):
         BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
 
         # this is the structure
-        structure = HB.Structure(beams=_beams, supports=BCs)
+        structure = Structure.Structure(beams=_beams, supports=BCs)
 
         # adding loads
         # structure.add_single_dynam_to_node(nodeID=len(_nodes) - 1, dynam={'FY': -1000000}, clear=True)  # clears previous loads
