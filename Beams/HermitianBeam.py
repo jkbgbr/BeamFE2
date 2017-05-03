@@ -1,5 +1,6 @@
 from __future__ import division
 import numpy as np
+from scipy.linalg import eigh
 # print precision, no scientific notation, wide lines
 np.set_printoptions(precision=6, suppress=True, linewidth=250)
 import math
@@ -339,9 +340,11 @@ class Structure(object):
         self.beams = beams
         self._load_vector = None
         self.supports = supports
-        self.displacements = None  # global dispacements
-        self.criticals = None
-        self.buckling_shapes = None
+        self.displacements = None  # global dispacements from the linear elastic analysis
+        self.criticals = None  # critical forces from the buckling analysis
+        self.buckling_shapes = None  # buckling shapes
+        self.frequencies = None  # eigenfrequencies
+        self.nodal_shapes = None  # modal shapes
 
     def displacements_as_dict(self, local=False):
 
@@ -585,51 +588,52 @@ class Structure(object):
             print('The stiffness matrix is singular')
             return False
 
-    def solve(self):
+    def solve(self, analysis=None):
         """
         solves the system, returns the vector of displacements.
         :return: 
         """
+        assert analysis in ['linear_elastic', 'modal', 'all']
         assert self.stiffness_matrix_is_ok
         assert self.node_numbering_is_ok
-        # linear static analysis
 
-        a = copy.deepcopy(self.K_with_BC)
-        self.displacements = np.linalg.inv(a) * self.q
-        self.displacements_for_beams()
-        # self.draw()
 
-        # Linear buckling
-        from scipy.linalg import eigh, eig
+        if analysis in ['linear_elastic', 'all']:
+            # linear static analysis
+            self.displacements = np.linalg.inv(self.K_with_BC) * self.q
+            self.displacements_for_beams()
 
-        # a, b = self.K_with_BC, self.K_geom
-        # eigvals, eigvecs = eigh(a, b)
-        # print(eigvals)
+        elif analysis in ['buckling']:
+            raise NotImplementedError
+            # Linear buckling
+            # not implemented yet!
 
         # modal analyse
-        a, b = self.K_with_BC, self.M
-        eigvals, eigvecs = eigh(a, b)
-        eigvecs = eigvecs.T
-        print(eigvals[0:5])
-        print([math.sqrt(x) for x in eigvals if x > 0][0:5])
-        print([math.sqrt(x)/(2*3.1415) for x in eigvals if x > 0][0:5])
-        print('')
-        for shind, sh in enumerate(eigvecs[0:5]):
+        elif analysis in ['modal', 'all']:
+            eigvals, eigvecs = eigh(self.K_with_BC, self.M)
+            self.frequencies = [math.sqrt(x)/(2*math.pi) for x in eigvals if x > 0]
+            self.nodal_shapes = eigvecs.T
 
-            print('')
-            _ux = sh[0::3]
-            _uy = sh[1::3]
-            _rotz = sh[2::3]
-            print('ux:', _ux)
-            print('uy:', _uy)
-            print('rotz:', _rotz)
-
-            # Two subplots, the axes array is 1-d
-            f, axarr = plt.subplots(2)
-            axarr[0].plot(list(range(len(_uy))), _ux)
-            axarr[0].set_title('#%d, f=%.2f Hz' % (shind+1, math.sqrt(eigvals[shind]) / 2*3.1415))
-            axarr[1].plot(list(range(len(_uy))), _uy)
-            plt.show()
+            # print(eigvals[0:5])
+            # print([math.sqrt(x) for x in eigvals if x > 0][0:5])
+            # print([math.sqrt(x)/(2*3.1415) for x in eigvals if x > 0][0:5])
+            # print('')
+            # for shind, sh in enumerate(eigvecs[0:5]):
+            #
+            #     print('')
+            #     _ux = sh[0::3]
+            #     _uy = sh[1::3]
+            #     _rotz = sh[2::3]
+            #     print('ux:', _ux)
+            #     print('uy:', _uy)
+            #     print('rotz:', _rotz)
+            #
+            #     # Two subplots, the axes array is 1-d
+            #     f, axarr = plt.subplots(2)
+            #     axarr[0].plot(list(range(len(_uy))), _ux)
+            #     axarr[0].set_title('#%d, f=%.2f Hz' % (shind+1, math.sqrt(eigvals[shind]) / 2*3.1415))
+            #     axarr[1].plot(list(range(len(_uy))), _uy)
+            #     plt.show()
 
 
         return True
@@ -822,7 +826,7 @@ if __name__ == '__main__':
     # structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': 20000})
 
     # solver :-) whatever happens here is done by numpy.
-    structure.solve()
+    structure.solve(analysis='all')
 
     _gew = 0
     for b in structure.beams:
