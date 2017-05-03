@@ -177,37 +177,6 @@ class HermitianBeam2D(object):
         """ reactions in the local coordinate system of the beam """
         return self.Ke * self.local_displacements
 
-    # def remove_DOF(self, node=None, dof=None):
-    #     """
-    #     Releases a DOF at node i or j.
-    #     This will be used to modify the stiffness matrix stored in _Ke before providing it for calculation
-    #     :param node:
-    #     :param dof:
-    #     :return:
-    #     """
-    #     assert node in ['i', 'j']
-    #     assert dof in self.dofnames
-    #     try:
-    #         self._end_DOFs[node].remove(dof)
-    #     except ValueError:
-    #         raise Exception('DOF already removed.')
-    #
-    # def restore_DOFs(self):
-    #     self._end_DOFs = {'i': list(copy.deepcopy(self.dofnames)), 'j': list(copy.deepcopy(self.dofnames))}
-    #
-    # def add_DOF(self, node=None, dof=None):
-    #     """
-    #     Adds a DOF at node i or j.
-    #     e.g. if this was removed previously
-    #     :param node:
-    #     :param dof:
-    #     :return:
-    #     """
-    #     assert node in ['i', 'j']
-    #     assert dof in self.dofnames
-    #     if dof not in self._end_DOFs[node]:
-    #         self._end_DOFs[node].append(dof)
-
     @property
     def local_displacements(self):
         """
@@ -295,17 +264,6 @@ class HermitianBeam2D(object):
             np.array([0, 6 * self.EI / (self.l ** 2), 2 * self.EI / self.l, 0, -6 * self.EI / (self.l ** 2), 4 * self.EI / self.l]),
             ])
 
-        # _sti = 0
-        # for node in ['i', 'j']:
-        #     if node == 'j':
-        #         _sti += self.dof
-        #     _toremove = [x for x in self.dofnames if x not in self._end_DOFs[node]]
-        #     for _dof in _toremove:
-        #         pos = _sti + self.dofnames.index(_dof)
-        #         _ret[pos, pos] = 0
-        #         # _ret[_sti + self.dofnames.index(_dof), :] = 0
-        #         # _ret[:, _sti + self.dofnames.index(_dof)] = 0
-        #         print('removed: nodeID %s, DOF %s' % (self.i.ID, _dof))
         return _ret
 
     @property
@@ -460,21 +418,8 @@ class Structure(object):
             for dof in v:  # dof to be fixed: 'ux', 'rotz' etc.
                 _pos = self.position_in_matrix(nodeID=k, DOF=dof)
                 # check, if the DOF has been released previously
-                _add_support = True  # flag to know if the support gets the additional large term
-
-                # for beam in self.beams:  # check all beams
-                #     if any([x.ID == k for x in beam.nodes]):  # if their node has supports defined. if yes
-                #         _sti = 0
-                #         for node in ['i', 'j']:
-                #             if node == 'j':
-                #                 _sti += beam.dof
-                #             _toremove = [x for x in beam.dofnames if x not in beam._end_DOFs[node]]  # the DOF that was released
-                #             if dof in _toremove:
-                #                 _add_support = False
-
-                if _add_support:
-                    _K[_pos, _pos] += 10e20
-                    # print('added support: nodeID %d, DOF %s' % (k, dof))
+                _K[_pos, _pos] += 10e20
+                # print('added support: nodeID %d, DOF %s' % (k, dof))
         return _K
 
     @property
@@ -565,6 +510,12 @@ class Structure(object):
         # linear static analysis
         self.displacements = np.linalg.inv(self.K_with_BC) * self.q_with_BC
         self.displacements_for_beams()
+
+        # Linear buckling
+        # from scipy.linalg import eigh
+        # eigvals, eigvecs = eigh(A, B, eigvals_only=False)
+
+
         return True
 
     def compile_global_stiffness_matrix(self):
@@ -725,7 +676,6 @@ if __name__ == '__main__':
     # supports
     BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
     # BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
-    # b1.remove_DOF(node='i', dof='rotz')
 
     # this is the structure
     structure = Structure(beams=[b1, b2, b3, b4, b5], supports=BCs)
