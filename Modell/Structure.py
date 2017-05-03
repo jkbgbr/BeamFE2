@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import itertools
 from drawing import draw_beam
-import numpy as np
 import copy
 from Modell.helpers import *
 from scipy.linalg import eigh
