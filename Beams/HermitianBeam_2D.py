@@ -132,11 +132,66 @@ class HermitianBeam2D(object):
         self._end_DOFs = {'i': list(copy.deepcopy(self.dofnames)), 'j': list(copy.deepcopy(self.dofnames))}
 
         self.rho = rho
-        self.displacements = None  # displacements in the GLOBAL system
+        self.displacements = None  # displacements in the GLOBAL system, provided by the solver
 
     def __repr__(self):
         return 'HermitianBeam2D(ID=%d, i=%r, j=%r, E=%d, I=%.2f, A=%.2f' \
                % (self.ID, self.i, self.j, self.E, self.I, self.A)
+
+    @classmethod
+    def from_dict(cls, adict):
+        try:
+            beam = HermitianBeam2D(
+                ID=adict['ID'],
+                i=adict['i'],
+                j=adict['j'],
+                E=adict['E'],
+                I=adict['I'],
+                A=adict['A'],
+                rho=adict['rho'],
+            )
+            assert all([hasattr(beam, x) for x in adict.keys()])  # check if the dict is too long
+        except KeyError as e:  # check if the dict is too short
+            raise Exception('Missing key from dict when creating %s: %s' % (cls.__name__, e))
+
+        return beam
+
+    @property
+    def nodes(self):
+        return self.i, self.j
+
+    @property
+    def l(self):
+        return math.sqrt((self.i.x-self.j.x)**2 + (self.i.y-self.j.y)**2)
+
+    @property
+    def EA(self):
+        return self.E * self.A
+
+    @property
+    def EI(self):
+        return self.E * self.I
+
+    @property
+    def direction(self):
+        # the direction of the beam in the global coordinate system
+        # this is a crucial point for the transfer from the local to the global systems
+        _dy = self.j.y - self.i.y
+        _dx = self.j.x - self.i.x
+        return np.arctan2(_dy, _dx)
+
+    #
+    # diverse matrices
+    #
+
+    @property
+    def transfer_matrix(self):
+        # matrix to rotate the stiffness matrix for compilation
+        return transfer_matrix(alpha=self.direction, asdegree=False, dof=self.dof, blocks=2)
+
+    def matrix_in_global(self, mtrx=None):
+        # matrix of the Beam element in the global coordinate system
+        return self.transfer_matrix * mtrx * self.transfer_matrix.T
 
     # shape functions. the input argument x is the "running parameter", a value normalized with the beam length
     def N1(self, x, L=1.):
@@ -174,110 +229,10 @@ class HermitianBeam2D(object):
     def N(self, x, L=1.):
         # the N matrix, assembled. 2 x 6 matrix, multiplied with self.local_displacements yields the deflections
         # for the internal points as a tuple with ux, uy values in the local system.
-        return np.matrix([[self.N1(x=x, L=L), 0,                    0,
+        return np.matrix([[self.N1(x=x, L=L),  0,                  0,
                            self.N4(x=x, L=L),  0,                  0],
-                          [0,                 self.N2(x=x, L=L),    self.N3(x=x, L=L),
+                          [0,                  self.N2(x=x, L=L),  self.N3(x=x, L=L),
                            0,                  self.N5(x=x, L=L),  self.N6(x=x, L=L)]])
-
-    def deflected_shape(self, local=True, scale=1.):
-        """
-        The deflected shape of the beam. based on the local_displacements, results are in the local coordinate system.
-        (ux, uy) = N * q
-        if local = False, the values are transferred in the global coordinate system
-        :return: 
-        """
-        _ip = self.number_internal_points
-        _deflected_shape = []
-
-        _t = transfer_matrix(-self.direction, asdegree=False, blocks=1, dof=2)  # 2x2 transform matrix
-
-        for i in range(_ip + 1):
-            _val = np_matrix_tolist(self.N(x=i / _ip, L=self.l) * self.local_displacements)  # displacements in the local system
-            _val = [x * scale for x in _val]
-            if not local:
-                _val = ((i / _ip) * self.l + _val[0], _val[1])  # the deflected shape in the local coordinate system
-                _val *= _t  # the deflected shape rotated
-                _val = np_matrix_tolist(_val)
-                _val = (_val[0] + self.i.x, _val[1] + self.i.y)
-            _deflected_shape.append(_val)
-
-        return _deflected_shape
-
-    def nodal_reactions(self):
-        """ reactions in the local coordinate system of the beam """
-        return self.Ke * self.local_displacements
-
-    @property
-    def local_displacements(self):
-        """
-        calculates the nodal displacements in the elements local system.
-        :return: 
-        """
-        # de-rotating matrix to transfer the displacements from the global to the elements local system
-        T = transfer_matrix(-self.direction, asdegree=False, blocks=len(self.nodes))
-        return T * self.displacements
-
-    def displacement_component(self, component=None, localsystem=False):
-        """
-        Returns a list with the displacements of the component defined
-        These are the nodal displacements calculated 
-        :param localsystem: boolean telling if the results to be provided are in the global or in the local system
-        :param component: any value from the dofnames list
-        :return: 
-        """
-        assert component in self.dofnames
-        if localsystem:
-            _ret = self.local_displacements[self.dofnames.index(component)::self.dof]
-        else:
-            _ret = self.displacements[self.dofnames.index(component)::self.dof]
-        return np_matrix_tolist(_ret)
-        # return list(itertools.chain.from_iterable(_ret.tolist()))
-
-    @classmethod
-    def from_dict(cls, adict):
-        try:
-            beam = HermitianBeam2D(
-                ID=adict['ID'],
-                i=adict['i'],
-                j=adict['j'],
-                E=adict['E'],
-                I=adict['I'],
-                A=adict['A'],
-                rho=adict['rho'],
-            )
-            assert all([hasattr(beam, x) for x in adict.keys()])  # check if the dict is too long
-        except KeyError as e:  # check if the dict is too short
-            raise Exception('Missing key from dict when creating %s: %s' % (cls.__name__, e))
-
-        return beam
-
-    @property
-    def nodes(self):
-        return self.i, self.j
-
-    @property
-    def l(self):
-        return math.sqrt((self.i.x-self.j.x)**2 + (self.i.y-self.j.y)**2)
-
-    @property
-    def EA(self):
-        return self.E * self.A
-
-    @property
-    def EI(self):
-        return self.E * self.I
-
-    # def _Me(self):
-    #     L = self.l
-    #     _ret = (self.rho / 10.) * self.A * L * \
-    #            np.matrix([
-    #                [1/2., 0, 0, 0, 0, 0],
-    #                [0, -0*(L**2)/24, 0, 0, 0, 0],
-    #                [0, 0, -0*(L**2)/24, 0, 0, 0],
-    #                [0, 0, 0, 1/2., 0, 0],
-    #                [0, 0, 0, 0, -0*(L**2)/24, 0],
-    #                [0, 0, 0, 0, 0, -0*(L**2)/24]])
-    #     return _ret
 
     def _Me(self):
         L = self.l
@@ -333,33 +288,62 @@ class HermitianBeam2D(object):
     def Ke(self):
         return self._Ke()
 
-    @property
-    def direction(self):
-        # the direction of the beam in the global coordinate system
-        # this is a crucial point for the transfer from the local to the global systems
-        _dy = self.j.y - self.i.y
-        _dx = self.j.x - self.i.x
-        return np.arctan2(_dy, _dx)
-
-    def matrix_in_global(self, mtrx=None):
-        # matrix of the Beam element in the global coordinate system
-        return self.transfer_matrix * mtrx * self.transfer_matrix.T
-
-    # @property
-    # def Kg(self):
-    #     # full stiffness matrix of the Beam element in the global coordinate system
-    #     return self.transfer_matrix * self.Ke * self.transfer_matrix.T
     #
-    # @property
-    # def Mg(self):
-    #     # full stiffness matrix of the Beam element in the global coordinate system
-    #     return self.transfer_matrix * self.Me * self.transfer_matrix.T
+    # results
+    #
+
+    def deflected_shape(self, local=True, scale=1.):
+        """
+        The deflected shape of the beam. based on the local_displacements, results are in the local coordinate system.
+        (ux, uy) = N * q
+        if local = False, the values are transferred in the global coordinate system
+        :return: 
+        """
+        _ip = self.number_internal_points
+        _deflected_shape = []
+
+        _t = transfer_matrix(-self.direction, asdegree=False, blocks=1, dof=2)  # 2x2 transform matrix
+
+        for i in range(_ip + 1):
+            _val = np_matrix_tolist(self.N(x=i / _ip, L=self.l) * self.local_displacements)  # displacements in the local system
+            _val = [x * scale for x in _val]
+            if not local:
+                _val = ((i / _ip) * self.l + _val[0], _val[1])  # the deflected shape in the local coordinate system
+                _val *= _t  # the deflected shape rotated
+                _val = np_matrix_tolist(_val)
+                _val = (_val[0] + self.i.x, _val[1] + self.i.y)
+            _deflected_shape.append(_val)
+
+        return _deflected_shape
+
+    def nodal_reactions(self):
+        """ reactions in the local coordinate system of the beam """
+        return self.Ke * self.local_displacements
 
     @property
-    def transfer_matrix(self):
-        # matrix to rotate the stiffness matrix for compilation
-        return transfer_matrix(alpha=self.direction, asdegree=False, dof=self.dof, blocks=2)
+    def local_displacements(self):
+        """
+        calculates the nodal displacements in the elements local system.
+        :return: 
+        """
+        # de-rotating matrix to transfer the displacements from the global to the elements local system
+        T = transfer_matrix(-self.direction, asdegree=False, blocks=len(self.nodes))
+        return T * self.displacements
 
+    def displacement_component(self, component=None, localsystem=False):
+        """
+        Returns a list with the displacements of the component defined
+        These are the nodal displacements calculated 
+        :param localsystem: boolean telling if the results to be provided are in the global or in the local system
+        :param component: any value from the dofnames list
+        :return: 
+        """
+        assert component in self.dofnames
+        if localsystem:
+            _ret = self.local_displacements[self.dofnames.index(component)::self.dof]
+        else:
+            _ret = self.displacements[self.dofnames.index(component)::self.dof]
+        return np_matrix_tolist(_ret)
 
 class Structure(object):
     """
