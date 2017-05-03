@@ -237,21 +237,54 @@ class HermitianBeam2D(object):
     def EI(self):
         return self.E * self.I
 
+    # def _Me(self):
+    #     L = self.l
+    #     _ret = (self.rho / 10.) * self.A * L * \
+    #            np.matrix([
+    #                [1/2., 0, 0, 0, 0, 0],
+    #                [0, -0*(L**2)/24, 0, 0, 0, 0],
+    #                [0, 0, -0*(L**2)/24, 0, 0, 0],
+    #                [0, 0, 0, 1/2., 0, 0],
+    #                [0, 0, 0, 0, -0*(L**2)/24, 0],
+    #                [0, 0, 0, 0, 0, -0*(L**2)/24]])
+    #     return _ret
+
     def _Me(self):
-        l = self.l
-        _ret = self.rho * self.A * self.l / 420 * \
+        L = self.l
+        _ret = self.rho * (self.A / 1e6) * (self.l / 1e3) / 420 * \
                np.matrix([
                    [140, 0, 0, 70, 0, 0],
-                   [0, 156, 22*l, 0, 54, -13*l],
-                   [0, 22*l, 4*l**2, 0, 13*l, -3*l**2],
+                   [0, 156, 22*L, 0, 54, -13*L],
+                   [0, 22*L, 4*(L**2), 0, 13*L, -3*(L**2)],
                    [70, 0, 0, 140, 0, 0],
-                   [0, 54, 13*l, 0, 156, -22*l],
-                   [0, -13*l, -3*l**2, 0, -22*l, 4*l**2]])
+                   [0, 54, 13*L, 0, 156, -22*L],
+                   [0, -13*L, -3*(L**2), 0, -22*L, 4*(L**2)]])
         return _ret
 
     @property
     def Me(self):
         return self._Me()
+
+    def _Ke_geom(self):
+        # the geometrical stiffness matrix, from H-P. Gavin CEE 421L. Matrix Structural Anyalsis - Duke University
+        _locdisp = self.local_displacements
+        T = _locdisp[3] - _locdisp[0]  # change of the axial length
+        L = self.l
+        _ret = np.matrix([
+            [0, 0, 0, 0, 0, 0],
+            [0, 6./5., L/10., 0, -(6./5.), L/10.],
+            [0, L/10., 2*(L**2)/15., 0, -(L/10.), -(L/30.)],
+            [0, 0, 0, 0, 0, 0],
+            [0, -(6./5.), -(L/10.), 0, (6./5.), -(L/10.)],
+            [0, (L/10.), -(L**2)/30., 0, -(L/10.), -(2*(L**2))/15.]
+        ])
+        _ret = np.multiply((T / L), _ret)
+
+        return _ret
+
+    @property
+    def Ke_geom(self):
+        return self._Ke_geom()
 
     def _Ke(self):
         # full stiffness matrix of the beam element in the element coordinate system
@@ -278,15 +311,19 @@ class HermitianBeam2D(object):
         _dx = self.j.x - self.i.x
         return np.arctan2(_dy, _dx)
 
-    @property
-    def Kg(self):
-        # full stiffness matrix of the Beam element in the global coordinate system
-        return self.transfer_matrix * self.Ke * self.transfer_matrix.T
+    def matrix_in_global(self, mtrx=None):
+        # matrix of the Beam element in the global coordinate system
+        return self.transfer_matrix * mtrx * self.transfer_matrix.T
 
-    @property
-    def Mg(self):
-        # full stiffness matrix of the Beam element in the global coordinate system
-        return self.transfer_matrix * self.Me * self.transfer_matrix.T
+    # @property
+    # def Kg(self):
+    #     # full stiffness matrix of the Beam element in the global coordinate system
+    #     return self.transfer_matrix * self.Ke * self.transfer_matrix.T
+    #
+    # @property
+    # def Mg(self):
+    #     # full stiffness matrix of the Beam element in the global coordinate system
+    #     return self.transfer_matrix * self.Me * self.transfer_matrix.T
 
     @property
     def transfer_matrix(self):
@@ -405,10 +442,62 @@ class Structure(object):
         # sum of DOFs, without eliminating for BCs
         return self.dof * len(self.nodes)
 
+    def zero_BC(self, mtrx=None):
+        """
+        Eliminates the rows and columns of the BC
+        """
+        mtrx = copy.deepcopy(mtrx)
+        print(mtrx.size)
+        _to_eliminate = []  # list of rows and columns to eliminate
+        for nodeID, DOFs in self.supports.items():
+            print(nodeID)
+            for DOF in DOFs:
+                print(DOF)
+                _to_eliminate.append(self.position_in_matrix(nodeID=nodeID, DOF=DOF))
+
+        _to_eliminate.sort()
+
+        for _ in _to_eliminate[::-1]:
+            mtrx[_] = 0
+            mtrx[:, _] = 0
+
+        return mtrx
+
+    def eliminate_BC(self, mtrx=None):
+        """
+        Eliminates the rows and columns of the BC
+        """
+        mtrx = copy.deepcopy(mtrx)
+        print(mtrx.size)
+        _to_eliminate = []  # list of rows and columns to eliminate
+        for nodeID, DOFs in self.supports.items():
+            print(nodeID)
+            for DOF in DOFs:
+                print(DOF)
+                _to_eliminate.append(self.position_in_matrix(nodeID=nodeID, DOF=DOF))
+
+        _to_eliminate.sort()
+
+        for _ in _to_eliminate[::-1]:
+            mtrx = np.delete(mtrx, _, axis=0)
+            mtrx = np.delete(mtrx, _, axis=1)
+
+        return mtrx
+
+    @property
+    def M(self):
+        # the compiled mass matrix
+        return compile_global_matrix(self.beams, mass=True)
+
+    @property
+    def K_geom(self):
+        # the compiled geometrical stiffness matrix
+        return compile_global_matrix(self.beams, geometrical=True)
+
     @property
     def K(self):
-        # the compiled stiffness matrix
-        return self.compile_global_stiffness_matrix()
+        # the compiled stiffness matrix, without supports
+        return compile_global_matrix(self.beams, stiffness=True)
 
     @property
     def K_with_BC(self):
@@ -426,10 +515,6 @@ class Structure(object):
     def q(self):
         # the load vector
         return self._load_vector.T
-
-    @property
-    def q_with_BC(self):
-        return self.q
 
     def add_single_dynam_to_node(self, nodeID=None, dynam=None, clear=False):
         """
@@ -508,22 +593,60 @@ class Structure(object):
         assert self.stiffness_matrix_is_ok
         assert self.node_numbering_is_ok
         # linear static analysis
-        self.displacements = np.linalg.inv(self.K_with_BC) * self.q_with_BC
+
+        a = copy.deepcopy(self.K_with_BC)
+        self.displacements = np.linalg.inv(a) * self.q
         self.displacements_for_beams()
+        # self.draw()
 
         # Linear buckling
-        # from scipy.linalg import eigh
-        # eigvals, eigvecs = eigh(A, B, eigvals_only=False)
+        from scipy.linalg import eigh, eig
+
+        # a, b = self.K_with_BC, self.K_geom
+        # eigvals, eigvecs = eigh(a, b)
+        # print(eigvals)
+
+        # modal analyse
+        a, b = self.K_with_BC, self.M
+        eigvals, eigvecs = eigh(a, b)
+        eigvecs = eigvecs.T
+        print(eigvals[0:5])
+        print([math.sqrt(x) for x in eigvals if x > 0][0:5])
+        print([math.sqrt(x)/(2*3.1415) for x in eigvals if x > 0][0:5])
+        print('')
+        for shind, sh in enumerate(eigvecs[0:5]):
+
+            print('')
+            _ux = sh[0::3]
+            _uy = sh[1::3]
+            _rotz = sh[2::3]
+            print('ux:', _ux)
+            print('uy:', _uy)
+            print('rotz:', _rotz)
+
+            # Two subplots, the axes array is 1-d
+            f, axarr = plt.subplots(2)
+            axarr[0].plot(list(range(len(_uy))), _ux)
+            axarr[0].set_title('#%d, f=%.2f Hz' % (shind+1, math.sqrt(eigvals[shind]) / 2*3.1415))
+            axarr[1].plot(list(range(len(_uy))), _uy)
+            plt.show()
 
 
         return True
+
+    def compile_global_geometrical_stiffness_matrix(self):
+        """
+        Compiles the global stiffness matrix from the element matrices.
+        :return: 
+        """
+        return compile_global_matrix(self.beams, geometrical=True)
 
     def compile_global_stiffness_matrix(self):
         """
         Compiles the global stiffness matrix from the element matrices.
         :return: 
         """
-        return compile_global_matrix(self.beams, stiffness=True, mass=False)
+        return compile_global_matrix(self.beams, stiffness=True)
 
     def nodenr_dof_from_position(self, position=None):
         """
@@ -553,12 +676,12 @@ class Structure(object):
         # return _ret
 
 
-def compile_global_matrix(beams, stiffness=True, mass=False):
+def compile_global_matrix(beams, stiffness=False, mass=False, geometrical=False):
     """
     Compiles the global stiffness matrix from the element matrices.
     :return: 
     """
-    assert stiffness is not mass  # either or
+    assert stiffness or mass or geometrical  # either or
 
     nodes = set(itertools.chain.from_iterable([x.nodes for x in beams]))  # nodes of the beams
     dof = beams[0].dof  # nr. of dofs
@@ -567,9 +690,13 @@ def compile_global_matrix(beams, stiffness=True, mass=False):
     _empty = np.matrix(_empty.reshape(_sumdof, _sumdof))
     for b in beams:
         if stiffness:
-            mtrx = b.Kg
+            mtrx = b.matrix_in_global(mtrx=b.Ke)
+        elif mass:
+            mtrx = b.matrix_in_global(mtrx=b.Me)
+        elif geometrical:
+            mtrx = b.matrix_in_global(mtrx=b.Ke_geom)
         else:
-            mtrx = b.Mg
+            raise Exception('matrix not specified')
         _sti = (b.i.ID - 1) * dof  # starting element of the block for node i
         _eni = _sti + dof  # end element for the block if node i
         _stj = (b.j.ID - 1) * dof
@@ -657,38 +784,57 @@ if __name__ == '__main__':
     import time
     sta = time.time()
     # nodes
-    n1 = Node.from_dict(adict={'ID': 1, 'coords': (0, 0)})  # from dict
-    n2 = Node.from_dict(adict={'ID': 2, 'coords': (0, 200)})
-    n3 = Node.from_dict(adict={'ID': 3, 'coords': (0, 400)})
-    n4 = Node.from_dict(adict={'ID': 4, 'coords': (0, 600)})
-    n5 = Node.from_dict(adict={'ID': 5, 'coords': (0, 800)})
-    n6 = Node.from_dict(adict={'ID': 6, 'coords': (0, 1000)})
+
+    _pieces = 20  # stk.
+    _length = 1400  # mm
+
+    _nodes = []
+    for i in range(_pieces+1):
+        _nodes.append(Node.from_dict(adict={'ID': i+1, 'coords': (i*_length/_pieces, 0)}))
 
     # beams
+    # section_column = sections.Recangle(height=3, width=20)
     section_column = sections.Circle(r=55)
-    section_beam = sections.Circle(r=0.15)
-    b1 = HermitianBeam2D.from_dict(adict={'ID': 1, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n1, 'j': n2})  # from dict
-    b2 = HermitianBeam2D.from_dict(adict={'ID': 2, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n2, 'j': n3})  # from dict
-    b3 = HermitianBeam2D.from_dict(adict={'ID': 3, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n3, 'j': n4})  # from dict
-    b4 = HermitianBeam2D.from_dict(adict={'ID': 4, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n4, 'j': n5})  # from dict
-    b5 = HermitianBeam2D.from_dict(adict={'ID': 5, 'E': 210000., 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7.85e-5, 'i': n5, 'j': n6})  # from dict
+    print(section_column.I)
+    print(section_column.A)
+    # rho = 0.007850  # kg/m3
+    rho = 7850000  # g/m3
+    # b1 = HermitianBeam2D.from_dict(adict={'ID': 1, 'E': 2.1e11, 'I': section_column.I['x'], 'A': section_column.A, 'rho': rho, 'i': n1, 'j': n2})  # from dict
+    _beams = []
+    for i in range(_pieces):
+        _beams.append(HermitianBeam2D.from_dict(adict={'ID': i, 'E': 2.1e11, 'I': section_column.I['x'], 'A': section_column.A, 'rho': rho, 'i': _nodes[i], 'j': _nodes[i+1]}))
+
+    for n in _nodes:
+        print(n)
+    for b in _beams:
+        print(b)
 
     # supports
     BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
     # BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
 
     # this is the structure
-    structure = Structure(beams=[b1, b2, b3, b4, b5], supports=BCs)
+    structure = Structure(beams=_beams, supports=BCs)
+    # structure = Structure(beams=[b1], supports=BCs)
 
     # adding loads
-    structure.add_single_dynam_to_node(nodeID=6, dynam={'MZ': -1000000}, clear=True)  # clears previous loads
-    structure.add_single_dynam_to_node(nodeID=4, dynam={'FX': -100000})  # clears previous loads
+    structure.add_single_dynam_to_node(nodeID=len(_nodes)-1, dynam={'FY': -1000000}, clear=True)  # clears previous loads
     # structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': 20000})
 
     # solver :-) whatever happens here is done by numpy.
     structure.solve()
-    print(b1.EI * (math.pi ** 2) / ((2*1000) ** 2))
-    structure.draw()
+
+    _gew = 0
+    for b in structure.beams:
+        _gew += b.A / 1e6 * b.rho / 1e3 * b.l / 1e3
+    print('Gewicht:', _gew)
+    # print(structure.M)
+    # print(structure.M.diagonal())
+    # print(np.sum(structure.M.diagonal()))
+
+
+
+    # structure.draw()
 
 
     # class HermitianBeam3D(object):
