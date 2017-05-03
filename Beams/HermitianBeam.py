@@ -855,6 +855,7 @@ if __name__ == '__main__':
     # print(structure.M.diagonal())
     # print(np.sum(structure.M.diagonal()))
 
+    print(time.time()-sta)
 
 
     # structure.draw()
