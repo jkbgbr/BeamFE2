@@ -1,12 +1,10 @@
 from __future__ import division
-import numpy as np
 from Modell.helpers import *
 import copy
 from Modell import BeamSections as sections
 from Modell import Structure
 from Modell import Node
 
-np.set_printoptions(precision=6, suppress=True, linewidth=250)
 
 # todo:
 # Lin stat:
@@ -28,20 +26,9 @@ np.set_printoptions(precision=6, suppress=True, linewidth=250)
 # Buckling:
 #   implement. the geometrical stiffness matrix is needed for that.
 # Displacements:
-#   displacements are to be stored in a way that multiple shapes can be handled (linstat: 1 set, all other: multiple sets)
+#   displacements are to be stored in a way that multiple shapes can be handled (linstat: 1 list, all other: multiple lists)
 
-
-# move solver-related stuff to own module
 # make results more egyseges for the analyses.
-
-
-
-class AnalysisResult(object):
-    def __init__(self, parent=None):
-        self.parent = parent
-        self.linear_static = None
-        self.modal = None
-        self.buckling = None
 
 
 class HermitianBeam2D(object):
