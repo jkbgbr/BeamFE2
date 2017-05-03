@@ -26,7 +26,7 @@ class Hermitian2D_Model(unittest.TestCase):
         steel: rho = 7.85 t/m3, E=210 GPa
         """
 
-        _pieces = 30  # number of segments along the length
+        _pieces = 9  # number of segments along the length
         _length = 1400  # mm
 
         # nodes
