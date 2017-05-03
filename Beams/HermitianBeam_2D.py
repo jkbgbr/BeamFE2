@@ -35,6 +35,10 @@ from drawing import _plotting_available, plt
 #   displacements are to be stored in a way that multiple shapes can be handled (linstat: 1 set, all other: multiple sets)
 
 
+# move solver-related stuff to own module
+# make results more egyseges for the analyses.
+
+
 class Node(object):
     """
     Node objects to be used with the FE Model
@@ -131,7 +135,11 @@ class HermitianBeam2D(object):
             self.I = I
         self._end_DOFs = {'i': list(copy.deepcopy(self.dofnames)), 'j': list(copy.deepcopy(self.dofnames))}
 
-        self.rho = rho
+        self.rho = rho  # density in g/m3 for the nodal analysis
+
+        # displacements are the result from the analysis. Its a dictionary, where the keys are
+        # the names of the analyses, and the results themselves are in the LOCAL system, separated
+        # according to DOF.
         self.displacements = None  # displacements in the GLOBAL system, provided by the solver
 
     def __repr__(self):
@@ -294,9 +302,9 @@ class HermitianBeam2D(object):
 
     def deflected_shape(self, local=True, scale=1.):
         """
-        The deflected shape of the beam. based on the local_displacements, results are in the local coordinate system.
+        The deflected shape of the beam. based on the local_displacements.
         (ux, uy) = N * q
-        if local = False, the values are transferred in the global coordinate system
+        if local = False, the values are transferred in the global coordinate system e.g. for plotting
         :return: 
         """
         _ip = self.number_internal_points
