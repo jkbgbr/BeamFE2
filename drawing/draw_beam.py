@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from drawing import _plotting_available, plt
-from Beams import HermitianBeam as HeBe
+from Beams import HermitianBeam_2D as HeBe
 
 
 def draw_structure(structure, show=True, displacements=True, internal_actions=False):

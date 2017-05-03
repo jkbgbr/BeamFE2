@@ -1,5 +1,5 @@
 import unittest
-from Beams import HermitianBeam as HB
+from Beams import HermitianBeam_2D as HB
 from Beams import Sections as sections
 
 from drawing import draw_beam
