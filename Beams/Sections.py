@@ -14,25 +14,25 @@ class Crossection(object):
 
 
 class Recangle(Crossection):
-    def __init__(self, shape='rectangle', a=None, b=None):
+    def __init__(self, shape='rectangle', height=None, width=None):
         super(Recangle, self).__init__(shape=shape)
-        assert a >= b
-        self.a = a
-        self.b = b
+        # assert a >= b
+        self.height = height
+        self.width = width
 
     def __repr__(self):
-        return 'Rectangle(a=%.2f, b=%.2f)' % (self.a, self.b)
+        return 'Rectangle(height=%.2f, width=%.2f)' % (self.height, self.width)
 
     def __str__(self):
-        return 'Rectangle %.2f x %.2f, A=%.2f, Ix=%.2f, Iy=%.2f' % (self.a, self.b, self.A, self.I['x'], self.I['y'])
+        return 'Rectangle %.2f x %.2f, A=%.2f, Ix=%.2f, Iy=%.2f' % (self.height, self.width, self.A, self.I['x'], self.I['y'])
 
     @property
     def A(self):
-        return self.a * self.b
+        return self.height * self.width
 
     @property
     def I(self):
-        _ret = {'x': (self.a ** 3) * self.b / 12, 'y': (self.b ** 3) * self.a / 12}
+        _ret = {'x': (self.height ** 3) * self.width / 12, 'y': (self.width ** 3) * self.height / 12}
         return _ret
 
 
