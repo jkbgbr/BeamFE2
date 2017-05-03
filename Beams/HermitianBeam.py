@@ -31,6 +31,8 @@ from drawing import _plotting_available, plt
 #   ability to choose which directions mass act?
 # Buckling:
 #   implement. the geometrical stiffness matrix is needed for that.
+# Displacements:
+#   displacements are to be stored in a way that multiple shapes can be handled (linstat: 1 set, all other: multiple sets)
 
 
 class Node(object):
@@ -614,7 +616,6 @@ class Structure(object):
         assert analysis in ['linear_elastic', 'modal', 'all']
         assert self.stiffness_matrix_is_ok
         assert self.node_numbering_is_ok
-
 
         if analysis in ['linear_elastic', 'all']:
             # linear static analysis
