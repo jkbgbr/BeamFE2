@@ -19,6 +19,9 @@ class Structure(object):
         self.frequencies = None  # eigenfrequencies
         self.nodal_shapes = None  # modal shapes
 
+    def mass(self):
+        return [x.mass for x in self.beams]
+
     def displacements_as_dict(self, local=False):
 
         uxs = self.displacement_component(component='ux')

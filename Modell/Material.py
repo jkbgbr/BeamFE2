@@ -19,6 +19,6 @@ class LinearElasticMaterial(Material):
 class Steel(LinearElasticMaterial):
     def __init__(self, E=2.1e11, nu=0.3):
         super(Steel, self).__init__()
-        self.rho = 7850000  # g/m3
+        self.rho = 7850000  # g/m3 to result correct modal results
         self.E = E  # N/m2
         self.nu = nu

@@ -107,6 +107,10 @@ class HermitianBeam2D(object):
         return self.E * self.I
 
     @property
+    def mass(self):
+        return self.A / 1e6 * self.rho / 1e3 * self.l / 1e3
+
+    @property
     def direction(self):
         # the direction of the beam in the global coordinate system
         # this is a crucial point for the transfer from the local to the global systems
@@ -322,46 +326,23 @@ if __name__ == '__main__':
         _nodes.append(Node.Node.from_dict(adict={'ID': i+1, 'coords': (i*_length/_pieces, 0)}))
 
     # beams
-    # section_column = sections.Recangle(height=3, width=20)
     section_column = sections.Circle(r=55)
-    print(section_column.I)
-    print(section_column.A)
-    # rho = 0.007850  # kg/m3
-    rho = 7850000  # g/m3
-    # b1 = HermitianBeam2D.from_dict(adict={'ID': 1, 'E': 2.1e11, 'I': section_column.I['x'], 'A': section_column.A, 'rho': rho, 'i': n1, 'j': n2})  # from dict
     _beams = []
     for i in range(_pieces):
-        _beams.append(HermitianBeam2D.from_dict(adict={'ID': i, 'E': 2.1e11, 'I': section_column.I['x'], 'A': section_column.A, 'rho': rho, 'i': _nodes[i], 'j': _nodes[i+1]}))
-
-    for n in _nodes:
-        print(n)
-    for b in _beams:
-        print(b)
+        _beams.append(HermitianBeam2D.from_dict(adict={'ID': i, 'E': 2.1e11, 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7850000, 'i': _nodes[i], 'j': _nodes[i+1]}))
 
     # supports
     BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
-    # BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
 
     # this is the structure
     structure = Structure.Structure(beams=_beams, supports=BCs)
-    # structure = Structure(beams=[b1], supports=BCs)
 
     # adding loads
     structure.add_single_dynam_to_node(nodeID=len(_nodes)-1, dynam={'FY': -1000000}, clear=True)  # clears previous loads
-    # structure.add_single_dynam_to_node(nodeID=3, dynam={'FX': 20000})
 
-    # solver :-) whatever happens here is done by numpy.
+    # solving it
     solve(structure, analysis='all')
 
-    _gew = 0
-    for b in structure.beams:
-        _gew += b.A / 1e6 * b.rho / 1e3 * b.l / 1e3
-    print('Gewicht:', _gew)
-    # print(structure.M)
-    # print(structure.M.diagonal())
-    # print(np.sum(structure.M.diagonal()))
-
-    print(time.time()-sta)
-
+    # posprocessing for now
     structure.draw()
 
