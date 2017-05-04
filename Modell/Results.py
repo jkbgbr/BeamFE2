@@ -50,41 +50,6 @@ class LinearStaticResult(AnalysisResult):
         super(LinearStaticResult, self).__init__(structure=structure)
         self.displacement_results = displacements  # the result as a one-element vector
 
-    # def global_displacements(self, mode=0, asvector=False):
-    #     # the displacements as a vector or partitioned in a dict by the dofs
-    #     disps = self.global_displacement_vector(mode)
-    #     if asvector:
-    #         return disps  # the full displacement vector as a numpy matrix
-    #     else:
-    #         globaldisps = {}
-    #         for dindex, dofname in enumerate(self.structure.dofnames):
-    #             globaldisps[dofname] = disps[dindex::self.structure.dof]
-    #         return globaldisps  # displacements partitioned by DOF, each a matrix
-    #
-    # def element_displacements(self, mode=None, beam=None, asvector=False):
-    #     # displacements an element for a mode, partitioned in a dict. For each elem an NxDOF numpy matrix
-    #     assert beam in self.structure.beams
-    #     struct = self.structure
-    #     disp = self.global_displacement_vector(mode)
-    #     _T = transfer_matrix(-beam.direction, asdegree=False, blocks=1, blocksize=3)
-    #     _sta = struct.position_in_matrix(nodeID=beam.i.ID, DOF='ux')  # starting position in the global displacement vector for node i
-    #     _end = struct.position_in_matrix(nodeID=beam.j.ID, DOF='ux')  # starting position in the global displacement vector for node j
-    #     disp = np.concatenate([_T * np.matrix(disp[_sta:_sta+beam.dof]), _T * np.matrix(disp[_end:_end+beam.dof])], axis=0)
-    #
-    #     if asvector:  # the displacement vector in the local coordinate system as a numpy matrix
-    #         return disp
-    #     else:
-    #         _ret = {}
-    #         for dindex, dofname in enumerate(beam.dofnames):
-    #             _ret[dofname] = disp[dindex::beam.dof]
-    #         return _ret  # displacements partitioned by DOF, each a matrix
-    #
-    # def global_displacement_vector(self, mode=None):
-    #     # the displacement vector of the structure in the global system, as calculated by the solver
-    #     # returned are the dsplacements for a mode (#index), in form of the displacement vector
-    #     mode = 0  # we only have one, so index is there only to provide a common interface for all analyses
-    #     return self.displacement_results[mode]
-
 
 class ModalResult(AnalysisResult):
     def __init__(self, structure=None, circular_freq=None, modalshapes=None):
