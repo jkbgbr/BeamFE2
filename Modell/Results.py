@@ -13,10 +13,11 @@ class AnalysisResult(object):
     def resulting_displacements(self):
         disps = self.displacements
         print(disps)
-        for disp in disps:
-            print(disp)
+        for k, v in disps.items():
+            print(k)
+            print(v)
 
-        exit()
+            exit()
             # print([math.sqrt(x ** 2 + y ** 2) for x, y in zip(disp['ux'], disp['uy'])])
         return [[math.sqrt(x ** 2 + y ** 2) for x, y in zip(disp['ux'], disp['uy'])] for disp in disps]
 

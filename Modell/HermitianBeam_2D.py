@@ -344,7 +344,7 @@ if __name__ == '__main__':
     structure.add_single_dynam_to_node(nodeID=len(_nodes)-1, dynam={'FY': -1000000}, clear=True)  # clears previous loads
 
     # solving it
-    solve(structure, analysis='all')
+    solve(structure, analysis='modal')
 
     # posprocessing for now
     structure.draw(analysistype='modal', mode=0)

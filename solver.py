@@ -11,6 +11,13 @@ def displacement_postprocessor(struct, disps):
 
     # storing the displacements for the structure. Values are in the global coordinate system.
     globaldisps = {}
+    pp.pprint(disps)
+    pp.pprint(disps[0][1::3])
+
+    # here the result is a dict with keys: DOFs, values: an array, containing the shape's deflections for the given DOF.
+    # however, we needed a list of dicts where each dict contains all three components.
+    hallo
+
     for dindex, dofname in enumerate(struct.dofnames):
         globaldisps[dofname] = disps[dindex::struct.dof]
 
@@ -31,6 +38,10 @@ def displacement_postprocessor(struct, disps):
         _sta = struct.position_in_matrix(nodeID=beam.i.ID, DOF='ux')  # starting position in the global displacement vector for node i
         _end = struct.position_in_matrix(nodeID=beam.j.ID, DOF='ux')  # starting position in the global displacement vector for node j
         beam_dispvectors[beam] = np.concatenate((T * disps[_sta:_sta+beam.dof], T * disps[_end:_end+beam.dof]), axis=0)
+
+    pp.pprint(globaldisps)
+
+    exit()
 
     return globaldisps, beamdisps, beam_dispvectors
 
