@@ -36,7 +36,7 @@ def draw_structure(structure, show=True, analysistype=None, mode=None):
         dre = structure.results[analysistype].global_displacements(mode=0, asvector=True)
         # # the scaling factor, based on the larges displacement and the length of the longest element
 
-        _scale = (_long / 10.) / max(abs(dre))
+        _scale = _long / max(abs(dre))
 
         for beam in structure.beams:
             # beam displacements by component

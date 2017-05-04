@@ -45,8 +45,6 @@ class AnalysisResult(object):
         return self.displacement_results[mode]
 
 
-
-
 class LinearStaticResult(AnalysisResult):
     def __init__(self, structure=None, displacements=None):
         super(LinearStaticResult, self).__init__(structure=structure)
@@ -93,22 +91,6 @@ class ModalResult(AnalysisResult):
         super(ModalResult, self).__init__(structure=structure)
         self.circular_frequencies = circular_freq
         self.displacement_results = modalshapes  # the result as a matrix
-
-
-
-
-    #
-    # def displacements_detailed(self, index=0):
-    #     # the displacements partitioned for the dofs, for the mode #index
-    #     globaldisps = {}
-    #     for dindex, dofname in enumerate(self.structure.dofnames):
-    #         globaldisps[dofname] = self.displacement_results[index][dindex::self.structure.dof]
-    #     yield globaldisps
-    #
-    # @property
-    # def displacement_vector(self, index=None):
-    #     # the displacement vector of the structure in the global system, as calculated by the solver, for the mode in #index
-    #     yield self.displacement_results[index]
 
     @property
     def frequencies(self):

@@ -331,7 +331,7 @@ if __name__ == '__main__':
 
     _nodes = []
     for i in range(_pieces+1):
-        _nodes.append(Node.Node.from_dict(adict={'ID': i+1, 'coords': (i*_length/_pieces, 0)}))
+        _nodes.append(Node.Node.from_dict(adict={'ID': i+1, 'coords': (0, i*_length/_pieces)}))
 
     # beams
     section_column = sections.Circle(r=55)
@@ -351,6 +351,8 @@ if __name__ == '__main__':
     # solving it
     solve(structure, analysis='all')
     # posprocessing for now
-    structure.draw(analysistype='linear static', mode=0)
-    structure.draw(analysistype='modal', mode=0)
+    # structure.draw(analysistype='linear static', mode=0)
+    # structure.draw(analysistype='modal', mode=0)
+    print(time.time()-sta)
+    print(structure.results['modal'].frequencies)
 

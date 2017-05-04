@@ -87,11 +87,7 @@ def solve(structure, analysis=None):
     if analysis in ['modal', 'all']:
         eigvals, eigvecs = eigh(structure.K_with_BC, structure.M)
         circfreq = [math.sqrt(x) for x in eigvals]
-
-        eigvals-ot ugy atrendezni, hogy allo vektorokban legyenek az eredmenyek
-
-
-
+        shapes = [np.matrix([eigvecs[:, x]]).T for x in range(len(eigvecs))]  # casting to list of coulmn matrices
         structure.results['modal'] = Results.ModalResult(structure=structure, circular_freq=circfreq, modalshapes=shapes)
 
     return True
