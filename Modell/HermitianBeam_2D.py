@@ -66,7 +66,8 @@ class HermitianBeam2D(object):
         # displacements are the result from the analysis. Its a dictionary, where the keys are
         # the names of the analyses, and the results themselves are in the LOCAL system, separated
         # according to DOF.
-        self.displacements = None  # displacements in the GLOBAL system, provided by the solver
+        # self.displacements = None  # displacements in the GLOBAL system, provided by the solver
+        self.results = {'linear static': None, 'modal': None, 'buckling': None}
 
     def __repr__(self):
         return 'HermitianBeam2D(ID=%d, i=%r, j=%r, E=%d, I=%.2f, A=%.2f' \
@@ -125,7 +126,7 @@ class HermitianBeam2D(object):
     @property
     def transfer_matrix(self):
         # matrix to rotate the stiffness matrix for compilation
-        return transfer_matrix(alpha=self.direction, asdegree=False, dof=self.dof, blocks=2)
+        return transfer_matrix(alpha=self.direction, asdegree=False, blocksize=self.dof, blocks=2)
 
     def matrix_in_global(self, mtrx=None):
         # matrix of the Beam element in the global coordinate system
@@ -230,9 +231,9 @@ class HermitianBeam2D(object):
     # results
     #
 
-    def deflected_shape(self, local=True, scale=1.):
+    def deflected_shape(self, local=True, scale=1., disps=None):
         """
-        The deflected shape of the beam. based on the local_displacements.
+        The deflected shape of the beam. based on the local displacements provided in disps.
         (ux, uy) = N * q
         if local = False, the values are transferred in the global coordinate system e.g. for plotting
         :return: 
@@ -240,12 +241,14 @@ class HermitianBeam2D(object):
         _ip = self.number_internal_points
         _deflected_shape = []
 
-        _t = transfer_matrix(-self.direction, asdegree=False, blocks=1, dof=2)  # 2x2 transform matrix
+        _t = None  # placeholder for the transform matrix
 
         for i in range(_ip + 1):
-            _val = np_matrix_tolist(self.N(x=i / _ip, L=self.l) * self.local_displacements)  # displacements in the local system
+            _val = np_matrix_tolist(self.N(x=i / _ip, L=self.l) * disps)  # displacements in the local system
             _val = [x * scale for x in _val]
             if not local:
+                if _t is None:
+                    _t = transfer_matrix(-self.direction, asdegree=False, blocks=1, blocksize=2)  # 2x2 transform matrix
                 _val = ((i / _ip) * self.l + _val[0], _val[1])  # the deflected shape in the local coordinate system
                 _val *= _t  # the deflected shape rotated
                 _val = np_matrix_tolist(_val)
@@ -254,34 +257,34 @@ class HermitianBeam2D(object):
 
         return _deflected_shape
 
-    def nodal_reactions(self):
+    def nodal_reactions(self, disps):
         """ reactions in the local coordinate system of the beam """
-        return self.Ke * self.local_displacements
+        return self.Ke * disps
 
-    @property
-    def local_displacements(self):
-        """
-        calculates the nodal displacements in the elements local system.
-        :return: 
-        """
-        # de-rotating matrix to transfer the displacements from the global to the elements local system
-        T = transfer_matrix(-self.direction, asdegree=False, blocks=len(self.nodes))
-        return T * self.displacements
+    # @property
+    # def local_displacements(self):
+    #     """
+    #     calculates the nodal displacements in the elements local system.
+    #     :return:
+    #     """
+    #     # de-rotating matrix to transfer the displacements from the global to the elements local system
+    #     T = transfer_matrix(-self.direction, asdegree=False, blocks=len(self.nodes))
+    #     return T * self.displacements
 
-    def displacement_component(self, component=None, localsystem=False):
-        """
-        Returns a list with the displacements of the component defined
-        These are the nodal displacements calculated 
-        :param localsystem: boolean telling if the results to be provided are in the global or in the local system
-        :param component: any value from the dofnames list
-        :return: 
-        """
-        assert component in self.dofnames
-        if localsystem:
-            _ret = self.local_displacements[self.dofnames.index(component)::self.dof]
-        else:
-            _ret = self.displacements[self.dofnames.index(component)::self.dof]
-        return np_matrix_tolist(_ret)
+    # def displacement_component(self, component=None, localsystem=False):
+    #     """
+    #     Returns a list with the displacements of the component defined
+    #     These are the nodal displacements calculated
+    #     :param localsystem: boolean telling if the results to be provided are in the global or in the local system
+    #     :param component: any value from the dofnames list
+    #     :return:
+    #     """
+    #     assert component in self.dofnames
+    #     if localsystem:
+    #         _ret = self.local_displacements[self.dofnames.index(component)::self.dof]
+    #     else:
+    #         _ret = self.displacements[self.dofnames.index(component)::self.dof]
+    #     return np_matrix_tolist(_ret)
 #
 
 
@@ -344,5 +347,5 @@ if __name__ == '__main__':
     solve(structure, analysis='all')
 
     # posprocessing for now
-    structure.draw()
+    structure.draw(analysistype='modal', mode=0)
 

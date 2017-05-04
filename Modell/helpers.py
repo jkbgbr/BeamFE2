@@ -40,30 +40,30 @@ def compile_global_matrix(beams, stiffness=False, mass=False, geometrical=False)
     return _empty
 
 
-def transfer_matrix(alpha, asdegree=False, blocks=2, dof=3):
+def transfer_matrix(alpha, asdegree=False, blocks=2, blocksize=3):
     # matrix to rotate the stiffness matrix for compilation
     if asdegree:
         alpha = math.radians(alpha)
     cs = math.cos(alpha)
     ss = math.sin(alpha)
-    if dof == 3:
+    if blocksize == 3:
         _block = np.matrix([[cs,    -ss,    0],
                             [ss,    cs,     0],
                             [0,     0,      1]])
-    elif dof == 2:
+    elif blocksize == 2:
         _block = np.matrix([[cs,    -ss],
                             [ss,    cs]])
 
     else:
         raise Exception('not implementeds, dof should be 2 or 3')
 
-    _sumdof = blocks * dof
+    _sumdof = blocks * blocksize
     _empty = np.zeros(_sumdof ** 2)
     _empty = np.matrix(_empty.reshape(_sumdof, _sumdof))
 
     for b in range(blocks):
-        _sti = b * dof  # starting element of the block for node i
-        _eni = _sti + dof  # end element for the block if node i
+        _sti = b * blocksize  # starting element of the block for node i
+        _eni = _sti + blocksize  # end element for the block if node i
         _empty[_sti:_eni, _sti:_eni] += _block
 
     return _empty

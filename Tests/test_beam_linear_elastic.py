@@ -71,15 +71,15 @@ class Hermitian2D_Element(unittest.TestCase):
 
     def test_FX_load(self):
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 1}, clear=True)
-        solve(self.beam_as_structure, analysis='linear_elastic')
-        disps = self.beam_as_structure.displacements
-        _expected = np.matrix([[0.0],
-                               [0.0],
-                               [0.0],
-                               [1.0],
-                               [0.0],
-                               [0.0]])
-        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
+        solve(self.beam_as_structure, analysis='linear static')
+        disps = self.beam_as_structure.beams[0].results['linear static'].displacements  # only one beam
+        disps = disps[0]  # in linear static only one solution
+        _expected = {'ux': np.matrix([[0.], [1.]]),
+                     'uy': np.matrix([[0.], [0.]]),
+                     'rotz': np.matrix([[0.], [0.]])}
+        self.assertTrue(np.allclose(disps['ux'], _expected['ux'], atol=ATOL))
+        self.assertTrue(np.allclose(disps['uy'], _expected['uy'], atol=ATOL))
+        self.assertTrue(np.allclose(disps['rotz'], _expected['rotz'], atol=ATOL))
 
     def test_FY_load(self):
         # tests a clamped beam for vertical load at the tip
@@ -88,15 +88,17 @@ class Hermitian2D_Element(unittest.TestCase):
         L = self.beam1.l
         EI = self.beam1.EI
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': P}, clear=True)
-        solve(self.beam_as_structure, analysis='linear_elastic')
-        disps = self.beam_as_structure.displacements
-        _expected = np.matrix([[0.0],
-                               [0.0],
-                               [0.0],
-                               [0.0],
-                               [(P * L ** 3) / (3 * EI)],  # vertical displacement at the end
-                               [(P * L ** 2) / (2 * EI)]])  # rotation at the end
-        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
+        solve(self.beam_as_structure, analysis='linear static')
+
+        disps = self.beam_as_structure.beams[0].results['linear static'].displacements  # only one beam
+        disps = disps[0]  # in linear static only one solution
+        _expected = {'ux': np.matrix([[0.], [0.]]),
+                     'uy': np.matrix([[0.], [(P * L ** 3) / (3 * EI)]]),
+                     'rotz': np.matrix([[0.], [(P * L ** 2) / (2 * EI)]])}
+
+        self.assertTrue(np.allclose(disps['ux'], _expected['ux'], atol=ATOL))
+        self.assertTrue(np.allclose(disps['uy'], _expected['uy'], atol=ATOL))
+        self.assertTrue(np.allclose(disps['rotz'], _expected['rotz'], atol=ATOL))
 
     def test_MZ_load(self):
         # tests a clamped beam for bending moment at the tip
@@ -105,32 +107,35 @@ class Hermitian2D_Element(unittest.TestCase):
         L = self.beam1.l
         EI = self.beam1.EI
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'MZ': M}, clear=True)
-        solve(self.beam_as_structure, analysis='linear_elastic')
-        disps = self.beam_as_structure.displacements
-        _expected = np.matrix([[0.0],
-                               [0.0],
-                               [0.0],
-                               [0.0],
-                               [(M * L ** 2) / (2 * EI)],  # vertical displacement at the end
-                               [(M * L) / EI]])  # rotation at the end
-        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
+        solve(self.beam_as_structure, analysis='linear static')
+
+        disps = self.beam_as_structure.beams[0].results['linear static'].displacements  # only one beam
+        disps = disps[0]  # in linear static only one solution
+        _expected = {'ux': np.matrix([[0.], [0.]]),
+                     'uy': np.matrix([[0.], [(M * L ** 2) / (2 * EI)]]),
+                     'rotz': np.matrix([[0.], [(M * L) / EI]])}
+
+        self.assertTrue(np.allclose(disps['ux'], _expected['ux'], atol=ATOL))
+        self.assertTrue(np.allclose(disps['uy'], _expected['uy'], atol=ATOL))
+        self.assertTrue(np.allclose(disps['rotz'], _expected['rotz'], atol=ATOL))
+
 
     # def test_nodal_reactions(self):
     #     # FX
     #     self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 1}, clear=True)
-    #     self.beam_as_structure.solve(type='linear_elastic')
+    #     self.beam_as_structure.solve(type='linear static')
     #     for beam in self.beam_as_structure.beams:
     #         print(beam.Ke * beam.local_displacements)
     #     print('')
     #     # FY
     #     self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': 1}, clear=True)
-    #     self.beam_as_structure.solve(type='linear_elastic')
+    #     self.beam_as_structure.solve(type='linear static')
     #     for beam in self.beam_as_structure.beams:
     #         print(beam.Ke * beam.local_displacements)
     #     print('')
     #     # MZ
     #     self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'MZ': 1}, clear=True)
-    #     self.beam_as_structure.solve(type='linear_elastic')
+    #     self.beam_as_structure.solve(type='linear static')
     #     for beam in self.beam_as_structure.beams:
     #         print(beam.Ke * beam.local_displacements)
     #     print('')
@@ -144,7 +149,7 @@ class Hermitian2D_Element(unittest.TestCase):
                                  [0, -12, -6, 0, 12, -6],
                                  [0, 6, 2, 0, -6, 4]])
 
-        _tm = HB.transfer_matrix(alpha=self.rotation_angle, asdegree=False, blocks=2, dof=3)
+        _tm = HB.transfer_matrix(alpha=self.rotation_angle, asdegree=False, blocks=2, blocksize=3)
         k_asinteger = _tm * k_asinteger * _tm.T
         self.assertTrue(np.allclose(k_asinteger, self.beam3.matrix_in_global(mtrx=self.beam3.Ke)))
         self.assertTrue(np.allclose(self.beam3.matrix_in_global(mtrx=self.beam3.Ke), self.beam4.matrix_in_global(mtrx=self.beam4.Ke)))
@@ -158,66 +163,83 @@ class Hermitian2D_Element(unittest.TestCase):
         # tests if the matrix is positive definite. The element stiffness matrix without proper constraints is not.
         self.assertRaises(np.linalg.linalg.LinAlgError, np.linalg.cholesky, self.beam3.Ke)
 
-    def test_FX_load_rotated(self):
-        self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'FX': 1., 'FY': 0.5}, clear=True)
-        solve(self.beam_as_structure_2, analysis='linear_elastic')
-        # checking the global values
-        disps = self.beam_as_structure_2.displacements
-        _expected = np.matrix([[0.0],
-                               [0.0],
-                               [0.0],
-                               [1.0],
-                               [0.5],
-                               [0.0]])
-        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
-
-        # checking the local values
-        disps = self.beam_as_structure_2.beams[0].local_displacements
-        _expected = np.matrix([[0.0],
-                               [0.0],
-                               [0.0],
-                               [1.0 / self._r],
-                               [0.0],
-                               [0.0]])
-        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
-
-
-    def test_FY_load_rotated(self):
-        # tests a clamped beam for vertical load at the tip
-        import random
-        P = random.randrange(1, 200)
-        L = self.beam3.l
-        EI = self.beam3.EI
-        _t = HB.transfer_matrix(alpha=self.rotation_angle, asdegree=False, blocks=1, dof=2)
-        _load = _t * np.matrix([[0, P]]).T
-
-        self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'FX': _load[0], 'FY': _load[1]}, clear=True)
-        solve(self.beam_as_structure_2, analysis='linear_elastic')
-        disps = self.beam_as_structure_2.beams[0].local_displacements
-        _expected = np.matrix([[0.0],
-                               [0.0],
-                               [0.0],
-                               [0.0],
-                               [(P * L ** 3) / (3 * EI)],  # vertical displacement at the end
-                               [(P * L ** 2) / (2 * EI)]])  # rotation at the end
-        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
-
-    def test_MZ_load_rotated(self):
-        # tests a clamped beam for bending moment at the tip
-        import random
-        M = random.randrange(1, 200)
-        L = self.beam3.l
-        EI = self.beam3.EI
-        self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'MZ': M}, clear=True)
-        solve(self.beam_as_structure_2, analysis='linear_elastic')
-        disps = self.beam_as_structure_2.beams[0].local_displacements
-        _expected = np.matrix([[0.0],
-                               [0.0],
-                               [0.0],
-                               [0.0],
-                               [(M * L ** 2) / (2 * EI)],  # vertical displacement at the end
-                               [(M * L) / EI]])  # rotation at the end
-        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
+    # def test_FX_load_rotated(self):
+    #     self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'FX': 1., 'FY': 0.5}, clear=True)
+    #     solve(self.beam_as_structure_2, analysis='linear static')
+    #
+    #     # checking the displacements in the global system - results of the structure
+    #     disps = self.beam_as_structure_2.results['linear static'].displacements
+    #     disps = disps[0]  # in linear static only one solution
+    #     _expected = {'ux': np.matrix([[0.], [1.]]),
+    #                  'uy': np.matrix([[0.], [0.5]]),
+    #                  'rotz': np.matrix([[0.], [0.]])}
+    #     self.assertTrue(np.allclose(disps['ux'], _expected['ux'], atol=ATOL))
+    #     self.assertTrue(np.allclose(disps['uy'], _expected['uy'], atol=ATOL))
+    #     self.assertTrue(np.allclose(disps['rotz'], _expected['rotz'], atol=ATOL))
+    #
+    #     # # checking the displacements in the local system - results of the first an only beam
+    #     beam = self.beam_as_structure_2.beams[0]
+    #     disps = beam.results['linear static'].displacements
+    #     disps = disps[0]  # in linear static only one solution
+    #     _expected = {'ux': np.matrix([[1.], [1. / self._r]]),
+    #                  'uy': np.matrix([[0.], [0.]]),
+    #                  'rotz': np.matrix([[0.], [0.]])}
+    #
+    #     print(disps)
+    #     print(_expected)
+    #
+    #
+    #     self.assertTrue(np.allclose(disps['ux'], _expected['ux'], atol=ATOL))
+    #     self.assertTrue(np.allclose(disps['uy'], _expected['uy'], atol=ATOL))
+    #     self.assertTrue(np.allclose(disps['rotz'], _expected['rotz'], atol=ATOL))
+    #
+    #
+    #     # disps = self.beam_as_structure_2.beams[0].local_displacements
+    #     # _expected = np.matrix([[0.0],
+    #     #                        [0.0],
+    #     #                        [0.0],
+    #     #                        [1.0 / self._r],
+    #     #                        [0.0],
+    #     #                        [0.0]])
+    #     # self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
+    #
+    #
+    # def test_FY_load_rotated(self):
+    #     # tests a clamped beam for vertical load at the tip
+    #     import random
+    #     P = random.randrange(1, 200)
+    #     L = self.beam3.l
+    #     EI = self.beam3.EI
+    #     _t = HB.transfer_matrix(alpha=self.rotation_angle, asdegree=False, blocks=1, blocksize=2)
+    #     _load = _t * np.matrix([[0, P]]).T
+    #
+    #     self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'FX': _load[0], 'FY': _load[1]}, clear=True)
+    #     solve(self.beam_as_structure_2, analysis='linear static')
+    #     disps = self.beam_as_structure_2.beams[0].local_displacements
+    #     _expected = np.matrix([[0.0],
+    #                            [0.0],
+    #                            [0.0],
+    #                            [0.0],
+    #                            [(P * L ** 3) / (3 * EI)],  # vertical displacement at the end
+    #                            [(P * L ** 2) / (2 * EI)]])  # rotation at the end
+    #     self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
+    #
+    # def test_MZ_load_rotated(self):
+    #     # tests a clamped beam for bending moment at the tip
+    #     import random
+    #     M = random.randrange(1, 200)
+    #     L = self.beam3.l
+    #     EI = self.beam3.EI
+    #     self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'MZ': M}, clear=True)
+    #     solve(self.beam_as_structure_2, analysis='linear static')
+    #     disps = self.beam_as_structure_2.beams[0].local_displacements
+    #     _expected = np.matrix([[0.0],
+    #                            [0.0],
+    #                            [0.0],
+    #                            [0.0],
+    #                            [(M * L ** 2) / (2 * EI)],  # vertical displacement at the end
+    #                            [(M * L) / EI]])  # rotation at the end
+    #     self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
 
 class Hermitian2D_Structure(unittest.TestCase):
@@ -249,21 +271,15 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_1(self):
         # assertion #1: single Axial force on Node #4
         self.structure_1.add_single_dynam_to_node(nodeID=4, dynam={'FX': 1}, clear=True)
-        solve(self.structure_1, analysis='linear_elastic')
-        disps = self.structure_1.displacements
-        _expected = np.matrix([[0.0],
-                               [0.0],
-                               [0.0],
-                               [4.76190476e-06],
-                               [0.00000000e+00],
-                               [0.00000000e+00],
-                               [9.52380952e-06],
-                               [0.00000000e+00],
-                               [0.00000000e+00],
-                               [1.42857143e-05],
-                               [0.00000000e+00],
-                               [0.00000000e+00]])
-        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
+        solve(self.structure_1, analysis='linear static')
+        disps = self.structure_1.results['linear static'].displacements  # only one beam
+        disps = disps[0]  # in linear static only one solution
+        _expected = {'ux': np.matrix([[0.], [4.76190476e-06], [9.52380952e-06], [1.42857143e-05]]),
+                     'uy': np.matrix([[0.], [0.], [0.], [0.]]),
+                     'rotz': np.matrix([[0.], [0.], [0.], [0.]])}
+        self.assertTrue(np.allclose(disps['ux'], _expected['ux'], atol=ATOL))
+        self.assertTrue(np.allclose(disps['uy'], _expected['uy'], atol=ATOL))
+        self.assertTrue(np.allclose(disps['rotz'], _expected['rotz'], atol=ATOL))
 
     def test_nodal_displacements_11(self):
         # assertion #1: single Axial force on Node 2, the element is rotated, so are the loads.
@@ -288,22 +304,39 @@ class Hermitian2D_Structure(unittest.TestCase):
 
         # since the elements were previously rotated by 45 degrees, now we rotate the results by -45 degrees back...
         T = HB.transfer_matrix(-45, asdegree=True, blocks=len(structure.nodes))
-        solve(structure, analysis='linear_elastic')
-        disps = T * structure.displacements
+        solve(structure, analysis='linear static')
 
-        _expected = np.matrix([[0.0],
-                               [0.0],
-                               [0.0],
-                               [4.76190476e-06],  # same as in _1
-                               [0.00000000e+00],
-                               [0.00000000e+00],
-                               [9.52380952e-06],
-                               [0.00000000e+00],
-                               [0.00000000e+00],
-                               [1.42857143e-05],
-                               [0.00000000e+00],
-                               [0.00000000e+00]])
-        self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
+        disps = structure.results['linear static'].displacements
+        print(disps)
+        print(T)
+        disps = T * disps  # in linear static only one solution
+        _expected = {'ux': np.matrix([[0.], [4.76190476e-06], [9.52380952e-06], [1.42857143e-05]]),
+                     'uy': np.matrix([[0.], [0.], [0.], [0.]]),
+                     'rotz': np.matrix([[0.], [0.], [0.], [0.]])}
+
+
+        print(disps)
+        print(_expected)
+        self.assertTrue(np.allclose(disps['ux'], _expected['ux'], atol=ATOL))
+        self.assertTrue(np.allclose(disps['uy'], _expected['uy'], atol=ATOL))
+        self.assertTrue(np.allclose(disps['rotz'], _expected['rotz'], atol=ATOL))
+
+        #
+        # disps = structure.displacements
+        #
+        # _expected = np.matrix([[0.0],
+        #                        [0.0],
+        #                        [0.0],
+        #                        [4.76190476e-06],  # same as in _1
+        #                        [0.00000000e+00],
+        #                        [0.00000000e+00],
+        #                        [9.52380952e-06],
+        #                        [0.00000000e+00],
+        #                        [0.00000000e+00],
+        #                        [1.42857143e-05],
+        #                        [0.00000000e+00],
+        #                        [0.00000000e+00]])
+        # self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
     def test_nodal_displacements_12(self):
         # same as _11, but the beams are rotated 60 degree clockwise
@@ -330,7 +363,7 @@ class Hermitian2D_Structure(unittest.TestCase):
 
         # since the elements were previously rotated by -60 degrees, now we rotate the results by 60 degrees back...
         T = HB.transfer_matrix(60, asdegree=True, blocks=len(structure.nodes))
-        solve(structure, analysis='linear_elastic')
+        solve(structure, analysis='linear static')
         disps = T * structure.displacements
         _expected = np.matrix([[0.0],
                                [0.0],
@@ -349,7 +382,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_2(self):
         # assertion #2: single shear load at Node 2
         self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FY': -1}, clear=True)
-        solve(self.structure_1, analysis='linear_elastic')
+        solve(self.structure_1, analysis='linear static')
         disps = self.structure_1.displacements
         _expected = np.matrix([[0.000000e+00],
                                [-1.000000e-21],
@@ -368,7 +401,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_3(self):
         # assertion #3: single concentrated moment at node 3
         self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'MZ': 1000000}, clear=True)
-        solve(self.structure_1, analysis='linear_elastic')
+        solve(self.structure_1, analysis='linear static')
         disps = self.structure_1.displacements
         _expected = np.matrix([[0.000000e+00],
                                [-1.040834e-61],
@@ -387,7 +420,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_4(self):
         # assertion #4: lots of loads at Node 3
         self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1000, 'FY': 1000, 'MZ': 1000000}, clear=True)
-        solve(self.structure_1, analysis='linear_elastic')
+        solve(self.structure_1, analysis='linear static')
         disps = self.structure_1.displacements
         _expected = np.matrix([[1.000000e-48],
                                [1.000000e-48],
@@ -406,7 +439,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_5(self):
         # assertion #4: lots of loads at Node 4
         self.structure_1.add_single_dynam_to_node(nodeID=4, dynam={'FX': 1000, 'FY': 1000, 'MZ': 1000000}, clear=True)
-        solve(self.structure_1, analysis='linear_elastic')
+        solve(self.structure_1, analysis='linear static')
         disps = self.structure_1.displacements
         _expected = np.matrix([[1.000000e-48],
                                [1.000000e-48],
@@ -427,7 +460,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_6(self):
         # assertion #5: shear load on node 3
         self.structure_2.add_single_dynam_to_node(nodeID=3, dynam={'FY': -1000}, clear=True)
-        solve(self.structure_2, analysis='linear_elastic')
+        solve(self.structure_2, analysis='linear static')
         disps = self.structure_2.displacements
         _expected = np.matrix([[0.],
                                [0.],
@@ -446,7 +479,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_7(self):
         # assertion #5: shear load on node 2 and node 3
         self.structure_2.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1000, 'FY': 1000, 'MZ': 1000000}, clear=True)
-        solve(self.structure_2, analysis='linear_elastic')
+        solve(self.structure_2, analysis='linear static')
         disps = self.structure_2.displacements
         _expected = np.matrix([[1.000000e-48],
                                [1.000000e-48],
@@ -465,7 +498,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_8(self):
         # assertion #5: shear load on node 2 and node 3
         self.structure_2.add_single_dynam_to_node(nodeID=4, dynam={'FX': 0, 'FY': -1, 'MZ': 0}, clear=True)
-        solve(self.structure_2, analysis='linear_elastic')
+        solve(self.structure_2, analysis='linear static')
         disps = self.structure_2.displacements
         # todo: this one fails, probably the transformation is not OK
         _expected = np.matrix([[0.000000e+00],
@@ -506,7 +539,7 @@ class Hermitian2D_Structure(unittest.TestCase):
 #         # for beam in self.structure_1.beams:
 #         #     beam.restore_DOFs()
 #         self.structure_1.add_single_dynam_to_node(nodeID=2, dynam={'FY': 1000000}, clear=True)
-#         self.structure_1.solve(type='linear_elastic')
+#         self.structure_1.solve(type='linear static')
 #         disps_1 = self.structure_1.displacements
 #         # print(disps_1)
 #
