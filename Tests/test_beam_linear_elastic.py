@@ -3,6 +3,7 @@ from Modell import HermitianBeam_2D as HB
 from Modell import BeamSections as sections
 from Modell import Structure
 from Modell import Node
+from solver import solve
 
 import numpy as np
 import math
@@ -70,7 +71,7 @@ class Hermitian2D_Element(unittest.TestCase):
 
     def test_FX_load(self):
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 1}, clear=True)
-        self.beam_as_structure.solve(analysis='linear_elastic')
+        solve(self.beam_as_structure, analysis='linear_elastic')
         disps = self.beam_as_structure.displacements
         _expected = np.matrix([[0.0],
                                [0.0],
@@ -87,7 +88,7 @@ class Hermitian2D_Element(unittest.TestCase):
         L = self.beam1.l
         EI = self.beam1.EI
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': P}, clear=True)
-        self.beam_as_structure.solve(analysis='linear_elastic')
+        solve(self.beam_as_structure, analysis='linear_elastic')
         disps = self.beam_as_structure.displacements
         _expected = np.matrix([[0.0],
                                [0.0],
@@ -104,7 +105,7 @@ class Hermitian2D_Element(unittest.TestCase):
         L = self.beam1.l
         EI = self.beam1.EI
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'MZ': M}, clear=True)
-        self.beam_as_structure.solve(analysis='linear_elastic')
+        solve(self.beam_as_structure, analysis='linear_elastic')
         disps = self.beam_as_structure.displacements
         _expected = np.matrix([[0.0],
                                [0.0],
@@ -159,7 +160,7 @@ class Hermitian2D_Element(unittest.TestCase):
 
     def test_FX_load_rotated(self):
         self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'FX': 1., 'FY': 0.5}, clear=True)
-        self.beam_as_structure_2.solve(analysis='linear_elastic')
+        solve(self.beam_as_structure_2, analysis='linear_elastic')
         # checking the global values
         disps = self.beam_as_structure_2.displacements
         _expected = np.matrix([[0.0],
@@ -191,7 +192,7 @@ class Hermitian2D_Element(unittest.TestCase):
         _load = _t * np.matrix([[0, P]]).T
 
         self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'FX': _load[0], 'FY': _load[1]}, clear=True)
-        self.beam_as_structure_2.solve(analysis='linear_elastic')
+        solve(self.beam_as_structure_2, analysis='linear_elastic')
         disps = self.beam_as_structure_2.beams[0].local_displacements
         _expected = np.matrix([[0.0],
                                [0.0],
@@ -208,7 +209,7 @@ class Hermitian2D_Element(unittest.TestCase):
         L = self.beam3.l
         EI = self.beam3.EI
         self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'MZ': M}, clear=True)
-        self.beam_as_structure_2.solve(analysis='linear_elastic')
+        solve(self.beam_as_structure_2, analysis='linear_elastic')
         disps = self.beam_as_structure_2.beams[0].local_displacements
         _expected = np.matrix([[0.0],
                                [0.0],
@@ -248,7 +249,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_1(self):
         # assertion #1: single Axial force on Node #4
         self.structure_1.add_single_dynam_to_node(nodeID=4, dynam={'FX': 1}, clear=True)
-        self.structure_1.solve(analysis='linear_elastic')
+        solve(self.structure_1, analysis='linear_elastic')
         disps = self.structure_1.displacements
         _expected = np.matrix([[0.0],
                                [0.0],
@@ -287,7 +288,7 @@ class Hermitian2D_Structure(unittest.TestCase):
 
         # since the elements were previously rotated by 45 degrees, now we rotate the results by -45 degrees back...
         T = HB.transfer_matrix(-45, asdegree=True, blocks=len(structure.nodes))
-        structure.solve(analysis='linear_elastic')
+        solve(structure, analysis='linear_elastic')
         disps = T * structure.displacements
 
         _expected = np.matrix([[0.0],
@@ -329,7 +330,7 @@ class Hermitian2D_Structure(unittest.TestCase):
 
         # since the elements were previously rotated by -60 degrees, now we rotate the results by 60 degrees back...
         T = HB.transfer_matrix(60, asdegree=True, blocks=len(structure.nodes))
-        structure.solve(analysis='linear_elastic')
+        solve(structure, analysis='linear_elastic')
         disps = T * structure.displacements
         _expected = np.matrix([[0.0],
                                [0.0],
@@ -348,7 +349,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_2(self):
         # assertion #2: single shear load at Node 2
         self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FY': -1}, clear=True)
-        self.structure_1.solve(analysis='linear_elastic')
+        solve(self.structure_1, analysis='linear_elastic')
         disps = self.structure_1.displacements
         _expected = np.matrix([[0.000000e+00],
                                [-1.000000e-21],
@@ -367,7 +368,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_3(self):
         # assertion #3: single concentrated moment at node 3
         self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'MZ': 1000000}, clear=True)
-        self.structure_1.solve(analysis='linear_elastic')
+        solve(self.structure_1, analysis='linear_elastic')
         disps = self.structure_1.displacements
         _expected = np.matrix([[0.000000e+00],
                                [-1.040834e-61],
@@ -386,7 +387,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_4(self):
         # assertion #4: lots of loads at Node 3
         self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1000, 'FY': 1000, 'MZ': 1000000}, clear=True)
-        self.structure_1.solve(analysis='linear_elastic')
+        solve(self.structure_1, analysis='linear_elastic')
         disps = self.structure_1.displacements
         _expected = np.matrix([[1.000000e-48],
                                [1.000000e-48],
@@ -405,7 +406,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_5(self):
         # assertion #4: lots of loads at Node 4
         self.structure_1.add_single_dynam_to_node(nodeID=4, dynam={'FX': 1000, 'FY': 1000, 'MZ': 1000000}, clear=True)
-        self.structure_1.solve(analysis='linear_elastic')
+        solve(self.structure_1, analysis='linear_elastic')
         disps = self.structure_1.displacements
         _expected = np.matrix([[1.000000e-48],
                                [1.000000e-48],
@@ -426,7 +427,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_6(self):
         # assertion #5: shear load on node 3
         self.structure_2.add_single_dynam_to_node(nodeID=3, dynam={'FY': -1000}, clear=True)
-        self.structure_2.solve(analysis='linear_elastic')
+        solve(self.structure_2, analysis='linear_elastic')
         disps = self.structure_2.displacements
         _expected = np.matrix([[0.],
                                [0.],
@@ -445,7 +446,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_7(self):
         # assertion #5: shear load on node 2 and node 3
         self.structure_2.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1000, 'FY': 1000, 'MZ': 1000000}, clear=True)
-        self.structure_2.solve(analysis='linear_elastic')
+        solve(self.structure_2, analysis='linear_elastic')
         disps = self.structure_2.displacements
         _expected = np.matrix([[1.000000e-48],
                                [1.000000e-48],
@@ -464,7 +465,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_8(self):
         # assertion #5: shear load on node 2 and node 3
         self.structure_2.add_single_dynam_to_node(nodeID=4, dynam={'FX': 0, 'FY': -1, 'MZ': 0}, clear=True)
-        self.structure_2.solve(analysis='linear_elastic')
+        solve(self.structure_2, analysis='linear_elastic')
         disps = self.structure_2.displacements
         # todo: this one fails, probably the transformation is not OK
         _expected = np.matrix([[0.000000e+00],

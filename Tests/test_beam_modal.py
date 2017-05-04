@@ -4,6 +4,7 @@ from Modell import BeamSections as sections
 from Modell import Structure
 from Modell import Node
 from Modell import Material
+from solver import solve
 
 from Tests import ATOL
 
@@ -53,7 +54,7 @@ class Hermitian2D_Model(unittest.TestCase):
         # structure.add_single_dynam_to_node(nodeID=len(_nodes) - 1, dynam={'FY': -1000000}, clear=True)  # clears previous loads
 
         # solver :-) whatever happens here is done by numpy.
-        structure.solve(analysis='modal')
+        solve(structure, analysis='modal')
 
         # pre-calculated values are from Axis, except for f3, that should be 708.3 Hz
         for pre, f in zip([40.56, 253.55, 711.3, 923.26], structure.frequencies[0:4]):

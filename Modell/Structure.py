@@ -2,12 +2,12 @@
 from drawing import draw_beam
 import copy
 from Modell.helpers import *
-from scipy.linalg import eigh
+from solver import solve
 
 
 class Structure(object):
     """
-    The Structure, composed of the FE Modell.
+    The Structure, composed of the FE Beams.
     """
     def __init__(self, beams=None, supports=None):
         self.beams = beams
@@ -264,55 +264,6 @@ class Structure(object):
         else:
             print('The stiffness matrix is singular')
             return False
-
-    def solve(self, analysis=None):
-        """
-        solves the system, returns the vector of displacements.
-        :return: 
-        """
-        assert analysis in ['linear_elastic', 'modal', 'all']
-        assert self.stiffness_matrix_is_ok
-        assert self.node_numbering_is_ok
-
-        if analysis in ['linear_elastic', 'all']:
-            # linear static analysis
-            self.displacements = np.linalg.inv(self.K_with_BC) * self.q
-            self.displacements_for_beams()
-
-        elif analysis in ['buckling']:
-            raise NotImplementedError
-            # Linear buckling
-            # not implemented yet!
-
-        # modal analyse
-        elif analysis in ['modal', 'all']:
-            eigvals, eigvecs = eigh(self.K_with_BC, self.M)
-            self.frequencies = [math.sqrt(x)/(2*math.pi) for x in eigvals if x > 0]
-            self.nodal_shapes = eigvecs.T
-
-            # print(eigvals[0:5])
-            # print([math.sqrt(x) for x in eigvals if x > 0][0:5])
-            # print([math.sqrt(x)/(2*3.1415) for x in eigvals if x > 0][0:5])
-            # print('')
-            # for shind, sh in enumerate(eigvecs[0:5]):
-            #
-            #     print('')
-            #     _ux = sh[0::3]
-            #     _uy = sh[1::3]
-            #     _rotz = sh[2::3]
-            #     print('ux:', _ux)
-            #     print('uy:', _uy)
-            #     print('rotz:', _rotz)
-            #
-            #     # Two subplots, the axes array is 1-d
-            #     f, axarr = plt.subplots(2)
-            #     axarr[0].plot(list(range(len(_uy))), _ux)
-            #     axarr[0].set_title('#%d, f=%.2f Hz' % (shind+1, math.sqrt(eigvals[shind]) / 2*3.1415))
-            #     axarr[1].plot(list(range(len(_uy))), _uy)
-            #     plt.show()
-
-
-        return True
 
     def compile_global_geometrical_stiffness_matrix(self):
         """
