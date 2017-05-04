@@ -188,26 +188,26 @@ class HermitianBeam2D(object):
     def Me(self):
         return self._Me()
 
-    def _Ke_geom(self):
-        # the geometrical stiffness matrix, from H-P. Gavin CEE 421L. Matrix Structural Anyalsis - Duke University
-        _locdisp = self.local_displacements
-        T = _locdisp[3] - _locdisp[0]  # change of the axial length
-        L = self.l
-        _ret = np.matrix([
-            [0, 0, 0, 0, 0, 0],
-            [0, 6./5., L/10., 0, -(6./5.), L/10.],
-            [0, L/10., 2*(L**2)/15., 0, -(L/10.), -(L/30.)],
-            [0, 0, 0, 0, 0, 0],
-            [0, -(6./5.), -(L/10.), 0, (6./5.), -(L/10.)],
-            [0, (L/10.), -(L**2)/30., 0, -(L/10.), -(2*(L**2))/15.]
-        ])
-        _ret = np.multiply((T / L), _ret)
-
-        return _ret
-
-    @property
-    def Ke_geom(self):
-        return self._Ke_geom()
+    # def _Ke_geom(self):
+    #     # the geometrical stiffness matrix, from H-P. Gavin CEE 421L. Matrix Structural Anyalsis - Duke University
+    #     _locdisp = self.local_displacements
+    #     T = _locdisp[3] - _locdisp[0]  # change of the axial length
+    #     L = self.l
+    #     _ret = np.matrix([
+    #         [0, 0, 0, 0, 0, 0],
+    #         [0, 6./5., L/10., 0, -(6./5.), L/10.],
+    #         [0, L/10., 2*(L**2)/15., 0, -(L/10.), -(L/30.)],
+    #         [0, 0, 0, 0, 0, 0],
+    #         [0, -(6./5.), -(L/10.), 0, (6./5.), -(L/10.)],
+    #         [0, (L/10.), -(L**2)/30., 0, -(L/10.), -(2*(L**2))/15.]
+    #     ])
+    #     _ret = np.multiply((T / L), _ret)
+    #
+    #     return _ret
+    #
+    # @property
+    # def Ke_geom(self):
+    #     return self._Ke_geom()
 
     def _Ke(self):
         # full stiffness matrix of the beam element in the element coordinate system
