@@ -236,7 +236,8 @@ class HermitianBeam2D(object):
 
     def deflected_shape(self, local=True, scale=1., disps=None):
         """
-        The deflected shape of the beam. based on the local displacements provided in disps.
+        The deflected shape of the beam. 
+        Based on the local, non-partitioned displacements of the end nodes, provided in disps.
         (ux, uy) = N * q
         if local = False, the values are transferred in the global coordinate system e.g. for plotting
         :return: 
@@ -247,13 +248,14 @@ class HermitianBeam2D(object):
         _t = None  # placeholder for the transform matrix
 
         for i in range(_ip + 1):
-            _val = np_matrix_tolist(self.N(x=i / _ip, L=self.l) * disps)  # displacements in the local system
-            _val = [x * scale for x in _val]
+            _val = self.N(x=i / _ip, L=self.l) * disps  # displacements in the local system
+            _val = np.multiply(scale, _val)
+            # _val = [x * scale for x in _val]
             if not local:
                 if _t is None:
                     _t = transfer_matrix(-self.direction, asdegree=False, blocks=1, blocksize=2)  # 2x2 transform matrix
-                _val = ((i / _ip) * self.l + _val[0], _val[1])  # the deflected shape in the local coordinate system
-                _val *= _t  # the deflected shape rotated
+                _val[0, 0] += (i / _ip) * self.l  # the deflected shape in the local coordinate system
+                _val = _t * _val  # the deflected shape rotated
                 _val = np_matrix_tolist(_val)
                 _val = (_val[0] + self.i.x, _val[1] + self.i.y)
             _deflected_shape.append(_val)
@@ -347,8 +349,8 @@ if __name__ == '__main__':
     structure.add_single_dynam_to_node(nodeID=len(_nodes)-1, dynam={'FY': -1000000}, clear=True)  # clears previous loads
 
     # solving it
-    solve(structure, analysis='modal')
-
+    solve(structure, analysis='all')
     # posprocessing for now
+    structure.draw(analysistype='linear static', mode=0)
     structure.draw(analysistype='modal', mode=0)
 

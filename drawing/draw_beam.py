@@ -32,16 +32,16 @@ def draw_structure(structure, show=True, analysistype=None, mode=None):
         _long = sorted(structure.beams, key=lambda x: x.l)[-1].l
 
         # # displacements
-        dre = structure.results[analysistype].resulting_displacements[mode]
+
+        dre = structure.results[analysistype].global_displacements(mode=0, asvector=True)
         # # the scaling factor, based on the larges displacement and the length of the longest element
-        _scale = (_long / 10.) / max(dre)
+
+        _scale = (_long / 10.) / max(abs(dre))
 
         for beam in structure.beams:
             # beam displacements by component
-            # dxs = beam.displacement_component(component='ux')
-            # dys = beam.displacement_component(component='uy')
-            dxs = beam.results[analysistype].displacements[mode]['ux']
-            dys = beam.results[analysistype].displacements[mode]['uy']
+            dxs = structure.results[analysistype].element_displacements(mode=mode, beam=beam)['ux']
+            dys = structure.results[analysistype].element_displacements(mode=mode, beam=beam)['uy']
 
             # data to plot: original positions + displacements
             _xdata = [p.x + dx * _scale for p, dx in zip(beam.nodes, dxs)]
@@ -51,7 +51,7 @@ def draw_structure(structure, show=True, analysistype=None, mode=None):
             plt.scatter(_xdata, _ydata, marker='s', color='k', s=30, zorder=3)
 
             # plot the deformed shape - using the internal points from the shape functions
-            _deflected = beam.deflected_shape(local=False, scale=_scale, disps=beam.results[analysistype].displacement_vector)
+            _deflected = beam.deflected_shape(local=False, scale=_scale, disps=structure.results[analysistype].element_displacements(mode=mode, beam=beam, asvector=True))
             plt.plot([x[0] for x in _deflected], [x[1] for x in _deflected], 'k-', zorder=3)
 
         # # plot loads - concentrated forces only for now

@@ -5,67 +5,110 @@ from Modell.helpers import *
 
 
 class AnalysisResult(object):
-    def __init__(self, parent=None):
-        self.parent = parent
-        self.displacements = None
+    def __init__(self, structure=None):
+        self.structure = structure
+        self.displacement_results = []  # will be a list, even if only with one element
 
-    @property
-    def resulting_displacements(self):
-        disps = self.displacements
-        print(disps)
-        for k, v in disps.items():
-            print(k)
-            print(v)
+    def global_displacements(self, mode=0, asvector=False):
+        # the displacements as a vector or partitioned in a dict by the dofs
+        disps = self.global_displacement_vector(mode)
+        if asvector:
+            return disps  # the full displacement vector as a numpy matrix
+        else:
+            globaldisps = {}
+            for dindex, dofname in enumerate(self.structure.dofnames):
+                globaldisps[dofname] = disps[dindex::self.structure.dof]
+            return globaldisps  # displacements partitioned by DOF, each a matrix
 
-            exit()
-            # print([math.sqrt(x ** 2 + y ** 2) for x, y in zip(disp['ux'], disp['uy'])])
-        return [[math.sqrt(x ** 2 + y ** 2) for x, y in zip(disp['ux'], disp['uy'])] for disp in disps]
+    def element_displacements(self, mode=None, beam=None, asvector=False):
+        # displacements an element for a mode, partitioned in a dict. For each elem an NxDOF numpy matrix
+        assert beam in self.structure.beams
+        struct = self.structure
+        disp = self.global_displacement_vector(mode)
+        _T = transfer_matrix(-beam.direction, asdegree=False, blocks=1, blocksize=3)
+        _sta = struct.position_in_matrix(nodeID=beam.i.ID, DOF='ux')  # starting position in the global displacement vector for node i
+        _end = struct.position_in_matrix(nodeID=beam.j.ID, DOF='ux')  # starting position in the global displacement vector for node j
 
-    #
-    # @property
-    # def displacement_vector(self):
-    #     """ die Verschiebungen als vector damit es mit  """
-    #     disps = self.displacements
-    #     print(disps)
-    #     print(disps[0]['ux'])
-    #     _ret = []
-    #     for disp in disps:
-    #         _ret.append([])
-    #         for i in range(len(disp['ux'])):
-    #             for dof in ['ux', 'uy', 'rotz']:
-    #                 _ret[-1].append(np_matrix_tolist(disp[dof][i]))
-    #     print(_ret)
-    #     return _ret
+        disp = np.concatenate([_T * np.matrix(disp[_sta:_sta+beam.dof]), _T * np.matrix(disp[_end:_end+beam.dof])], axis=0)
 
-# def resulting_displacement(self):
-#     _ux = self.displacement_component(component='ux')
-#     _uy = self.displacement_component(component='uy')
-#     return [math.sqrt(x ** 2 + y ** 2) for x, y in zip(_ux, _uy)]
+        if asvector:  # the displacement vector in the local coordinate system as a numpy matrix
+            return disp
+        else:
+            _ret = {}
+            for dindex, dofname in enumerate(beam.dofnames):
+                _ret[dofname] = disp[dindex::beam.dof]
+            return _ret  # displacements partitioned by DOF, each a matrix
+
+    def global_displacement_vector(self, mode=None):
+        # the displacement vector of the structure in the global system, as calculated by the solver
+        # returned are the dsplacements for a mode (#index), in form of the displacement vector
+        return self.displacement_results[mode]
+
+
 
 
 class LinearStaticResult(AnalysisResult):
-    def __init__(self, parent=None, displacements=None, displacement_vector=None):
-        super(LinearStaticResult, self).__init__(parent=parent)
-        self.parent = parent
-        self.displacements = displacements
-        self.displacements_as_vector = displacement_vector
+    def __init__(self, structure=None, displacements=None):
+        super(LinearStaticResult, self).__init__(structure=structure)
+        self.displacement_results = displacements  # the result as a one-element vector
 
-    @property
-    def displacement_vector(self):
-        return self.displacements_as_vector
+    # def global_displacements(self, mode=0, asvector=False):
+    #     # the displacements as a vector or partitioned in a dict by the dofs
+    #     disps = self.global_displacement_vector(mode)
+    #     if asvector:
+    #         return disps  # the full displacement vector as a numpy matrix
+    #     else:
+    #         globaldisps = {}
+    #         for dindex, dofname in enumerate(self.structure.dofnames):
+    #             globaldisps[dofname] = disps[dindex::self.structure.dof]
+    #         return globaldisps  # displacements partitioned by DOF, each a matrix
+    #
+    # def element_displacements(self, mode=None, beam=None, asvector=False):
+    #     # displacements an element for a mode, partitioned in a dict. For each elem an NxDOF numpy matrix
+    #     assert beam in self.structure.beams
+    #     struct = self.structure
+    #     disp = self.global_displacement_vector(mode)
+    #     _T = transfer_matrix(-beam.direction, asdegree=False, blocks=1, blocksize=3)
+    #     _sta = struct.position_in_matrix(nodeID=beam.i.ID, DOF='ux')  # starting position in the global displacement vector for node i
+    #     _end = struct.position_in_matrix(nodeID=beam.j.ID, DOF='ux')  # starting position in the global displacement vector for node j
+    #     disp = np.concatenate([_T * np.matrix(disp[_sta:_sta+beam.dof]), _T * np.matrix(disp[_end:_end+beam.dof])], axis=0)
+    #
+    #     if asvector:  # the displacement vector in the local coordinate system as a numpy matrix
+    #         return disp
+    #     else:
+    #         _ret = {}
+    #         for dindex, dofname in enumerate(beam.dofnames):
+    #             _ret[dofname] = disp[dindex::beam.dof]
+    #         return _ret  # displacements partitioned by DOF, each a matrix
+    #
+    # def global_displacement_vector(self, mode=None):
+    #     # the displacement vector of the structure in the global system, as calculated by the solver
+    #     # returned are the dsplacements for a mode (#index), in form of the displacement vector
+    #     mode = 0  # we only have one, so index is there only to provide a common interface for all analyses
+    #     return self.displacement_results[mode]
 
 
 class ModalResult(AnalysisResult):
-    def __init__(self, parent=None, circular_freq=None, modalshapes=None, modalshape_vector=None):
-        super(ModalResult, self).__init__(parent=parent)
-        self.parent = parent
+    def __init__(self, structure=None, circular_freq=None, modalshapes=None):
+        super(ModalResult, self).__init__(structure=structure)
         self.circular_frequencies = circular_freq
-        self.displacements = modalshapes
-        self.modalshape_vector = modalshape_vector
+        self.displacement_results = modalshapes  # the result as a matrix
 
-    @property
-    def displacement_vector(self):
-        return self.modalshape_vector
+
+
+
+    #
+    # def displacements_detailed(self, index=0):
+    #     # the displacements partitioned for the dofs, for the mode #index
+    #     globaldisps = {}
+    #     for dindex, dofname in enumerate(self.structure.dofnames):
+    #         globaldisps[dofname] = self.displacement_results[index][dindex::self.structure.dof]
+    #     yield globaldisps
+    #
+    # @property
+    # def displacement_vector(self, index=None):
+    #     # the displacement vector of the structure in the global system, as calculated by the solver, for the mode in #index
+    #     yield self.displacement_results[index]
 
     @property
     def frequencies(self):
@@ -77,13 +120,11 @@ class ModalResult(AnalysisResult):
 
 
 class BucklingResult(AnalysisResult):
-    def __init__(self, parent=None, criticals=None, bucklingshapes=None, bucklingshape_vector=None):
-        super(BucklingResult, self).__init__(parent=parent)
-        self.parent = parent
+    def __init__(self, structure=None, criticals=None, bucklingshapes=None):
+        super(BucklingResult, self).__init__(structure=structure)
         self.criticals = criticals
         self.displacements = bucklingshapes
-        self.bucklingshape_vector = bucklingshape_vector
 
     @property
     def displacement_vector(self):
-        return self.bucklingshape_vector
+        raise NotImplementedError

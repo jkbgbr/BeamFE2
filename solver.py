@@ -76,11 +76,7 @@ def solve(structure, analysis=None):
     if analysis in ['linear static', 'all']:
         # linear static analysis
         disps = inv(structure.K_with_BC) * structure.q
-        globaldisps, beamdisps, beam_dispvectors = displacement_postprocessor(structure, disps)
-
-        structure.results['linear static'] = Results.LinearStaticResult(parent=structure, displacements=[globaldisps], displacement_vector=disps)
-        for beam in structure.beams:
-            beam.results['linear static'] = Results.LinearStaticResult(parent=beam, displacements=[beamdisps[beam]], displacement_vector=beam_dispvectors[beam])
+        structure.results['linear static'] = Results.LinearStaticResult(structure=structure, displacements=[disps])
 
     if analysis in ['buckling']:
         raise NotImplementedError
@@ -91,47 +87,11 @@ def solve(structure, analysis=None):
     if analysis in ['modal', 'all']:
         eigvals, eigvecs = eigh(structure.K_with_BC, structure.M)
         circfreq = [math.sqrt(x) for x in eigvals]
-        globaldisps, beamdisps, beam_dispvectors = displacement_postprocessor(struct=structure, disps=eigvecs.T)
 
-        # globaldisps[1]['ux'][4] is a matrix with both ux results of beam ID 4 in mode 1
-        print(globaldisps[0]['uy'][0])
-        print(globaldisps[0]['uy'][1])
-        print(globaldisps[0]['uy'][2])
-        print(globaldisps[0]['uy'][3])
-        print(globaldisps[0]['uy'][4])
-        print(globaldisps[0]['uy'][5])
-        print(globaldisps[0]['uy'][6])
-        exit()
-
-        structure.results['modal'] = Results.ModalResult(parent=structure, circular_freq=circfreq, modalshapes=globaldisps)
-        for beam in structure.beams:
-
-            beam.results['modal'] = Results.ModalResult(parent=beam, circular_freq=circfreq, modalshapes=beamdisps[beam], modalshape_vector=beam_dispvectors[beam])
+        eigvals-ot ugy atrendezni, hogy allo vektorokban legyenek az eredmenyek
 
 
-        # structure.frequencies = [math.sqrt(x ) /( 2 *math.pi) for x in eigvals if x > 0]
-        # structure.nodal_shapes = eigvecs.T
 
-        # print(eigvals[0:5])
-        # print([math.sqrt(x) for x in eigvals if x > 0][0:5])
-        # print([math.sqrt(x)/(2*3.1415) for x in eigvals if x > 0][0:5])
-        # print('')
-        # for shind, sh in enumerate(eigvecs[0:5]):
-        #
-        #     print('')
-        #     _ux = sh[0::3]
-        #     _uy = sh[1::3]
-        #     _rotz = sh[2::3]
-        #     print('ux:', _ux)
-        #     print('uy:', _uy)
-        #     print('rotz:', _rotz)
-        #
-        #     # Two subplots, the axes array is 1-d
-        #     f, axarr = plt.subplots(2)
-        #     axarr[0].plot(list(range(len(_uy))), _ux)
-        #     axarr[0].set_title('#%d, f=%.2f Hz' % (shind+1, math.sqrt(eigvals[shind]) / 2*3.1415))
-        #     axarr[1].plot(list(range(len(_uy))), _uy)
-        #     plt.show()
-
+        structure.results['modal'] = Results.ModalResult(structure=structure, circular_freq=circfreq, modalshapes=shapes)
 
     return True
