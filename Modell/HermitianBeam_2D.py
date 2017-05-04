@@ -73,6 +73,9 @@ class HermitianBeam2D(object):
         return 'HermitianBeam2D(ID=%d, i=%r, j=%r, E=%d, I=%.2f, A=%.2f' \
                % (self.ID, self.i, self.j, self.E, self.I, self.A)
 
+    def __str__(self):
+        return 'HB2D_%d' % self.ID
+
     @classmethod
     def from_dict(cls, adict):
         try:
