@@ -5,6 +5,25 @@ from Modell.helpers import *
 
 
 class AnalysisResult(object):
+    """
+    This function creates the somehow ordered results of the analyses.
+    The resulting three element tuple contains:
+    - globaldisps: displacements of the structure in the global coordinate system
+    - beamdisps: displacements of the beams (per beam) in the beams local coordinate system
+    - beam_dispvectors: the displacement vectors of the beams in the local system
+    In all cases the result is a list, with as many elements as many results the analysis provides. For static this is 
+    just one, for buckling, modal more.
+    Each element of the list contains a dict with the keys the DOFs of the element. The number of elements in a value is
+    the num,ber of nodes the element has.
+    
+    beamdisps[5][beam obj.]['ux'] is a matrix with both ux results of beam obj. in mode 5
+    beam_dispvectors[3][beam obj.] is a matrix with all displacements of beam obj. in mode 3
+
+    :param struct: 
+    :param disps: 
+    :return: 
+    """
+
     def __init__(self, structure=None):
         self.structure = structure
         self.displacement_results = []  # will be a list, even if only with one element
@@ -13,8 +32,10 @@ class AnalysisResult(object):
         # the displacements as a vector or partitioned in a dict by the dofs
         disps = self.global_displacement_vector(mode)
         if asvector:
+            # disps is a vector of all nodal displacements in
             return disps  # the full displacement vector as a numpy matrix
         else:
+            # globaldisps['ux'] is a matrix with ux results of the whole strucutre in the mode requested
             globaldisps = {}
             for dindex, dofname in enumerate(self.structure.dofnames):
                 globaldisps[dofname] = disps[dindex::self.structure.dof]
@@ -28,6 +49,8 @@ class AnalysisResult(object):
         _T = transfer_matrix(-beam.direction, asdegree=False, blocks=1, blocksize=3)
         _sta = struct.position_in_matrix(nodeID=beam.i.ID, DOF='ux')  # starting position in the global displacement vector for node i
         _end = struct.position_in_matrix(nodeID=beam.j.ID, DOF='ux')  # starting position in the global displacement vector for node j
+
+        print(disp)
 
         disp = np.concatenate([_T * np.matrix(disp[_sta:_sta+beam.dof]), _T * np.matrix(disp[_end:_end+beam.dof])], axis=0)
 

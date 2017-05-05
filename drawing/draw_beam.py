@@ -43,6 +43,10 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
             dxs = structure.results[analysistype].element_displacements(mode=mode, beam=beam)['ux']
             dys = structure.results[analysistype].element_displacements(mode=mode, beam=beam)['uy']
 
+            print('')
+            print(structure.results[analysistype].element_displacements(mode=mode, beam=beam, asvector=True))
+            print(structure.results[analysistype].element_displacements(mode=mode, beam=beam))
+
             # data to plot: original positions + displacements
             _xdata = [p.x + dx * _scale for p, dx in zip(beam.nodes, dxs)]
             _ydata = [p.y + dy * _scale for p, dy in zip(beam.nodes, dys)]
