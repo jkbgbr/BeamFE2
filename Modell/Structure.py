@@ -38,7 +38,7 @@ class Structure(object):
 
         # return _ret
 
-    def draw(self, show=True, analysistype=None, mode=None):
+    def draw(self, show=True, analysistype=None, mode=0):
         draw_beam.draw_structure(self, show=show, analysistype=analysistype, mode=mode)
 
     # def displacements_for_beams(self):

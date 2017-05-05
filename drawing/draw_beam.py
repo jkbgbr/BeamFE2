@@ -4,7 +4,7 @@ from drawing import _plotting_available, plt
 from Modell import HermitianBeam_2D as HeBe
 
 
-def draw_structure(structure, show=True, analysistype=None, mode=None):
+def draw_structure(structure, show=True, analysistype=None, mode=0):
     if _plotting_available:
         for beam in structure.beams:
             # line width is in pixel

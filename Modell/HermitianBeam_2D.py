@@ -36,7 +36,7 @@ class HermitianBeam2D(object):
 
     dof = 3  # degrees of freedom
     dofnames = 'ux', 'uy', 'rotz'
-    number_internal_points = 20
+    number_internal_points = 10
 
     def __init__(self, ID=None, i=None, j=None, E=None, crosssection=None, I=None, A=None, rho=None):
         """
@@ -253,7 +253,7 @@ class HermitianBeam2D(object):
             # _val = [x * scale for x in _val]
             if not local:
                 if _t is None:
-                    _t = transfer_matrix(-self.direction, asdegree=False, blocks=1, blocksize=2)  # 2x2 transform matrix
+                    _t = transfer_matrix(self.direction, asdegree=False, blocks=1, blocksize=2)  # 2x2 transform matrix
                 _val[0, 0] += (i / _ip) * self.l  # the deflected shape in the local coordinate system
                 _val = _t * _val  # the deflected shape rotated
                 _val = np_matrix_tolist(_val)
@@ -326,7 +326,7 @@ if __name__ == '__main__':
     sta = time.time()
     # nodes
 
-    _pieces = 20  # stk.
+    _pieces = 3  # stk.
     _length = 1400  # mm
 
     _nodes = []
@@ -350,9 +350,9 @@ if __name__ == '__main__':
 
     # solving it
     solve(structure, analysis='all')
-    # posprocessing for now
-    # structure.draw(analysistype='linear static', mode=0)
-    # structure.draw(analysistype='modal', mode=0)
     print(time.time()-sta)
+    # posprocessing for now
+    structure.draw(analysistype='linear static')
+    structure.draw(analysistype='modal', mode=0)
     print(structure.results['modal'].frequencies)
 
