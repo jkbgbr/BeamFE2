@@ -1,13 +1,10 @@
 import numpy as np
 np.set_printoptions(precision=6, suppress=True, linewidth=250)
 
-
-
-
 # todo:
 # Tests:
-#   nodal reaction tests assert missing
-#   rotated beam results, asserts
+#   tests for internal displacements due to nodal loading
+#   linear and modal analysis, units should be checked. use pint?
 # Lin stat:
 #   adding loads off-node (concentrated force and moment, bending)
 #   http://12000.org/my_notes/stiffness_matrix/stiffness_matrix_report.htm for internal actions, at the end of the page
