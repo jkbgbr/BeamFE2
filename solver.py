@@ -18,7 +18,7 @@ def solve(structure, analysis=None):
 
     if analysis in ['linear static', 'all']:
         # linear static analysis
-        disps = inv(structure.K_with_BC) * structure.q
+        disps = inv(structure.K_with_BC) * structure.load_vector
         structure.results['linear static'] = Results.LinearStaticResult(structure=structure, displacements=[disps])
 
     if analysis in ['buckling']:
@@ -28,7 +28,7 @@ def solve(structure, analysis=None):
 
     # modal analyse
     if analysis in ['modal', 'all']:
-        eigvals, eigvecs = eigh(structure.K_with_BC, structure.M)
+        eigvals, eigvecs = eigh(structure.K_with_BC, structure.M_with_masses)
         try:
             circfreq = [math.sqrt(x) for x in eigvals if x > 0]
             # circfreq = [math.sqrt(x) for x in eigvals]
