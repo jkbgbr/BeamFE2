@@ -57,5 +57,5 @@ class Hermitian2D_Model(unittest.TestCase):
         solve(structure, analysis='modal')
 
         # pre-calculated values are from Axis, except for f3, that should be 708.3 Hz
-        for pre, f in zip([40.56, 253.55, 711.3, 923.26], structure.frequencies[0:4]):
+        for pre, f in zip([40.56, 253.55, 711.3, 923.26], structure.results['modal'].frequencies[0:4]):
             self.assertAlmostEqual(pre, f, delta=2.)
