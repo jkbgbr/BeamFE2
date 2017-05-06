@@ -8,6 +8,10 @@ from solver import solve
 
 h = 2000  # story heigth
 L = 2 * h  # bay width
+mass_1 = 10000  # kg
+mass_2 = 200000  # kg
+# rho = 7850000
+rho = 0
 
 _nodes = [0]  # 0th element to have mathcing ID and list position
 _nodes.append(Node.Node.from_dict(adict={'ID': 1, 'coords': (0, 0)}))
@@ -21,7 +25,6 @@ _nodes.append(Node.Node.from_dict(adict={'ID': 6, 'coords': (L, 2 * h)}))
 section_column_1 = sections.Recangle(height=100, width=100)  # section, 1st storey
 section_column_2 = sections.Recangle(height=200, width=100)  # section, 2nd storey
 section_beam = sections.Recangle(height=1e3, width=1e3)  # section, 2nd storey
-rho = 7850000
 EE = 2.1e11
 
 _beams = []
@@ -41,7 +44,13 @@ BCs = {1: ['ux', 'uy', 'rotz'], 2: ['ux', 'uy', 'rotz']}  # supports as dict
 structure = Structure.Structure(beams=_beams, supports=BCs)
 
 # adding loads
-structure.add_single_dynam_to_node(nodeID=5, dynam={'FX': 1000000, 'FY': 0}, clear=True)  # clears previous loads
+# structure.add_single_dynam_to_node(nodeID=1, dynam={'FX': 0, 'FY': 0}, clear=True)
+structure.add_mass_to_node(nodeID=1, mass=mass_1/2., clear=True)  # clears previous loads
+structure.add_mass_to_node(nodeID=2, mass=mass_1/2.)
+structure.add_mass_to_node(nodeID=3, mass=mass_1/2.)  # clears previous loads
+structure.add_mass_to_node(nodeID=4, mass=mass_1/2.)
+structure.add_mass_to_node(nodeID=5, mass=mass_2/2.)
+structure.add_mass_to_node(nodeID=6, mass=mass_2/2.)
 
 # # adding loads
 # mass_1 = 2000  # kg
@@ -52,9 +61,9 @@ structure.add_single_dynam_to_node(nodeID=5, dynam={'FX': 1000000, 'FY': 0}, cle
 # structure.add_mass_to_node(nodeID=6, mass=mass_2 / 2, clear=True)  # clears previous loads
 
 # solving it
-solve(structure, analysis='all')
+solve(structure, analysis='modal')
 # posprocessing
 
-structure.draw(analysistype='linear static')
+structure.draw(analysistype='modal')
 for i in range(10):
     structure.draw(analysistype='modal', mode=i)

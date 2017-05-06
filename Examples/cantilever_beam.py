@@ -6,17 +6,22 @@ from Modell import Structure
 from Modell import Node
 from solver import solve
 
-VERTICAL = False
+"""
+A simple cantilever beam in vertical or horizontal position.
+"""
 
-# nodes
-_pieces = 3  # No. of element divisions
-_length = 1400  # length of element [mm]
+VERTICAL = False  # True/False for vertical/horizontal
+NR_BEAMS = 3  # number of finite elements
+LENGTH = 1400  # length of cantilever
+F_HORIZONTAL = 1000000
+F_VERTICAL = 1000000
+
 
 # nodes
 if VERTICAL:  # vertical beam
-    _nodes = [Node.Node.from_dict(adict={'ID': i+1, 'coords': (0, i*_length/_pieces)}) for i in range(_pieces+1)]
+    _nodes = [Node.Node.from_dict(adict={'ID': i+1, 'coords': (0, i*LENGTH/NR_BEAMS)}) for i in range(NR_BEAMS+1)]
 else:  # horizontal beam
-    _nodes = [Node.Node.from_dict(adict={'ID': i+1, 'coords': (i*_length/_pieces, 0)}) for i in range(_pieces+1)]
+    _nodes = [Node.Node.from_dict(adict={'ID': i+1, 'coords': (i*LENGTH/NR_BEAMS, 0)}) for i in range(NR_BEAMS+1)]
 
 # beams
 section_column = sections.Circle(r=55)  # section
@@ -25,7 +30,7 @@ EE = 2.1e11
 _beams = [HB.HermitianBeam2D.from_dict(adict=
                                        {'ID': i, 'E': EE, 'I': section_column.I['x'], 'A': section_column.A,
                                         'rho': rho, 'i': _nodes[i], 'j': _nodes[i+1]})
-          for i in range(_pieces)]
+          for i in range(NR_BEAMS)]
 
 # supports
 BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
@@ -34,12 +39,12 @@ BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
 structure = Structure.Structure(beams=_beams, supports=BCs)
 
 # adding loads
-structure.add_single_dynam_to_node(nodeID=len(_nodes), dynam={'FX': 1000000000000, 'FY': 0}, clear=True)  # clears previous loads
+structure.add_single_dynam_to_node(nodeID=len(_nodes), dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL}, clear=True)
 
 # solving it
 solve(structure, analysis='all')
-# posprocessing
 
+# posprocessing
 structure.draw(analysistype='linear static')
-for i in range(10):
+for i in range(3):
     structure.draw(analysistype='modal', mode=i)
