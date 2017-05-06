@@ -47,7 +47,7 @@ class AnalysisResult(object):
         :param local: boolean. For True, the results are in the element local system, for False in the global.
         :param mode: No. of mode
         :param beam: beam to get the displacements for
-        :param asvector: for True, a q vector is provided (NxDOF numpy matrix), for False the components are 
+        :param asvector: for True, a load_vector vector is provided (NxDOF numpy matrix), for False the components are 
         partitioned in a dict with keys corresponfing the DOFs
         :return: the displacements in the desired format
         """

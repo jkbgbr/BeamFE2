@@ -143,9 +143,6 @@ class HermitianBeam2D(object):
         :param L: length of the beam
         :return: value of the shape function at x
         """
-        print('in N1')
-        print(x*L)
-        print(x/L)
         x *= L
         return 1 - x / L
 
@@ -244,7 +241,7 @@ class HermitianBeam2D(object):
         """
         The deflected shape of the beam, based on the local, non-partitioned displacements of the end nodes, 
         provided in disps.
-        (ux, uy) = N * q
+        (ux, uy) = N * load_vector
         :param local: if local = False, the values are transferred in the global coordinate system e.g. for plotting
         :param scale: displacement magnification scale
         :param disps: nodal displacements in the local system
