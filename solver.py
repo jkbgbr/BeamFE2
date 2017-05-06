@@ -29,7 +29,19 @@ def solve(structure, analysis=None):
     # modal analyse
     if analysis in ['modal', 'all']:
         eigvals, eigvecs = eigh(structure.K_with_BC, structure.M)
-        circfreq = [math.sqrt(x) for x in eigvals]
+        try:
+            circfreq = [math.sqrt(x) for x in eigvals if x > 0]
+            # circfreq = [math.sqrt(x) for x in eigvals]
+        except ValueError:
+            print(eigvals)
+            print('negative eigenvalues found')
+            for indi, i in enumerate([x for x in eigvals if x < 0]):
+                print(indi+1, i)
+            print('')
+            import time
+            time.sleep(0.5)
+            raise
+
         shapes = [np.matrix([eigvecs[:, x]]).T for x in range(len(eigvecs))]  # casting to list of coulmn matrices
 
         structure.results['modal'] = Results.ModalResult(structure=structure, circular_freq=circfreq, modalshapes=shapes)

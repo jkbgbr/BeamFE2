@@ -137,9 +137,17 @@ class HermitianBeam2D(object):
 
     # shape functions. the input argument x is the "running parameter", a value normalized with the beam length
     def N1(self, x, L=1.):
-        # shape function for axial displacements, node 'i'
+        """
+        Shape function for axial displacements, node 'i'
+        :param x: position of the internal point along the length, 0.0 <= x <= 1.0
+        :param L: length of the beam
+        :return: value of the shape function at x
+        """
+        print('in N1')
+        print(x*L)
+        print(x/L)
         x *= L
-        return x / L
+        return 1 - x / L
 
     def N2(self, x, L=1.):
         # shape function for shear displacements, node 'i'
@@ -154,7 +162,7 @@ class HermitianBeam2D(object):
     def N4(self, x, L=1.):
         # shape function for axial displacements, node 'j'
         x *= L
-        return 1 - x / L
+        return x / L
         # return -1 * self.N1(x, L=L) + 1
 
     def N5(self, x, L=1.):
@@ -171,10 +179,8 @@ class HermitianBeam2D(object):
     def N(self, x, L=1.):
         # the N matrix, assembled. 2 x 6 matrix, multiplied with self.local_displacements yields the deflections
         # for the internal points as a tuple with ux, uy values in the local system.
-        return np.matrix([[self.N1(x=x, L=L),  0,                  0,
-                           self.N4(x=x, L=L),  0,                  0],
-                          [0,                  self.N2(x=x, L=L),  self.N3(x=x, L=L),
-                           0,                  self.N5(x=x, L=L),  self.N6(x=x, L=L)]])
+        return np.matrix([[self.N1(x=x, L=L),  0,                  0,                     self.N4(x=x, L=L),  0,                  0],
+                          [0,                  self.N2(x=x, L=L),  self.N3(x=x, L=L),     0,                  self.N5(x=x, L=L),  self.N6(x=x, L=L)]])
 
     def _Me(self):
         L = self.l
@@ -236,30 +242,46 @@ class HermitianBeam2D(object):
 
     def deflected_shape(self, local=True, scale=1., disps=None):
         """
-        The deflected shape of the beam. 
-        Based on the local, non-partitioned displacements of the end nodes, provided in disps.
+        The deflected shape of the beam, based on the local, non-partitioned displacements of the end nodes, 
+        provided in disps.
         (ux, uy) = N * q
-        if local = False, the values are transferred in the global coordinate system e.g. for plotting
+        :param local: if local = False, the values are transferred in the global coordinate system e.g. for plotting
+        :param scale: displacement magnification scale
+        :param disps: nodal displacements in the local system
         :return: 
         """
         _ip = self.number_internal_points
         _deflected_shape = []
 
-        _t = None  # placeholder for the transform matrix
+        if not local:
+            _t = transfer_matrix(self.direction, asdegree=False, blocks=1, blocksize=2)  # 2x2 transform matrix
+        else:
+            _t = transfer_matrix(alpha=0, asdegree=False, blocks=1, blocksize=2)  # 2x2 transform matrix
 
-        for i in range(_ip + 1):
+        for i in range(_ip + 1):  # e.g. 0, 1, 2, 3 for _ip == 3
+            print('')
+            print('i, position in beam')
+            print(i, self.l * i / _ip)
+            print(disps)
             _val = self.N(x=i / _ip, L=self.l) * disps  # displacements in the local system
+            print('N')
+            print(self.N(x=i / _ip, L=self.l))
+            print('N x q')
+            print(_val)
             _val = np.multiply(scale, _val)
-            # _val = [x * scale for x in _val]
-            if not local:
-                if _t is None:
-                    _t = transfer_matrix(self.direction, asdegree=False, blocks=1, blocksize=2)  # 2x2 transform matrix
-                _val[0, 0] += (i / _ip) * self.l  # the deflected shape in the local coordinate system
-                _val = _t * _val  # the deflected shape rotated
-                _val = np_matrix_tolist(_val)
-                _val = (_val[0] + self.i.x, _val[1] + self.i.y)
-            _deflected_shape.append(_val)
+            print('scaled value')
+            print(_val)
+            _val[0, 0] += (i / _ip) * self.l  # the deflected shape in the local coordinate system
 
+            print(_val)
+            _val = _t * _val  # the deflected shape rotated (possibly by 0 degree)
+            print(_val)
+            if not local:
+                _val = np_matrix_tolist(_val)  # type casting
+                _val = (_val[0] + self.i.x, _val[1] + self.i.y)  # translating the start point to node i
+            _deflected_shape.append(_val)
+            print('current deflected shape')
+            print(_deflected_shape)
         return _deflected_shape
 
     def nodal_reactions(self, disps):
@@ -294,6 +316,7 @@ class HermitianBeam2D(object):
 
 
 if __name__ == '__main__':
+    pass
 
     # # nodes
     # n1 = Node.from_dict(adict={'ID': 1, 'coords': (0, 0)})  # from dict
@@ -321,38 +344,3 @@ if __name__ == '__main__':
     # # sorry, no postprocessng, however you can only plot the displacements
     # pp.pprint(structure.displacements_as_dict())
     # draw_beam.draw_structure(structure)
-
-    import time
-    sta = time.time()
-    # nodes
-
-    _pieces = 3  # stk.
-    _length = 1400  # mm
-
-    _nodes = []
-    for i in range(_pieces+1):
-        _nodes.append(Node.Node.from_dict(adict={'ID': i+1, 'coords': (0, i*_length/_pieces)}))
-
-    # beams
-    section_column = sections.Circle(r=55)
-    _beams = []
-    for i in range(_pieces):
-        _beams.append(HermitianBeam2D.from_dict(adict={'ID': i, 'E': 2.1e11, 'I': section_column.I['x'], 'A': section_column.A, 'rho': 7850000, 'i': _nodes[i], 'j': _nodes[i+1]}))
-
-    # supports
-    BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
-
-    # this is the structure
-    structure = Structure.Structure(beams=_beams, supports=BCs)
-
-    # adding loads
-    structure.add_single_dynam_to_node(nodeID=len(_nodes)-1, dynam={'FY': -1000000}, clear=True)  # clears previous loads
-
-    # solving it
-    solve(structure, analysis='all')
-    print(time.time()-sta)
-    # posprocessing for now
-    structure.draw(analysistype='linear static')
-    structure.draw(analysistype='modal', mode=0)
-    print(structure.results['modal'].frequencies)
-

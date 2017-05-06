@@ -72,7 +72,7 @@ def transfer_matrix(alpha, asdegree=False, blocks=2, blocksize=3):
 def np_matrix_tolist(mtrx):
     """
     casts a numpy matrix into a flat list
-    :param mtrx: 
-    :return: 
+    :param mtrx:
+    :return:
     """
     return list(itertools.chain.from_iterable(mtrx.tolist()))

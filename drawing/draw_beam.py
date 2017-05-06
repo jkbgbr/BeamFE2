@@ -2,6 +2,7 @@
 
 from drawing import _plotting_available, plt
 from Modell import HermitianBeam_2D as HeBe
+from Modell.helpers import *
 
 
 def draw_structure(structure, show=True, analysistype=None, mode=0):
@@ -13,10 +14,11 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
 
         # plot supports
         # 1/scale will be the length of the bars representing the restricted translational degrees of freedom
-        scale = 20
+        # length of the longes beam - this will be the base for the scaling
+        _long = sorted(structure.beams, key=lambda x: x.l)[-1].l
         figsize = [plt.rcParams["figure.dpi"] * x for x in plt.rcParams["figure.figsize"]]  # width of the fig in pixels
         w_figsize = figsize[0]
-        supportsize = w_figsize / scale
+        supportsize = _long / w_figsize
         for k, v in structure.supports.items():
             _aktnode = [x for x in structure.nodes if x.ID == k][0]
             for dof in v:
@@ -28,8 +30,8 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
                     plt.plot([_aktnode.x, _aktnode.x], [_aktnode.y, _aktnode.y], 'seagreen', markersize=16, zorder=7)  # a point
 
         # plot the deformed shape
-        # length of the longes beam - this will be the base for the scaling
-        _long = sorted(structure.beams, key=lambda x: x.l)[-1].l
+
+        plt.show()
 
         # # displacements
 
@@ -37,25 +39,43 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
         # # the scaling factor, based on the larges displacement and the length of the longest element
 
         _scale = _long / max(abs(dre))
+        # _scale = 1.0
 
         for beam in structure.beams:
             # beam displacements by component
-            dxs = structure.results[analysistype].element_displacements(mode=mode, beam=beam)['ux']
-            dys = structure.results[analysistype].element_displacements(mode=mode, beam=beam)['uy']
+            dxs = structure.results[analysistype].element_displacements(local=False, mode=mode, beam=beam)['ux']
+            dys = structure.results[analysistype].element_displacements(local=False, mode=mode, beam=beam)['uy']
 
             print('')
+            print(analysistype)
+            print('')
+            print('disp vector, beam #%d' % beam.ID)
             print(structure.results[analysistype].element_displacements(mode=mode, beam=beam, asvector=True))
+            print('disp partitioned')
             print(structure.results[analysistype].element_displacements(mode=mode, beam=beam))
-
+            print('scale: %.2f' % _scale)
             # data to plot: original positions + displacements
             _xdata = [p.x + dx * _scale for p, dx in zip(beam.nodes, dxs)]
             _ydata = [p.y + dy * _scale for p, dy in zip(beam.nodes, dys)]
+
+            print('beam nodes')
+            print(beam.nodes)
+            print('x displacements')
+            print(dxs)
+            print('x positions to display')
+            print(_xdata)
+            print('y displacements')
+            print(dys)
+            print('y positions to display')
+            print(_ydata)
 
             # the nodes as squares
             plt.scatter(_xdata, _ydata, marker='s', color='k', s=30, zorder=3)
 
             # plot the deformed shape - using the internal points from the shape functions
-            _deflected = beam.deflected_shape(local=False, scale=_scale, disps=structure.results[analysistype].element_displacements(mode=mode, beam=beam, asvector=True))
+            _deflected = beam.deflected_shape(local=False, scale=_scale, disps=structure.results[analysistype].element_displacements(local=False, mode=mode, beam=beam, asvector=True))
+            print('points of the deflected shape')
+            print(_deflected)
             plt.plot([x[0] for x in _deflected], [x[1] for x in _deflected], 'k-', zorder=3)
 
         # # plot loads - concentrated forces only for now

@@ -41,16 +41,28 @@ class AnalysisResult(object):
                 globaldisps[dofname] = disps[dindex::self.structure.dof]
             return globaldisps  # displacements partitioned by DOF, each a matrix
 
-    def element_displacements(self, mode=None, beam=None, asvector=False):
-        # displacements an element for a mode, partitioned in a dict. For each elem an NxDOF numpy matrix
+    def element_displacements(self, local=True, mode=None, beam=None, asvector=False):
+        """
+        displacements an element for a mode, partitioned in a dict. For each elem an NxDOF numpy matrix
+        :param local: boolean. For True, the results are in the element local system, for False in the global.
+        :param mode: No. of mode
+        :param beam: beam to get the displacements for
+        :param asvector: for True, a q vector is provided (NxDOF numpy matrix), for False the components are 
+        partitioned in a dict with keys corresponfing the DOFs
+        :return: the displacements in the desired format
+        """
+
         assert beam in self.structure.beams
         struct = self.structure
         disp = self.global_displacement_vector(mode)
-        _T = transfer_matrix(-beam.direction, asdegree=False, blocks=1, blocksize=3)
+
+        if local:
+            _T = transfer_matrix(-beam.direction, asdegree=False, blocks=1, blocksize=3)
+        else:
+            _T = transfer_matrix(alpha=0, asdegree=False, blocks=1, blocksize=3)
+
         _sta = struct.position_in_matrix(nodeID=beam.i.ID, DOF='ux')  # starting position in the global displacement vector for node i
         _end = struct.position_in_matrix(nodeID=beam.j.ID, DOF='ux')  # starting position in the global displacement vector for node j
-
-        print(disp)
 
         disp = np.concatenate([_T * np.matrix(disp[_sta:_sta+beam.dof]), _T * np.matrix(disp[_end:_end+beam.dof])], axis=0)
 
