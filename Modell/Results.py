@@ -41,7 +41,7 @@ class AnalysisResult(object):
                 globaldisps[dofname] = disps[dindex::self.structure.dof]
             return globaldisps  # displacements partitioned by DOF, each a matrix
 
-    def element_displacements(self, local=True, mode=None, beam=None, asvector=False):
+    def element_displacements(self, local=True, mode=0, beam=None, asvector=False):
         """
         displacements an element for a mode, partitioned in a dict. For each elem an NxDOF numpy matrix
         :param local: boolean. For True, the results are in the element local system, for False in the global.

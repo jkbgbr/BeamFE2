@@ -2,7 +2,6 @@
 from drawing import draw_beam
 import copy
 from Modell.helpers import *
-from solver import solve
 
 
 class Structure(object):
