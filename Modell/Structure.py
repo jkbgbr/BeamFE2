@@ -122,6 +122,10 @@ class Structure(object):
     def M_with_masses(self):
         # copy of the the stiffness matrix with the boundary conditions taken into account
         _M = copy.deepcopy(self.M)
+
+        if self._mass_vector is None:
+            self._mass_vector = np.matrix(np.zeros(self.sumdof))
+
         for mindex, m in enumerate(np_matrix_tolist(self.mass_vector)):
             _M[mindex, mindex] += m
 
