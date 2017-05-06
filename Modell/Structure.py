@@ -119,6 +119,21 @@ class Structure(object):
         return compile_global_matrix(self.beams, mass=True)
 
     @property
+    def M_with_masses(self):
+        # copy of the the stiffness matrix with the boundary conditions taken into account
+        _M = copy.deepcopy(self.M)
+        for mindex, m in enumerate(np_matrix_tolist(self.mass_vector)):
+            _M[mindex, mindex] += m
+
+        # for k, v in self.supports.items():  # k is the nodeID that has support
+        #     for dof in v:  # dof to be fixed: 'ux', 'rotz' etc.
+        #         _pos = self.position_in_matrix(nodeID=k, DOF=dof)
+        #         # check, if the DOF has been released previously
+        #         _M[_pos, _pos] += 10e20
+
+        return _M
+
+    @property
     def K_geom(self):
         # the compiled geometrical stiffness matrix
         return compile_global_matrix(self.beams, geometrical=True)
@@ -141,12 +156,12 @@ class Structure(object):
         return _K
 
     @property
-    def q(self):
+    def load_vector(self):
         # the load vector
         return self._load_vector.T
 
     @property
-    def m(self):
+    def mass_vector(self):
         # a vector containing the masses
         # currently no distinction between directions, defined massesact in all directions
         return self._mass_vector
@@ -191,34 +206,36 @@ class Structure(object):
         Checks if the name of the dynam is OK.
         clears previous loads on the node, if clear is True
         
-        :param nodeID: 
-        :param dynam: 
-        :param clear: 
+        :param nodeID: ID of the node the mass is added to
+        :param mass: mass to be added in [kg]
+        :param clear: if True, all previously defined masses will be deleted
         :return: 
         """
         #
 
         assert nodeID in [x.ID for x in self.nodes]
 
-        if self._load_vector is None:
-            self._load_vector = np.matrix(np.zeros(self.sumdof))
+        if self._mass_vector is None:
+            self._mass_vector = np.matrix(np.zeros(self.sumdof))
 
         # clear all loads defined previously
         if clear:
             # print('loads cleared')
             self._mass_vector[0, :-1] = 0
 
-        print(mass)
-        print(nodeID)
+        _sti = self.position_in_matrix(nodeID=nodeID, DOF='ux')
+        for p in range(3):
+            self._mass_vector[0, _sti + p] += mass
+            print('added: Node %d, mass %.2f' % (nodeID, mass))
 
-        for k, v in mass.items():
-
-            for name, number in zip(self.loadnames, range(self.dof)):  # pairs e.g. 'FX' with 0, 'FY' with 1 etc.
-                # _sti = nodeID * self.dof + number  # starting index
-                if k == name:
-                    _sti = self.position_in_matrix(nodeID=nodeID, dynam=k)
-                    self._load_vector[0, _sti] += v
-                    # print('added: Node %d, dynam %s = %.2f' % (nodeID, k, v))
+        #
+        # for k, v in mass.items():
+        #
+        #     for name, number in zip(self.loadnames, range(self.dof)):  # pairs e.g. 'FX' with 0, 'FY' with 1 etc.
+        #         # _sti = nodeID * self.dof + number  # starting index
+        #         if k == name:
+        #             _sti = self.position_in_matrix(nodeID=nodeID, dynam=k)
+        #             self._load_vector[0, _sti] += v
 
     @property
     def stiffness_matrix_is_symmetric(self):
@@ -247,6 +264,11 @@ class Structure(object):
         else:
             print('Node numbering is not ok')
             return False
+
+    @property
+    def mass_matrix_is_ok(self):
+        return True
+        # todo: check for symmetry, positive definiteness
 
     @property
     def stiffness_matrix_is_ok(self):
