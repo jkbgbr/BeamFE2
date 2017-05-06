@@ -37,7 +37,7 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
         dre = structure.results[analysistype].global_displacements(mode=0, asvector=True)
         # # the scaling factor, based on the larges displacement and the length of the longest element
 
-        _scale = _long / max(abs(dre))
+        _scale = 0.05 * _long / max(abs(dre))
         # _scale = 1.0
 
         for beam in structure.beams:
@@ -72,7 +72,7 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
             plt.scatter(_xdata, _ydata, marker='s', color='k', s=30, zorder=3)
 
             # plot the deformed shape - using the internal points from the shape functions
-            _deflected = beam.deflected_shape(local=False, scale=_scale, disps=structure.results[analysistype].element_displacements(local=False, mode=mode, beam=beam, asvector=True))
+            _deflected = beam.deflected_shape(local=False, scale=_scale, disps=structure.results[analysistype].element_displacements(local=True, mode=mode, beam=beam, asvector=True))
             # print('points of the deflected shape')
             # print(_deflected)
             plt.plot([x[0] for x in _deflected], [x[1] for x in _deflected], 'k-', zorder=3)

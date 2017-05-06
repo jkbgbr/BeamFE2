@@ -256,7 +256,7 @@ class HermitianBeam2D(object):
         if local:
             _t = transfer_matrix(alpha=0, asdegree=False, blocks=1, blocksize=2)  # 2x2 transform matrix
         else:
-            _t = transfer_matrix(-self.direction, asdegree=False, blocks=1, blocksize=2)  # 2x2 transform matrix
+            _t = transfer_matrix(self.direction, asdegree=False, blocks=1, blocksize=2)  # 2x2 transform matrix
 
         for i in range(_ip + 1):  # e.g. 0, 1, 2, 3 for _ip == 3
             _val = self.N(x=i / _ip, L=self.l) * disps  # displacements in the local system
