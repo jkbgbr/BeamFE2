@@ -14,11 +14,10 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
 
         # plot supports
         # 1/scale will be the length of the bars representing the restricted translational degrees of freedom
-        # length of the longes beam - this will be the base for the scaling
-        _long = sorted(structure.beams, key=lambda x: x.l)[-1].l
+        scale = 10
         figsize = [plt.rcParams["figure.dpi"] * x for x in plt.rcParams["figure.figsize"]]  # width of the fig in pixels
         w_figsize = figsize[0]
-        supportsize = _long / w_figsize
+        supportsize = w_figsize / scale
         for k, v in structure.supports.items():
             _aktnode = [x for x in structure.nodes if x.ID == k][0]
             for dof in v:
@@ -30,8 +29,8 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
                     plt.plot([_aktnode.x, _aktnode.x], [_aktnode.y, _aktnode.y], 'seagreen', markersize=16, zorder=7)  # a point
 
         # plot the deformed shape
-
-        plt.show()
+        # length of the longes beam - this will be the base for the scaling
+        _long = sorted(structure.beams, key=lambda x: x.l)[-1].l
 
         # # displacements
 
@@ -74,26 +73,26 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
 
             # plot the deformed shape - using the internal points from the shape functions
             _deflected = beam.deflected_shape(local=False, scale=_scale, disps=structure.results[analysistype].element_displacements(local=False, mode=mode, beam=beam, asvector=True))
-            print('points of the deflected shape')
-            print(_deflected)
+            # print('points of the deflected shape')
+            # print(_deflected)
             plt.plot([x[0] for x in _deflected], [x[1] for x in _deflected], 'k-', zorder=3)
 
-        # # plot loads - concentrated forces only for now
-        # for lindex, load in enumerate(HeBe.np_matrix_tolist(structure.q)):
-        #     if load != 0:
-        #         _node, component = structure.nodenr_dof_from_position(position=lindex)
-        #         mp = structure.node_by_ID(id=_node).coords  # starting point of the arrow
-        #
-        #         if component == 'FX':
-        #             _norm = (load * supportsize / abs(load), 0,)
-        #         elif component == 'FY':
-        #             _norm = (0, load * supportsize / abs(load))
-        #         else:
-        #             _norm = False
-        #         # plotting, if there is a norm
-        #         ax = plt.gca()
-        #         if _norm:
-        #             ax.arrow(mp[0], mp[1], _norm[0], _norm[1], head_width=supportsize/20., head_length=supportsize/20., fc='r', ec='r')
+        # plot loads - concentrated forces only for now
+        for lindex, load in enumerate(HeBe.np_matrix_tolist(structure.q)):
+            if load != 0:
+                _node, component = structure.nodenr_dof_from_position(position=lindex)
+                mp = structure.node_by_ID(id=_node).coords  # starting point of the arrow
+
+                if component == 'FX':
+                    _norm = (load * _long/scale / abs(load), 0,)
+                elif component == 'FY':
+                    _norm = (0, load * _long/scale / abs(load))
+                else:
+                    _norm = False
+                # plotting, if there is a norm
+                ax = plt.gca()
+                if _norm:
+                    ax.arrow(mp[0], mp[1], _norm[0], _norm[1], head_width=_long/scale, head_length=_long/scale, fc='r', ec='r')
 
         if show:
             plt.axis('tight')

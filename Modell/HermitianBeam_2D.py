@@ -253,35 +253,20 @@ class HermitianBeam2D(object):
         _ip = self.number_internal_points
         _deflected_shape = []
 
-        if not local:
-            _t = transfer_matrix(self.direction, asdegree=False, blocks=1, blocksize=2)  # 2x2 transform matrix
-        else:
+        if local:
             _t = transfer_matrix(alpha=0, asdegree=False, blocks=1, blocksize=2)  # 2x2 transform matrix
+        else:
+            _t = transfer_matrix(-self.direction, asdegree=False, blocks=1, blocksize=2)  # 2x2 transform matrix
 
         for i in range(_ip + 1):  # e.g. 0, 1, 2, 3 for _ip == 3
-            print('')
-            print('i, position in beam')
-            print(i, self.l * i / _ip)
-            print(disps)
             _val = self.N(x=i / _ip, L=self.l) * disps  # displacements in the local system
-            print('N')
-            print(self.N(x=i / _ip, L=self.l))
-            print('N x q')
-            print(_val)
             _val = np.multiply(scale, _val)
-            print('scaled value')
-            print(_val)
             _val[0, 0] += (i / _ip) * self.l  # the deflected shape in the local coordinate system
-
-            print(_val)
             _val = _t * _val  # the deflected shape rotated (possibly by 0 degree)
-            print(_val)
             if not local:
                 _val = np_matrix_tolist(_val)  # type casting
                 _val = (_val[0] + self.i.x, _val[1] + self.i.y)  # translating the start point to node i
             _deflected_shape.append(_val)
-            print('current deflected shape')
-            print(_deflected_shape)
         return _deflected_shape
 
     def nodal_reactions(self, disps):
