@@ -46,5 +46,11 @@ solve(structure, analysis='all')
 
 # posprocessing
 structure.draw(analysistype='linear static')
-for i in range(3):
-    structure.draw(analysistype='modal', mode=i)
+# for i in range(3):
+#     structure.draw(analysistype='modal', mode=i)
+
+for b in structure.beams:
+    print('')
+    print(b)
+    disp = structure.results['linear static'].element_displacements(local=True, beam=b, asvector=True)
+    print(b.nodal_reactions(disps=disp))

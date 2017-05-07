@@ -270,59 +270,6 @@ class HermitianBeam2D(object):
         """ reactions in the local coordinate system of the beam """
         return self.Ke * disps
 
-    # @property
-    # def local_displacements(self):
-    #     """
-    #     calculates the nodal displacements in the elements local system.
-    #     :return:
-    #     """
-    #     # de-rotating matrix to transfer the displacements from the global to the elements local system
-    #     T = transfer_matrix(-self.direction, asdegree=False, blocks=len(self.nodes))
-    #     return T * self.displacements
-
-    # def displacement_component(self, component=None, localsystem=False):
-    #     """
-    #     Returns a list with the displacements of the component defined
-    #     These are the nodal displacements calculated
-    #     :param localsystem: boolean telling if the results to be provided are in the global or in the local system
-    #     :param component: any value from the dofnames list
-    #     :return:
-    #     """
-    #     assert component in self.dofnames
-    #     if localsystem:
-    #         _ret = self.local_displacements[self.dofnames.index(component)::self.dof]
-    #     else:
-    #         _ret = self.displacements[self.dofnames.index(component)::self.dof]
-    #     return np_matrix_tolist(_ret)
-#
-
 
 if __name__ == '__main__':
     pass
-
-    # # nodes
-    # n1 = Node.from_dict(adict={'ID': 1, 'coords': (0, 0)})  # from dict
-    # n2 = Node.from_dict(adict={'ID': 2, 'coords': (250, 0)})
-    # n3 = Node(ID=3, coords=(400, 0))  # direct
-    #
-    # # beams
-    # b1 = HermitianBeam2D.from_dict(adict={'ID': 1, 'E': 210000., 'I': 39760.78, 'A': 706.5, 'rho': 7.85e-5, 'i': n1, 'j': n2})  # from dict
-    # b2 = HermitianBeam2D(E=21000., ID=2, I=39760.78, A=706.5, i=n2, j=n3, rho=7.85e-5)  # direct
-    #
-    # # supports
-    # BCs = {1: ['ux', 'uy'], 3: ['uy']}  # supports as dict
-    # # BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
-    #
-    # # this is the structure
-    # structure = Structure(beams=[b1, b2], supports=BCs)
-    #
-    # # adding loads
-    # structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 10000}, clear=True)  # clears previous loads
-    # structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': 1000})  # no clearing, just adding
-    #
-    # # solver :-) whatever happens here is done by numpy.
-    # solve(structure, analysis='linear static')
-    #
-    # # sorry, no postprocessng, however you can only plot the displacements
-    # pp.pprint(structure.displacements_as_dict())
-    # draw_beam.draw_structure(structure)
