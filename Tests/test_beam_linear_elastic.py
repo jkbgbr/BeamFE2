@@ -120,22 +120,22 @@ class Hermitian2D_Element(unittest.TestCase):
         solve(self.beam_as_structure, analysis='linear static')
         for beam in self.beam_as_structure.beams:
             disps = self.beam_as_structure.results['linear static'].element_displacements(local=True, beam=beam, asvector=True)
-            print(beam.Ke * disps)
-        print('')
+            # print(beam.Ke * disps)
+        # print('')
         # FY
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': 1}, clear=True)
         solve(self.beam_as_structure, analysis='linear static')
         for beam in self.beam_as_structure.beams:
             disps = self.beam_as_structure.results['linear static'].element_displacements(local=True, beam=beam, asvector=True)
-            print(beam.Ke * disps)
-        print('')
+            # print(beam.Ke * disps)
+        # print('')
         # MZ
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'MZ': 1}, clear=True)
         solve(self.beam_as_structure, analysis='linear static')
         for beam in self.beam_as_structure.beams:
             disps = self.beam_as_structure.results['linear static'].element_displacements(local=True, beam=beam, asvector=True)
-            print(beam.Ke * disps)
-        print('')
+            # print(beam.Ke * disps)
+        # print('')
 
     # tests on the rotated structure
     def test_element_stiffness_matrix_rotated(self):
@@ -341,8 +341,6 @@ class Hermitian2D_Structure(unittest.TestCase):
                                [1.42857143e-05],
                                [0.00000000e+00],
                                [0.00000000e+00]])
-        print(disps)
-        print(_expected)
         self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
     def test_nodal_displacements_2(self):

@@ -229,7 +229,7 @@ class Structure(object):
         _sti = self.position_in_matrix(nodeID=nodeID, DOF='ux')
         for p in range(3):
             self._mass_vector[0, _sti + p] += mass
-            print('added: Node %d, mass %.2f' % (nodeID, mass))
+            # print('added: Node %d, mass %.2f' % (nodeID, mass))
 
         #
         # for k, v in mass.items():

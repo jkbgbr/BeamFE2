@@ -21,11 +21,6 @@ def solve(structure, analysis=None):
         disps = inv(structure.K_with_BC) * structure.load_vector
         structure.results['linear static'] = Results.LinearStaticResult(structure=structure, displacements=[disps])
 
-    if analysis in ['buckling']:
-        raise NotImplementedError
-        # Linear buckling
-        # not implemented yet!
-
     # modal analyse
     if analysis in ['modal', 'all']:
         eigvals, eigvecs = eigh(structure.K_with_BC, structure.M_with_masses)
@@ -45,5 +40,12 @@ def solve(structure, analysis=None):
         shapes = [np.matrix([eigvecs[:, x]]).T for x in range(len(eigvecs))]  # casting to list of coulmn matrices
 
         structure.results['modal'] = Results.ModalResult(structure=structure, circular_freq=circfreq, modalshapes=shapes)
+
+    if analysis in ['buckling']:
+        raise NotImplementedError
+        # Linear buckling
+        # not implemented yet!
+
+
 
     return True

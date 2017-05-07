@@ -12,7 +12,8 @@ np.set_printoptions(precision=6, suppress=True, linewidth=250)
 #   LATER: defining hinges?
 #   LATER: 3D Beam element?
 # Modal:
-#   tests, ideally opensess-based and with analytical formulae
+#   change the solver to use elimination instead of added masses
+#   tests, ideally opensess-based and with analytical formulae -> chopra book, example around 10.5
 #   (http://opensees.berkeley.edu/wiki/index.php/Eigen_analysis_of_a_two-story_shear_frame)
 #   lumped mass matrix?
 #   modal masses, modal participation
