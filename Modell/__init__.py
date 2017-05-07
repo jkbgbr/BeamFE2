@@ -7,7 +7,6 @@ np.set_printoptions(precision=6, suppress=True, linewidth=250)
 #   linear and modal analysis, units should be checked. 100 % test coverage?
 # Lin stat:
 #   internal actions in internal points, also plot them
-
 #   calculating stresses (Sections need stress points for this...)
 # Modal:
 #   what is the lumped mass matrix for the 6DOF Bernoulli Beam?
