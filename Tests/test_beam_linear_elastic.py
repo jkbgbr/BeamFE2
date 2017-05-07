@@ -120,22 +120,25 @@ class Hermitian2D_Element(unittest.TestCase):
         solve(self.beam_as_structure, analysis='linear static')
         for beam in self.beam_as_structure.beams:
             disps = self.beam_as_structure.results['linear static'].element_displacements(local=True, beam=beam, asvector=True)
-            # print(beam.Ke * disps)
-        # print('')
+            print(beam.Ke * disps)
+        print('')
         # FY
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': 1}, clear=True)
         solve(self.beam_as_structure, analysis='linear static')
         for beam in self.beam_as_structure.beams:
             disps = self.beam_as_structure.results['linear static'].element_displacements(local=True, beam=beam, asvector=True)
-            # print(beam.Ke * disps)
-        # print('')
+            print(beam.Ke * disps)
+        print('')
         # MZ
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'MZ': 1}, clear=True)
         solve(self.beam_as_structure, analysis='linear static')
         for beam in self.beam_as_structure.beams:
             disps = self.beam_as_structure.results['linear static'].element_displacements(local=True, beam=beam, asvector=True)
-            # print(beam.Ke * disps)
-        # print('')
+            print(beam.Ke * disps)
+            print(disps)
+            solve(self.beam_as_structure, analysis='linear static')
+            self.beam_as_structure.draw(analysistype='linear static')
+        print('')
 
     # tests on the rotated structure
     def test_element_stiffness_matrix_rotated(self):
