@@ -4,20 +4,25 @@ from Modell import HermitianBeam_2D as HB
 from Modell import Structure
 from Modell import Node
 from solver import solve
+import math
 
 """
 This example is from the opensees website: 
 http://opensees.berkeley.edu/wiki/index.php/Eigen_analysis_of_a_two-story_shear_frame
 origonal: Anil K. Chopra, Example in 10.5
 the opensees tcl source is included at the end of this file
+Kinda OK.
 """
 
 
 h = 120  # story heigth
 L = 2 * h  # bay width
-mass_1 = 100 / 386.
-rho = 0  # consistent mass matrix but density=0 -> only the masses are considered.
+mass_1 = 1000000000 / 386.
+rho = 7850  # steel / 1000
 EE = 29000
+I = 320
+A = 63.41
+
 
 _nodes = [0]  # 0th element to have mathcing ID and list position
 _nodes.append(Node.Node.from_dict(adict={'ID': 1, 'coords': (0, 0)}))
@@ -29,14 +34,14 @@ _nodes.append(Node.Node.from_dict(adict={'ID': 6, 'coords': (L, 2 * h)}))
 
 # beams
 _beams = []
-_beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': 1, 'E': EE, 'I': 2 * 320, 'A': 1 * 63.41, 'rho': rho, 'i': _nodes[1], 'j': _nodes[3]}))
-_beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': 2, 'E': EE, 'I': 1 * 320, 'A': 1 * 63.41, 'rho': rho, 'i': _nodes[3], 'j': _nodes[5]}))
+_beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': 1, 'E': EE, 'I': 2 * I, 'A': 1 * A, 'rho': rho, 'i': _nodes[1], 'j': _nodes[3]}))
+_beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': 2, 'E': EE, 'I': 1 * I, 'A': 1 * A, 'rho': rho, 'i': _nodes[3], 'j': _nodes[5]}))
 
-_beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': 3, 'E': EE, 'I': 2 * 320, 'A': 1 * 63.41, 'rho': rho, 'i': _nodes[2], 'j': _nodes[4]}))
-_beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': 4, 'E': EE, 'I': 1 * 320, 'A': 1 * 63.41, 'rho': rho, 'i': _nodes[4], 'j': _nodes[6]}))
+_beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': 3, 'E': EE, 'I': 2 * I, 'A': 1 * A, 'rho': rho, 'i': _nodes[2], 'j': _nodes[4]}))
+_beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': 4, 'E': EE, 'I': 1 * I, 'A': 1 * A, 'rho': rho, 'i': _nodes[4], 'j': _nodes[6]}))
 
-_beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': 5, 'E': EE, 'I': 2 * 320, 'A': 320, 'rho': rho, 'i': _nodes[3], 'j': _nodes[4]}))
-_beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': 6, 'E': EE, 'I': 2 * 320, 'A': 320, 'rho': rho, 'i': _nodes[5], 'j': _nodes[6]}))
+_beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': 5, 'E': EE, 'I': 2 * I, 'A': I, 'rho': rho, 'i': _nodes[3], 'j': _nodes[4]}))
+_beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': 6, 'E': EE, 'I': 2 * I, 'A': I, 'rho': rho, 'i': _nodes[5], 'j': _nodes[6]}))
 
 # supports
 BCs = {1: ['ux', 'uy', 'rotz'], 2: ['ux', 'uy', 'rotz']}  # supports as dict
@@ -54,16 +59,16 @@ structure.add_mass_to_node(nodeID=6, mass=mass_1/2.)
 
 # solving it
 solve(structure, analysis='modal')
+
 # posprocessing
+om_1 = (2.198 * math.sqrt(EE * I / (mass_1 * h ** 3))) / (2 * math.pi)
+om_2 = (5.85 * math.sqrt(EE * I / (mass_1 * h ** 3))) / (2 * math.pi)
+print('expected / calculated values in [Hz]:')
+print('Mode 1: %.8f / %.8f' % (om_1, structure.results['modal'].frequencies[0]))
+print('Mode 2: %.8f / %.8f' % (om_2, structure.results['modal'].frequencies[1]))
 
 for i in range(2):
     structure.draw(analysistype='modal', mode=i)
-
-print('expected values:')
-import math
-om_1 = 2.198 * math.sqrt(29000 * 320 / (mass_1 * h ** 3))
-om_2 = 5.85 * math.sqrt(29000 * 320 / (mass_1 * h ** 3))
-print(om_1 / (2 * math.pi), om_2 / (2 * math.pi))
 
 
 # # Eigen analysis of a two-storey one-bay frame; Example 10.5 from "Dynamics of Structures" book by Anil Chopra

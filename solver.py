@@ -26,7 +26,6 @@ def solve(structure, analysis=None):
         eigvals, eigvecs = eigh(structure.K_with_BC, structure.M_with_masses)
         try:
             circfreq = [math.sqrt(x) for x in eigvals if x > 0]
-            # circfreq = [math.sqrt(x) for x in eigvals]
         except ValueError:
             print(eigvals)
             print('negative eigenvalues found')

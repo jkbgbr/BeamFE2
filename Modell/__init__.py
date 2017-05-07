@@ -12,9 +12,9 @@ np.set_printoptions(precision=6, suppress=True, linewidth=250)
 #   LATER: defining hinges?
 #   LATER: 3D Beam element?
 # Modal:
-#   change the solver to use elimination instead of added masses
+#   what is the lumped mass matrix for the 6DOF Bernoulli Beam?
+#   change the solver to condense the matrix when the mass matrix is not positive definite
 #   tests, ideally opensess-based and with analytical formulae -> chopra book, example around 10.5
-#   (http://opensees.berkeley.edu/wiki/index.php/Eigen_analysis_of_a_two-story_shear_frame)
 #   lumped mass matrix?
 #   modal masses, modal participation
 #   EC-based stuff: modal antwort, summation...
