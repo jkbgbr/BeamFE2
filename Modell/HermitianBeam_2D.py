@@ -195,6 +195,31 @@ class HermitianBeam2D(object):
     def Me(self):
         return self._Me()
 
+        # http://opensees.berkeley.edu/WebSVN/filedetails.php?repname=OpenSees&path=%2Ftrunk%2FSRC%2Felement%2FelasticBeamColumn%2FElasticTimoshenkoBeam2d.cpp
+
+        # // compute initial stiffness matrix in local system
+        # kl.Zero();
+        # kl(0,0) = kl(3,3) = E*A/L;
+        # kl(0,3) = kl(3,0) = -kl(0,0);
+        # double a1z = E*Iz/(1.0 + phi);
+        # kl(1,1) = kl(4,4) = 12.0*a1z/(L*L*L);
+        # kl(1,4) = kl(4,1) = -kl(1,1);
+        # kl(2,2) = kl(5,5) = (4.0 + phi)*a1z/L;
+        # kl(2,5) = kl(5,2) = (2.0 - phi)*a1z/L;
+        # kl(1,2) = kl(2,1) = kl(1,5) = kl(5,1) = 6.0*a1z/(L*L);
+        # kl(2,4) = kl(4,2) = kl(4,5) = kl(5,4) = -kl(1,2);
+        #
+        # // compute geometric stiffness matrix in local system
+        # klgeo.Zero();
+        # if (nlGeo == 1)  {
+        #     double b1z = 1.0/(30.0*L*pow(1.0 + phi,2));
+        #     klgeo(1,1) = klgeo(4,4) = b1z*(30.0*phi*phi + 60.0*phi + 36.0);
+        #     klgeo(1,4) = klgeo(4,1) = -klgeo(1,1);
+        #     klgeo(2,2) = klgeo(5,5) = b1z*L*L*(2.5*phi*phi + 5.0*phi + 4.0);
+        #     klgeo(2,5) = klgeo(5,2) = -b1z*L*L*(2.5*phi*phi + 5.0*phi + 1.0);
+        #     klgeo(1,2) = klgeo(2,1) = klgeo(1,5) = klgeo(5,1) = 3.0*L;
+        #     klgeo(2,4) = klgeo(4,2) = klgeo(4,5) = klgeo(5,4) = -klgeo(1,2);
+        # }
     # def _Ke_geom(self):
     #     # the geometrical stiffness matrix, from H-P. Gavin CEE 421L. Matrix Structural Anyalsis - Duke University
     #     _locdisp = self.local_displacements
