@@ -17,8 +17,8 @@ Kinda OK.
 
 h = 120  # story heigth
 L = 2 * h  # bay width
-mass_1 = 1000000000 / 386.
-rho = 7850  # steel / 1000
+mass_1 = 1000 / 386.
+rho = 0  # steel / 1000
 EE = 29000
 I = 320
 A = 63.41

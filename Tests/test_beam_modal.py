@@ -7,8 +7,6 @@ from Modell import Material
 from solver import solve
 import math
 
-from Tests import ATOL
-
 
 class Hermitian2D_Model(unittest.TestCase):
     """
@@ -23,93 +21,49 @@ class Hermitian2D_Model(unittest.TestCase):
 
     def test_clamped_rod(self):
         """
-        A beam with clamped end at Node #1, under self weight.
-        L = 1400 mm,
-        cross-section: r=55 mm rod
-        steel: rho = 7.85 t/m3, E=210 GPa
+        A beam with clamped end under self weight.
+        Results are accepted if circular frequencies are within 1% of the analytical solution.
+        http://iitg.vlab.co.in/?sub=62&brch=175&sim=1080&cnt=1
         """
+        _pieces = 8  # number of finite elements
+        for i in range(2):
+            if i == 0:
+                _length = 450.  # mm
+                rho = 7.850e-8
+                section_column = sections.Rectangle(height=3., width=20.)
+                E = 2.1e6
+            else:
+                _length = 0.45  # m
+                rho = 7850
+                section_column = sections.Rectangle(height=0.003, width=0.02)
+                E = 2.1e11
 
-        _pieces = 9  # number of segments along the length
-        _length = 1400  # mm
+            # nodes
+            _nodes = []
+            for i in range(_pieces + 1):
+                _nodes.append(Node.Node.from_dict(adict={'ID': i + 1, 'coords': (i * _length / _pieces, 0)}))
 
-        # nodes
-        _nodes = []
-        for i in range(_pieces + 1):
-            _nodes.append(Node.Node.from_dict(adict={'ID': i + 1, 'coords': (i * _length / _pieces, 0)}))
+            # beams
+            I = section_column.I['x']
+            A = section_column.A
+            _beams = []
+            for i in range(_pieces):
+                _beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': i, 'E': E, 'I': I,
+                                                                  'A': A, 'rho': rho,
+                                                                  'i': _nodes[i], 'j': _nodes[i + 1]}))
 
-        # beams
-        section_column = sections.Circle(r=55)
-        _beams = []
-        for i in range(_pieces):
-            _beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': i, 'E': self.E, 'I': section_column.I['x'],
-                                                              'A': section_column.A, 'rho': self.rho,
-                                                              'i': _nodes[i], 'j': _nodes[i + 1]}))
+            # supports
+            _last = max([x.ID for x in _nodes])
+            BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
 
-        # supports
-        BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
+            # this is the structure
+            structure = Structure.Structure(beams=_beams, supports=BCs)
 
-        # this is the structure
-        structure = Structure.Structure(beams=_beams, supports=BCs)
+            # solver :-) whatever happens here is done by numpy.
+            solve(structure, analysis='modal')
 
-        # adding loads
-        # structure.add_single_dynam_to_node(nodeID=len(_nodes) - 1, dynam={'FY': -1000000}, clear=True)  # clears previous loads
-
-        # solver :-) whatever happens here is done by numpy.
-        solve(structure, analysis='modal')
-
-        # pre-calculated values are from Axis, except for f3, that should be 708.3 Hz
-        for pre, f in zip([40.56, 253.55, 711.3, 923.26], structure.results['modal'].frequencies[0:4]):
-            self.assertAlmostEqual(pre, f, delta=2.)
-
-    def test_doubly_clamped_rod(self):
-        """
-        A beam with clamped ends under self weight.
-        """
-
-        _pieces = 9  # number of segments along the length
-        _length = 1  # mm
-        rho = 7833
-
-        # nodes
-        _nodes = []
-        for i in range(_pieces + 1):
-            _nodes.append(Node.Node.from_dict(adict={'ID': i + 1, 'coords': (i * _length / _pieces, 0)}))
-
-        # beams
-        # section_column = sections.Circle(r=(55/1000.))
-        I = 1/1e12
-        A = 1/1e6
-        E = 2.0684e11
-        _beams = []
-        for i in range(_pieces):
-            _beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': i, 'E': E, 'I': I,
-                                                              'A': A, 'rho': rho,
-                                                              'i': _nodes[i], 'j': _nodes[i + 1]}))
-
-        # supports
-        _last = max([x.ID for x in _nodes])
-        BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
-
-        # this is the structure
-        structure = Structure.Structure(beams=_beams, supports=BCs)
-
-        # adding loads
-        # structure.add_single_dynam_to_node(nodeID=len(_nodes) - 1, dynam={'FY': -1000000}, clear=True)  # clears previous loads
-
-        # solver :-) whatever happens here is done by numpy.
-        solve(structure, analysis='modal')
-
-        print(structure.results['modal'].circular_frequencies)
-        print(structure.results['modal'].frequencies)
-        print(I)
-        print(E)
-        print(rho)
-        print(_length)
-        q = rho * A * _length / _length
-        mu = q / 9.81
-
-        _grund = math.sqrt((I * E) / (mu * _length ** 4))
-        # om = [22.4, 61.7, 121, 200, 298]  # doubly clamped
-        om = [3.52, 22.4, 61.7, 121, 200]  # clamped at one end
-        om = [x * _grund for x in om]
-        print(om)
+            _base = math.sqrt((I * E) / ((A * rho) * _length ** 4))
+            omegas = [3.52, 22.03, 61.7, 121, 200]  # clamped at one end
+            omegas = [x * _base for x in omegas]
+            for pre, f in zip(omegas, structure.results['modal'].circular_frequencies[0:5]):
+                self.assertAlmostEqual(pre, f, delta=pre*0.01)
