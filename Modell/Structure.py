@@ -70,47 +70,65 @@ class Structure(object):
         # sum of DOFs, without eliminating for BCs
         return self.dof * len(self.nodes)
 
-    def zero_BC(self, mtrx=None):
+    # def zero_BC(self, mtrx=None):
+    #     """
+    #     Eliminates the rows and columns of the BC
+    #     """
+    #     mtrx = copy.deepcopy(mtrx)
+    #     print(mtrx.size)
+    #     _to_eliminate = []  # list of rows and columns to eliminate
+    #     for nodeID, DOFs in self.supports.items():
+    #         print(nodeID)
+    #         for DOF in DOFs:
+    #             print(DOF)
+    #             _to_eliminate.append(self.position_in_matrix(nodeID=nodeID, DOF=DOF))
+    #
+    #     _to_eliminate.sort()
+    #
+    #     for _ in _to_eliminate[::-1]:
+    #         mtrx[_] = 0
+    #         mtrx[:, _] = 0
+    #
+    #     return mtrx
+
+    @property
+    def positions_to_eliminate(self):
+        """
+        Numbers of rows and columns to be eliminated when condensing the K and M matrices for the modal analysis.
+        Returned is a sorted list of these.
+        When deleting the rows, one should begin with the highest number, that is, the reversed list of positions
+        When re-populating the displacement vectors, the list should not be reversed.
+        :return: the list with the numbers of the rows, columns
+        """
+
+        _to_eliminate = []  # list of rows and columns to eliminate
+        for nodeID, DOFs in self.supports.items():
+            for DOF in DOFs:
+                _to_eliminate.append(self.position_in_matrix(nodeID=nodeID, DOF=DOF))
+        _to_eliminate.sort()
+        return _to_eliminate
+
+    def condense(self, mtrx=None):
         """
         Eliminates the rows and columns of the BC
         """
-        mtrx = copy.deepcopy(mtrx)
-        print(mtrx.size)
-        _to_eliminate = []  # list of rows and columns to eliminate
-        for nodeID, DOFs in self.supports.items():
-            print(nodeID)
-            for DOF in DOFs:
-                print(DOF)
-                _to_eliminate.append(self.position_in_matrix(nodeID=nodeID, DOF=DOF))
-
-        _to_eliminate.sort()
-
-        for _ in _to_eliminate[::-1]:
-            mtrx[_] = 0
-            mtrx[:, _] = 0
-
-        return mtrx
-
-    def eliminate_BC(self, mtrx=None):
-        """
-        Eliminates the rows and columns of the BC
-        """
-        mtrx = copy.deepcopy(mtrx)
-        print(mtrx.size)
-        _to_eliminate = []  # list of rows and columns to eliminate
-        for nodeID, DOFs in self.supports.items():
-            print(nodeID)
-            for DOF in DOFs:
-                print(DOF)
-                _to_eliminate.append(self.position_in_matrix(nodeID=nodeID, DOF=DOF))
-
-        _to_eliminate.sort()
-
-        for _ in _to_eliminate[::-1]:
+        for _ in self.positions_to_eliminate[::-1]:
             mtrx = np.delete(mtrx, _, axis=0)
             mtrx = np.delete(mtrx, _, axis=1)
 
         return mtrx
+
+    # def repopulate(self, mtrx):
+    #     """
+    #     The opposite of condense
+    #     """
+    #     for _ in self.positions_to_eliminate:
+    #         mtrx = np.insert(mtrx, _, axis=0)
+    #         mtrx = np.insert(mtrx, _, axis=1)
+    #
+    #     return mtrx
+
+
 
     @property
     def M(self):
@@ -127,12 +145,6 @@ class Structure(object):
 
         for mindex, m in enumerate(np_matrix_tolist(self.mass_vector)):
             _M[mindex, mindex] += m
-
-        # for k, v in self.supports.items():  # k is the nodeID that has support
-        #     for dof in v:  # dof to be fixed: 'ux', 'rotz' etc.
-        #         _pos = self.position_in_matrix(nodeID=k, DOF=dof)
-        #         # check, if the DOF has been released previously
-        #         _M[_pos, _pos] += 10e20
 
         return _M
 
@@ -231,14 +243,6 @@ class Structure(object):
             self._mass_vector[0, _sti + p] += mass
             # print('added: Node %d, mass %.2f' % (nodeID, mass))
 
-        #
-        # for k, v in mass.items():
-        #
-        #     for name, number in zip(self.loadnames, range(self.dof)):  # pairs e.g. 'FX' with 0, 'FY' with 1 etc.
-        #         # _sti = nodeID * self.dof + number  # starting index
-        #         if k == name:
-        #             _sti = self.position_in_matrix(nodeID=nodeID, dynam=k)
-        #             self._load_vector[0, _sti] += v
 
     @property
     def stiffness_matrix_is_symmetric(self):

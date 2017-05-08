@@ -13,9 +13,9 @@ class Crossection(object):
         raise NotImplementedError
 
 
-class Recangle(Crossection):
+class Rectangle(Crossection):
     def __init__(self, shape='rectangle', height=None, width=None):
-        super(Recangle, self).__init__(shape=shape)
+        super(Rectangle, self).__init__(shape=shape)
         # assert a >= b
         self.height = height
         self.width = width

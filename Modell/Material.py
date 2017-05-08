@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+"""
+Material models for the FE elements.
+Consult __init__.py for units
+"""
+
 
 class Material(object):
     def __init__(self):
@@ -17,8 +22,8 @@ class LinearElasticMaterial(Material):
 
 
 class Steel(LinearElasticMaterial):
-    def __init__(self, E=2.1e11, nu=0.3):
+    def __init__(self, E=2.1e6, nu=0.3):
         super(Steel, self).__init__()
-        self.rho = 7850000  # g/m3 to result correct modal results
+        self.rho = 7.850e-8  # to result correct modal results together with N, mm, second
         self.E = E  # N/m2
         self.nu = nu

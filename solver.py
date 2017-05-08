@@ -23,7 +23,21 @@ def solve(structure, analysis=None):
 
     # modal analyse
     if analysis in ['modal', 'all']:
-        eigvals, eigvecs = eigh(structure.K_with_BC, structure.M_with_masses)
+        """
+        units: 
+        Length: [m]
+        Density: [kg/m3]
+        Young's module: [N/m2] 
+        Time: [s]
+        OR
+        Length: [mm]
+        Density: [t/mm3] * 1e-8
+        Young's module: [N/mm2] 
+        Time: [s]
+        """
+        K = structure.condense(mtrx=structure.K_with_BC)
+        M = structure.condense(mtrx=structure.M_with_masses)
+        eigvals, eigvecs = eigh(K, M)
         try:
             circfreq = [math.sqrt(x) for x in eigvals if x > 0]
             # circfreq = [math.sqrt(x) for x in eigvals]
@@ -37,9 +51,20 @@ def solve(structure, analysis=None):
             time.sleep(0.5)
             raise
 
-        shapes = [np.matrix([eigvecs[:, x]]).T for x in range(len(eigvecs))]  # casting to list of coulmn matrices
+        shapes = [np.matrix([eigvecs[:, x]]).T for x in range(len(eigvecs))]  # casting to list of column matrices
 
-        structure.results['modal'] = Results.ModalResult(structure=structure, circular_freq=circfreq, modalshapes=shapes)
+        # shapes is to be updated (re-populated) to account for the rows and columns removed during condensing
+        _ret = None
+        positions_to_eliminate = structure.positions_to_eliminate
+        for sh in shapes:
+            for position in positions_to_eliminate:
+                sh = np.insert(sh, position, [0], axis=0)
+            if _ret is None:
+                _ret = [sh]
+            else:
+                _ret.append(sh)
+
+        structure.results['modal'] = Results.ModalResult(structure=structure, circular_freq=circfreq, modalshapes=_ret)
 
     if analysis in ['buckling']:
         raise NotImplementedError

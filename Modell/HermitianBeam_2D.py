@@ -181,7 +181,7 @@ class HermitianBeam2D(object):
 
     def _Me(self):
         L = self.l
-        _ret = self.rho * (self.A / 1e6) * (self.l / 1e3) / 420 * \
+        _ret = self.rho * self.A * self.l / 420 * \
                np.matrix([
                    [140, 0, 0, 70, 0, 0],
                    [0, 156, 22*L, 0, 54, -13*L],
