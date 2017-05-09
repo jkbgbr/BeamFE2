@@ -200,22 +200,19 @@ class HermitianBeam2D(object):
     #     # not implemented yet
     #     raise NotImplementedError
 
-    def _Ke_geom(self, N=-1):
+    def _Ke_geom(self, N=1):
         # the geometrical stiffness matrix, from H-P. Gavin CEE 421L. Matrix Structural Anyalsis - Duke University
 
         L = self.l
         _ret = np.matrix([
-            [0, 0, 0, 0, 0, 0],
-            [0, 6./5., L/10., 0, -(6./5.), L/10.],
-            [0, L/10., 2*(L**2)/15., 0, -(L/10.), -(L/30.)],
-            [0, 0, 0, 0, 0, 0],
-            [0, -(6./5.), -(L/10.), 0, (6./5.), -(L/10.)],
-            [0, (L/10.), -(L**2)/30., 0, -(L/10.), -(2*(L**2))/15.]
+            [0,     0,          0,              0,      0,          0],
+            [0,     6./5.,      L/10.,          0,      -(6./5.),   L/10.],
+            [0,     L/10.,      2*(L**2)/15.,   0,      -(L/10.),   -(L**2)/30.],
+            [0,     0,          0,              0,      0,          0],
+            [0,     -(6./5.),   -(L/10.),       0,      (6./5.),    -(L/10.)],
+            [0,     (L/10.),    -(L**2)/30.,    0,      -(L/10.),   -(2*(L**2))/15.]
         ])
-        print(_ret)
-
-        # _ret = np.multiply((N / L), _ret)
-
+        _ret = np.multiply((N / L), _ret)
         return _ret
 
     @property

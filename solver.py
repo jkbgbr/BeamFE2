@@ -77,20 +77,18 @@ def solve(structure, analysis=None):
 
     if analysis in ['buckling']:
         solve(structure, analysis='linear static')
-
-        print(structure.beams[0]._Ke_geom(N=1))
-
-
-        K = structure.condense(mtrx=structure.K)
+        beam = structure.beams[0]
+        K = structure.condense(mtrx=structure.K_with_BC)
         KG = structure.condense(mtrx=structure.K_geom)
-        eigvals = namivan(a=K, b=KG)[0]  # here the numpy
-        eigvecs = namivan(a=K, b=KG)[1]  # here the numpy
+        eigvals = namivan(a=K, b=KG)[0]
+        eigvecs = namivan(a=K, b=KG)[1]
 
+        print([x for x in sorted(eigvals.real)])
         print([x for x in sorted(eigvals.real) if x>0])
         print('')
-        # print(eigvectors)
 
         shapes = [np.matrix([eigvecs[:, x]]).T for x in range(len(eigvecs))]  # casting to list of column matrices
+        print(shapes)
 
         # shapes is to be updated (re-populated) to account for the rows and columns removed during condensing
         _ret = None
@@ -103,20 +101,21 @@ def solve(structure, analysis=None):
             else:
                 _ret.append(sh)
 
-        print(_ret[0][0::3])
-        print(_ret[0][1::3])
-        print(_ret[0][2::3])
+        # print(_ret[0][0::3])
+        # print(_ret[0][1::3])
+        # print(_ret[0][2::3])
 
         structure.results['buckling'] = Results.BucklingResult(structure=structure, criticals=eigvals, bucklingshapes=_ret)
 
+        structure.draw(analysistype='linear static')
         structure.draw(analysistype='buckling', mode=0)
         # print(sorted(scipy.linalg.eigvalsh(K, b=KG)))
 
         # eigvals, eigvecs = eigh(K, KG)
 
         # solve(structure, analysis='buckling')
-
-        exit()
+        print(structure.results['linear static'].displacement_results)
+        print((math.pi**2)*beam.EI/(900**2))
 
         # Linear buckling
         # not implemented yet!
