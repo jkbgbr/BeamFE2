@@ -80,7 +80,6 @@ def solve(structure, analysis=None):
 
         print(structure.beams[0]._Ke_geom(N=1))
 
-        exit()
 
         K = structure.condense(mtrx=structure.K)
         KG = structure.condense(mtrx=structure.K_geom)
