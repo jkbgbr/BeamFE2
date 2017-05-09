@@ -105,8 +105,4 @@ class BucklingResult(AnalysisResult):
     def __init__(self, structure=None, criticals=None, bucklingshapes=None):
         super(BucklingResult, self).__init__(structure=structure)
         self.criticals = criticals
-        self.displacements = bucklingshapes
-
-    @property
-    def displacement_vector(self):
-        raise NotImplementedError
+        self.displacement_results = bucklingshapes
