@@ -146,11 +146,14 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
             plt.plot([p.x for p in beam.nodes], [p.y for p in beam.nodes], 'royalblue', linewidth=3, alpha=1, zorder=1)  # beams
             plt.scatter([p.x for p in beam.nodes], [p.y for p in beam.nodes], marker='s', color='navy', alpha=0.5, s=30, zorder=2)  # nodes
 
+        # length of the longes beam - this will be the base for the scaling
+        _long = sorted(structure.beams, key=lambda x: x.l)[-1].l
+
         # plot supports
         # 1/scale will be the length of the bars representing the restricted translational degrees of freedom
         figsize = [plt.rcParams["figure.dpi"] * x for x in plt.rcParams["figure.figsize"]]  # width of the fig in pixels
         w_figsize = figsize[0]
-        supportsize = w_figsize * SUPPORT_SCALE
+        supportsize = _long * SUPPORT_SCALE
         for k, v in structure.supports.items():
             _aktnode = [x for x in structure.nodes if x.ID == k][0]
             for dof in v:
@@ -162,8 +165,6 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
                     plt.plot([_aktnode.x, _aktnode.x], [_aktnode.y, _aktnode.y], 'seagreen', markersize=16, zorder=7)  # a point
 
         # plot the deformed shape
-        # length of the longes beam - this will be the base for the scaling
-        _long = sorted(structure.beams, key=lambda x: x.l)[-1].l
 
         # # displacements
 
