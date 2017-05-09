@@ -94,7 +94,9 @@ class Structure(object):
     @property
     def positions_to_eliminate(self):
         """
-        Numbers of rows and columns to be eliminated when condensing the K and M matrices for the modal analysis.
+        Numbers of rows and columns to be eliminated when condensing the K and M matrices for the modal analysis, based
+        on the boundary conditions defined.
+        Possible zero-rows are not considered here.
         Returned is a sorted list of these.
         When deleting the rows, one should begin with the highest number, that is, the reversed list of positions
         When re-populating the displacement vectors, the list should not be reversed.

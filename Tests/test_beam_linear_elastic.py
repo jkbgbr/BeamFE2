@@ -479,30 +479,30 @@ class Hermitian2D_Structure(unittest.TestCase):
         self.assertTrue(np.allclose(disps, _expected, atol=ATOL))
 
 #
-class Hermitian2D_Internal(unittest.TestCase):
-    """
-    advanced tests for the hermitian 2D beam: adding hinges by releasing the stiffnesses
-    """
-
-    @classmethod
-    def setUpClass(cls):
-
-        # structure #1: 3 elements in a row along the global X axis
-        cls.n1 = Node.Node(ID=1, coords=(0, 0))
-        cls.n2 = Node.Node(ID=2, coords=(100, 0))
-        cls.n3 = Node.Node(ID=3, coords=(200, 0))
-
-        # section for the beams: 10 by 10 rectangle
-        sect = sections.Rectangle(height=30, width=30)
-        b1 = HB.HermitianBeam2D(E=210000., ID=1, crosssection=sect, i=cls.n1, j=cls.n2)
-        b2 = HB.HermitianBeam2D(E=210000., ID=2, crosssection=sect, i=cls.n2, j=cls.n3)
-        cls.structure_1 = Structure.Structure(beams=[b1, b2], supports={1: ['ux', 'uy', 'rotz'], 3: ['ux', 'uy', 'rotz']})
-
-    def test_internal_deflections(self):
-        # for beam in self.structure_1.beams:
-        #     beam.restore_DOFs()
-        self.structure_1.add_single_dynam_to_node(nodeID=2, dynam={'FY': 1000000}, clear=True)
-        solve(self.structure_1, analysis='linear static')
-        disps = self.structure_1.results['linear static'].global_displacements(asvector=True)
-        # self.structure_1.draw(analysistype='linear static')
-        # self.assertTrue(True)
+# class Hermitian2D_Internal(unittest.TestCase):
+#     """
+#     advanced tests for the Beams: internal displacements
+#     """
+#
+#     @classmethod
+#     def setUpClass(cls):
+#
+#         # structure #1: 3 elements in a row along the global X axis
+#         cls.n1 = Node.Node(ID=1, coords=(0, 0))
+#         cls.n2 = Node.Node(ID=2, coords=(100, 0))
+#         cls.n3 = Node.Node(ID=3, coords=(200, 0))
+#
+#         # section for the beams: 10 by 10 rectangle
+#         sect = sections.Rectangle(height=30, width=30)
+#         b1 = HB.HermitianBeam2D(E=210000., ID=1, crosssection=sect, i=cls.n1, j=cls.n2)
+#         b2 = HB.HermitianBeam2D(E=210000., ID=2, crosssection=sect, i=cls.n2, j=cls.n3)
+#         cls.structure_1 = Structure.Structure(beams=[b1, b2], supports={1: ['ux', 'uy', 'rotz'], 3: ['ux', 'uy', 'rotz']})
+#
+#     def test_internal_deflections(self):
+#         # for beam in self.structure_1.beams:
+#         #     beam.restore_DOFs()
+#         self.structure_1.add_single_dynam_to_node(nodeID=2, dynam={'FY': 1000000}, clear=True)
+#         solve(self.structure_1, analysis='linear static')
+#         disps = self.structure_1.results['linear static'].global_displacements(asvector=True)
+#         # self.structure_1.draw(analysistype='linear static')
+#         # self.assertTrue(True)
