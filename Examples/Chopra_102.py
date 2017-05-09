@@ -36,7 +36,6 @@ BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
 structure = Structure.Structure(beams=_beams, supports=BCs)
 
 # adding loads, masses
-structure.add_mass_to_node(nodeID=1, mass=10000000 * mass / 2., clear=True)  # clears previous loads
 structure.add_mass_to_node(nodeID=2, mass=mass * L / 2.)
 structure.add_mass_to_node(nodeID=3, mass=mass * L / 4.)
 
