@@ -100,6 +100,9 @@ class ModalResult(AnalysisResult):
     def periods(self):
         return [1./x for x in self.frequencies]
 
+    def modeshape(self, mode=None):
+        return self.displacement_results[mode]
+
 
 class BucklingResult(AnalysisResult):
     def __init__(self, structure=None, criticals=None, bucklingshapes=None):

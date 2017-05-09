@@ -40,7 +40,7 @@ def solve(structure, analysis=None):
         Time: [s]
         OR
         Length: [mm]
-        Density: [t/mm3] * 1e-8
+        Mass: [t] -> Density: [t/mm3]!
         Young's module: [N/mm2] 
         Time: [s]
         """
@@ -84,13 +84,11 @@ def solve(structure, analysis=None):
         K = structure.condense(mtrx=structure.K)
         KG = structure.condense(mtrx=structure.K_geom)
         eigvals = namivan(a=K, b=KG)[0]  # here the numpy
-        eigvectors = namivan(a=K, b=KG)[1]  # here the numpy
+        eigvecs = namivan(a=K, b=KG)[1]  # here the numpy
 
         print([x for x in sorted(eigvals.real) if x>0])
         print('')
         # print(eigvectors)
-
-        exit()
 
         shapes = [np.matrix([eigvecs[:, x]]).T for x in range(len(eigvecs))]  # casting to list of column matrices
 

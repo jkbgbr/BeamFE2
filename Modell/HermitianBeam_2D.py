@@ -214,7 +214,7 @@ class HermitianBeam2D(object):
         ])
         print(_ret)
 
-        _ret = np.multiply((N / L), _ret)
+        # _ret = np.multiply((N / L), _ret)
 
         return _ret
 
