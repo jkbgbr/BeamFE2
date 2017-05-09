@@ -29,9 +29,9 @@ class Hermitian2D_Model(unittest.TestCase):
         for i in range(2):
             if i == 0:
                 _length = 450.  # mm
-                rho = 7.850e-8
+                rho = 7.850e-9
                 section_column = sections.Rectangle(height=3., width=20.)
-                E = 2.1e6
+                E = 2.1e5
             else:
                 _length = 0.45  # m
                 rho = 7850
