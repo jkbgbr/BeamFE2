@@ -9,13 +9,12 @@ np.set_printoptions(precision=6, suppress=True, linewidth=250)
 #   internal actions in internal points, also plot them
 #   calculating stresses (Sections need stress points for this...)
 # Modal:
-#   what is the lumped mass matrix for the 6DOF Bernoulli Beam?
-#   change the solver to condense the matrix when the mass matrix is not positive definite?
-#   tests, ideally opensess-based and with analytical formulae -> chopra book, example around 10.5
+#   check added mass etc. Chopra example with higher resolution
+#   tests
 #   modal masses, modal participation
 #   EC-based stuff: modal antwort, summation...
 # Buckling:
-#   implement. the geometrical stiffness matrix is needed for that.
+#   implement.
 
 # todo: LATER
 # Lin stat:
