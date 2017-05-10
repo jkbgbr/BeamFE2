@@ -83,12 +83,13 @@ def solve(structure, analysis=None):
         eigvals = namivan(a=K, b=KG)[0]
         eigvecs = namivan(a=K, b=KG)[1]
 
+        print((math.pi**2)*beam.EI/(900**2))
+        print((math.pi**2)*beam.EI/((0.7*450)**2))
         print([x for x in sorted(eigvals.real)])
         print([x for x in sorted(eigvals.real) if x>0])
         print('')
 
         shapes = [np.matrix([eigvecs[:, x]]).T for x in range(len(eigvecs))]  # casting to list of column matrices
-        print(shapes)
 
         # shapes is to be updated (re-populated) to account for the rows and columns removed during condensing
         _ret = None

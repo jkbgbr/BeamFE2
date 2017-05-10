@@ -9,7 +9,7 @@ import math
 
 
 F_HORIZONTAL = 1000000
-F_VERTICAL = 1
+F_VERTICAL = 100
 
 class Hermitian2D_Model(unittest.TestCase):
     """
@@ -28,7 +28,7 @@ class Hermitian2D_Model(unittest.TestCase):
         Results are accepted if circular frequencies are within 1% of the analytical solution.
         http://iitg.vlab.co.in/?sub=62&brch=175&sim=1080&cnt=1
         """
-        _pieces = 3  # number of finite elements
+        _pieces = 1  # number of finite elements
         _length = 450.  # mm
         rho = 7.850e-8
         section_column = sections.Rectangle(height=1., width=1.)
@@ -51,13 +51,13 @@ class Hermitian2D_Model(unittest.TestCase):
 
         # supports
         _last = max([x.ID for x in _nodes])
-        BCs = {1: ['ux', 'uy', 'rotz'], _last: ['ux']}  # supports as dict
+        BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
 
         # this is the structure
         structure = Structure.Structure(beams=_beams, supports=BCs)
 
         # adding loads
-        structure.add_single_dynam_to_node(nodeID=_last, dynam={'FX': 0, 'FY': -1*F_VERTICAL}, clear=True)
+        structure.add_single_dynam_to_node(nodeID=_last, dynam={'FX': 0, 'FY': -100*F_VERTICAL}, clear=True)
 
         # solver :-) whatever happens here is done by numpy.
 
