@@ -51,7 +51,7 @@ class Hermitian2D_Model(unittest.TestCase):
 
         # supports
         _last = max([x.ID for x in _nodes])
-        BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
+        BCs = {1: ['ux', 'uy', 'rotz'], _last: ['ux']}  # supports as dict
 
         # this is the structure
         structure = Structure.Structure(beams=_beams, supports=BCs)

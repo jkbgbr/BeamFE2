@@ -107,8 +107,10 @@ def solve(structure, analysis=None):
 
         structure.results['buckling'] = Results.BucklingResult(structure=structure, criticals=eigvals, bucklingshapes=_ret)
 
-        structure.draw(analysistype='linear static')
+        # structure.draw(analysistype='linear static')
         structure.draw(analysistype='buckling', mode=0)
+        structure.draw(analysistype='buckling', mode=1)
+        structure.draw(analysistype='buckling', mode=2)
         # print(sorted(scipy.linalg.eigvalsh(K, b=KG)))
 
         # eigvals, eigvecs = eigh(K, KG)
@@ -116,6 +118,7 @@ def solve(structure, analysis=None):
         # solve(structure, analysis='buckling')
         print(structure.results['linear static'].displacement_results)
         print((math.pi**2)*beam.EI/(900**2))
+        print((math.pi**2)*beam.EI/((0.7*450)**2))
 
         # Linear buckling
         # not implemented yet!
