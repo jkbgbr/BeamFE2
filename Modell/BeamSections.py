@@ -17,6 +17,8 @@ class Crossection(object):
 
 class CustomCrosssection(Crossection):
     def __init__(self, shape='custom', A=None, I=None):
+        assert A is not None
+        assert I is not None
         super(CustomCrosssection, self).__init__(shape=shape)
         self._A = A
         self._I = I
@@ -33,7 +35,6 @@ class CustomCrosssection(Crossection):
 class Rectangle(Crossection):
     def __init__(self, shape='rectangle', height=None, width=None):
         super(Rectangle, self).__init__(shape=shape)
-        # assert a >= b
         self.height = height
         self.width = width
 
