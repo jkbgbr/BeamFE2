@@ -11,6 +11,18 @@ class Material(object):
         pass
 
 
+class CustomLinearElasticMaterial(Material):
+    def __init__(self, E=None, nu=None):
+        assert E is not None
+        assert nu is not None
+        super(CustomLinearElasticMaterial, self).__init__()
+        self.E = E  # the elastic modulus in N/m2
+        self.nu = nu  # Poisson's ration, dimensionless
+
+    def G(self):
+        return self.E/(2 * 1 + self.nu)
+
+
 class LinearElasticMaterial(Material):
     def __init__(self):
         super(LinearElasticMaterial, self).__init__()
