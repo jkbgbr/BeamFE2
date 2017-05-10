@@ -6,11 +6,28 @@ class Crossection(object):
     def __init__(self, shape=None, *args, **kwargs):
         self.shape = shape
 
+    @property
     def A(self):
         raise NotImplementedError
 
+    @property
     def I(self):
         raise NotImplementedError
+
+
+class CustomCrosssection(Crossection):
+    def __init__(self, shape='custom', A=None, I=None):
+        super(CustomCrosssection, self).__init__(shape=shape)
+        self._A = A
+        self._I = I
+
+    @property
+    def A(self):
+        return self._A
+
+    @property
+    def I(self):
+        return self._I
 
 
 class Rectangle(Crossection):
@@ -56,7 +73,7 @@ class Circle(Crossection):
 
 
 class HollowCircle(Crossection):
-    def __init__(self, shape='circle', r=None, s=None):
+    def __init__(self, shape='hollowcircle', r=None, s=None):
         super(HollowCircle, self).__init__(shape=shape)
         self.r_out = r
         self.s = s
