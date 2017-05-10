@@ -19,6 +19,8 @@ class CustomCrosssection(Crossection):
     def __init__(self, shape='custom', A=None, I=None):
         assert A is not None
         assert I is not None
+        assert A > 0
+        assert I > 0
         super(CustomCrosssection, self).__init__(shape=shape)
         self._A = A
         self._I = I
