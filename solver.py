@@ -32,18 +32,7 @@ def solve(structure, analysis=None):
 
     # modal analyse
     if analysis in ['modal', 'all']:
-        """
-        units: 
-        Length: [m]
-        Density: [kg/m3]
-        Young's module: [N/m2] 
-        Time: [s]
-        OR
-        Length: [mm]
-        Mass: [t] -> Density: [t/mm3]!
-        Young's module: [N/mm2] 
-        Time: [s]
-        """
+        # for details on unit choice see Modell/__init__.py
         K = structure.condense(mtrx=structure.K_with_BC)
         M = structure.condense(mtrx=structure.M_with_masses)
         eigvals, eigvecs = sp.eigh(K, M)
