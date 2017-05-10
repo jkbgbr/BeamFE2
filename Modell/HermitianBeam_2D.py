@@ -180,6 +180,7 @@ class HermitianBeam2D(object):
                           [0,                  self.N2(x=x, L=L),  self.N3(x=x, L=L),     0,                  self.N5(x=x, L=L),  self.N6(x=x, L=L)]])
 
     def _Me(self):
+
         L = self.l
         _ret = self.rho * self.A * self.l / 420 * \
                np.matrix([
@@ -190,6 +191,17 @@ class HermitianBeam2D(object):
                    [0, 54, 13*L, 0, 156, -22*L],
                    [0, -13*L, -3*(L**2), 0, -22*L, 4*(L**2)]])
         return _ret
+
+        # _ret = self.rho * self.A * L / 2. * \
+        #        np.matrix([
+        #            [1, 0, 0, 70, 0, 0],
+        #            [0, 1, 0, 0, 0, 0],
+        #            [0, 0, 0, 0, 0, 0],
+        #            [0, 0, 0, 1, 0, 0],
+        #            [0, 0, 0, 0, 1, 0],
+        #            [0, 0, 0, 0, 0, 0]])
+        # return _ret
+
 
     @property
     def Me(self):
