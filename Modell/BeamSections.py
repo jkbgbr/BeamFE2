@@ -64,6 +64,9 @@ class Circle(Crossection):
     def __repr__(self):
         return 'Circle(r=%.2f)' % self.r
 
+    def __str__(self):
+        return 'Circle r = %.2f, A=%.2f, Ix=%.2f, Iy=%.2f' % (self.r, self.A, self.I['x'], self.I['y'])
+
     @property
     def A(self):
         return self.r ** 2 * math.pi
@@ -80,10 +83,13 @@ class HollowCircle(Crossection):
         super(HollowCircle, self).__init__(shape=shape)
         self.r_out = r
         self.s = s
-        self.r_in = s
+        self.r_in = r - s
 
     def __repr__(self):
         return 'HollowCircle(r=%.2f, s=%.2f)' % (self.r_out, self.s)
+
+    def __str__(self):
+        return 'Hollow Circle r = %.2f, s = %.2f, A=%.2f, Ix=%.2f, Iy=%.2f' % (self.r, self.s, self.A, self.I['x'], self.I['y'])
 
     @property
     def A(self):
