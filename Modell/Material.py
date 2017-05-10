@@ -13,7 +13,7 @@ class Material(object):
 
 class LinearElasticMaterial(Material):
     # abstract class
-    def __init__(self, name='custom', E=None, nu=None, rho=None):
+    def __init__(self, name='elastic material', E=None, nu=None, rho=None):
         assert E is not None
         assert 0 < E
         assert nu is not None
@@ -56,7 +56,7 @@ class LinearElasticMaterial(Material):
 
 
 class Steel(LinearElasticMaterial):
-    # normal ideal elastic steel
+    # ideal elastic steel
     def __init__(self, name='steel'):
         super(Steel, self).__init__(E=2.1e5, nu=0.3, name=name, rho=7.85e-9)
 
