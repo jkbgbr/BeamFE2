@@ -9,7 +9,7 @@ import math
 
 
 F_HORIZONTAL = 1000000
-F_VERTICAL = 100
+F_VERTICAL = 1
 
 class Hermitian2D_Model(unittest.TestCase):
     """
@@ -57,7 +57,7 @@ class Hermitian2D_Model(unittest.TestCase):
         structure = Structure.Structure(beams=_beams, supports=BCs)
 
         # adding loads
-        structure.add_single_dynam_to_node(nodeID=_last, dynam={'FX': 0, 'FY': -100*F_VERTICAL}, clear=True)
+        structure.add_single_dynam_to_node(nodeID=_last, dynam={'FX': 0, 'FY': -1*F_VERTICAL}, clear=True)
 
         # solver :-) whatever happens here is done by numpy.
 

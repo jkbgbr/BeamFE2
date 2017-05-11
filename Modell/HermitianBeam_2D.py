@@ -212,7 +212,7 @@ class HermitianBeam2D(object):
     #     # not implemented yet
     #     raise NotImplementedError
 
-    def _Ke_geom(self, N=-100):
+    def _Ke_geom(self, N=-1):
         # the geometrical stiffness matrix, from H-P. Gavin CEE 421L. Matrix Structural Anyalsis - Duke University
 
         L = self.l
