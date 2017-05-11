@@ -69,12 +69,8 @@ def solve(structure, analysis=None):
         beam = structure.beams[0]
         K = structure.condense(mtrx=structure.K_with_BC)
         KG = structure.condense(mtrx=structure.K_geom)
-        K = structure.condense(mtrx=structure.K)
-        KG = structure.condense(mtrx=structure.K_geom)
         eigvals = namivan(a=K, b=KG)[0]
         eigvecs = namivan(a=K, b=KG)[1]
-
-        print(np.linalg.eigvals(K))
 
         print((math.pi**2)*beam.EI/(900**2))
         print([x for x in sorted(eigvals.real) if x>0])
@@ -112,7 +108,5 @@ def solve(structure, analysis=None):
 
         # Linear buckling
         # not implemented yet!
-
-
 
     return True
