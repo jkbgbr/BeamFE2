@@ -85,6 +85,28 @@ class LinearStaticResult(AnalysisResult):
         super(LinearStaticResult, self).__init__(structure=structure)
         self.displacement_results = displacements  # the result as a one-element vector
 
+    @property
+    def reaction_forces(self):
+        _ret = np.zeros([len(self.structure.nodes)*3, 1])
+
+        # nodal reactions from loads defined as beam internals - these will be added as these are REACTION formces
+        for b in self.structure.beams:
+            disp = self.structure.results['linear static'].element_displacements(local=True, beam=b, asvector=True)
+            for nodeind, node in enumerate(b.nodes):
+                # position of the first dof in the result matrix
+                _pos = self.structure.position_in_matrix(nodeID=node.ID, DOF='ux')
+                # writing the value
+                _ret[_pos:_pos + 3] += b.nodal_reactions_asvector(disps=disp)[nodeind * 3:nodeind * 3 + 3]
+
+        # loads defined directly on nodes - these will be substracted as these are ACTION formces
+        for x in self.structure.nodal_loads:
+            _pos = self.structure.position_in_matrix(nodeID=x.node.ID, DOF='ux')
+            # writing the value
+            _ret[_pos:_pos + 3] -= x.asvector.T
+
+        return _ret
+
+
 class ModalResult(AnalysisResult):
     def __init__(self, structure=None, circular_freq=None, modalshapes=None):
         super(ModalResult, self).__init__(structure=structure)

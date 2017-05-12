@@ -2,7 +2,8 @@
 from drawing import draw_beam
 import copy
 from Modell.helpers import *
-from Modell.BeamLoads import *
+from Modell.Loads import *
+from Modell import Loads as BL
 
 
 class Structure(object):
@@ -11,10 +12,24 @@ class Structure(object):
     """
     def __init__(self, beams=None, supports=None):
         self.beams = beams
+        self.nodal_loads = []
         self._load_vector = None
         self._mass_vector = None
         self.supports = supports
         self.results = {'linear static': None, 'modal': None, 'buckling': None}
+
+    def add_nodal_load(self, nodeID=None, dynam=None, clear=False):
+        # finding the node
+        node = [x for x in self.nodes if nodeID == x.ID]
+        if len(node) != 1:
+            raise Exception('There is no node with ID %d' % nodeID)
+        else:
+            node = node[0]
+        # making sure the dynam is full
+        # todo we need FX, FY, MZ
+        self.nodal_loads.append(BL.NodalLoad(node=node, dynam=dynam))
+        self.add_single_dynam_to_node(nodeID=nodeID, dynam=dynam, clear=clear)
+
 
     def mass(self):
         """ Structural mass """
@@ -185,17 +200,9 @@ class Structure(object):
         return self._mass_vector
 
     def add_internal_loads(self, beam=None, **kwargs):
-        print('')
-        print(beam)
         beam.add_internal_load(**kwargs)
-        print(beam.reduced_internal_loads)
         for node in beam.nodes:
-            print('')
-            print(node)
             self.add_single_dynam_to_node(nodeID=node.ID, dynam=beam.reduced_internal_loads[node])
-            print(self._load_vector)
-
-        print('')
 
     def reduce_internal_loads(self):
         """

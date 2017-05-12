@@ -1,10 +1,23 @@
 
+import numpy as np
 import math
 from drawing import _plotting_available, plt
 import sys
 import inspect
 
-LOADTYPES = 'uniform perpendicular force'
+BEAM_LOAD_TYPES = 'uniform perpendicular force'
+NODAL_LOAD_TYPES = ['force', 'moment']
+
+
+class NodalLoad(object):
+    def __init__(self, node=None, dynam=None, *args, **kwargs):
+        self.node = node  # length of beam
+        self.dynam = dynam
+
+    @property
+    def asvector(self):
+        d = self.dynam
+        return np.matrix([d['FX'], d['FY'], d['MZ']])
 
 
 class BeamLoad(object):
@@ -39,15 +52,23 @@ class UniformPerpendicularForce(BeamLoad):
         return [x / self.nr_points for x in range(self.nr_points+1)]  # points where the load is
 
     @property
+    def reactions_asvector(self):
+        _ret = np.matrix([[0, self.q * self.beam.l / 2, self.q * (self.beam.l ** 2) / 12,
+                           0, self.q * self.beam.l / 2, - 1 * self.q * (self.beam.l ** 2) / 12.]])
+        return _ret
+
+    @property
     def reactions(self):
         """
         reactions at node i for the DOFs
         :return: 3-tuple for local FX, FY, MZ 
         """
+        _av = self.reactions_asvector
         _ret = {
-            self.beam.i: {'FX': 0, 'FY': self.q * self.beam.l / 2, 'MZ': self.q * (self.beam.l ** 2) / 12},
-            self.beam.j: {'FX': 0, 'FY': self.q * self.beam.l / 2, 'MZ': - 1 * self.q * (self.beam.l ** 2) / 12}
+            self.beam.i: {'FX': _av[0, 0], 'FY': _av[0, 1], 'MZ': _av[0, 2]},
+            self.beam.j: {'FX': _av[0, 3], 'FY': _av[0, 4], 'MZ': _av[0, 5]}
                 }
+
         return _ret
 
     def deflection_at_position(self, xi):
