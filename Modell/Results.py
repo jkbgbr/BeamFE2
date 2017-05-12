@@ -85,7 +85,6 @@ class LinearStaticResult(AnalysisResult):
         super(LinearStaticResult, self).__init__(structure=structure)
         self.displacement_results = displacements  # the result as a one-element vector
 
-
 class ModalResult(AnalysisResult):
     def __init__(self, structure=None, circular_freq=None, modalshapes=None):
         super(ModalResult, self).__init__(structure=structure)

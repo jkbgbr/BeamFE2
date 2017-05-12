@@ -26,6 +26,8 @@ else:  # horizontal beam
 
 # beams
 section_column = sections.Rectangle(height=3, width=10)  # section
+print(section_column.I)
+print(section_column.A)
 mat = Material.Steel()
 rho = mat.rho
 EE = mat.E
@@ -38,7 +40,7 @@ _beams = [HB.HermitianBeam2D.from_dict(adict=
 
 
 # supports
-BCs = {1: ['ux', 'uy', 'rotz'], 3: ['ux', 'uy', 'rotz']}  # supports as dict
+BCs = {1: ['ux', 'uy', 'rotz'], NR_BEAMS+1: ['ux', 'uy', 'rotz']}  # supports as dict
 
 # this is the cantilever itself, composed of the beams, complete with supports
 structure = Structure.Structure(beams=_beams, supports=BCs)
@@ -53,7 +55,7 @@ for b in structure.beams:
 print(structure.load_vector)
 
 # solving it
-solve(structure, analysis='all')
+solve(structure, analysis='linear static')
 
 
 # posprocessing
@@ -61,14 +63,20 @@ structure.draw(analysistype='linear static')
 # for i in range(3):
 #     structure.draw(analysistype='modal', mode=i)
 
-print(structure.results['linear static'].displacement_results)
+strudisp = structure.results['linear static'].displacement_results
+print(structure.K_with_BC)
+print(strudisp[0])
+import numpy as np
+print(structure.K_with_BC * strudisp[0])
 
-#
-# for b in structure.beams:
-#     print('')
-#     print(b)
-#     disp = structure.results['linear static'].element_displacements(local=True, beam=b, asvector=True)
-#     print(disp)
-#     print(b.nodal_reactions(disps=disp))
-#     # print('local reactions')
-#     # print(b.nodal_reactions(disps=disp)-b.load_vector)
+exit()
+
+
+for b in structure.beams:
+    print('')
+    print(b)
+    disp = structure.results['linear static'].element_displacements(local=True, beam=b, asvector=True)
+    print(disp)
+    print(b.nodal_reactions(disps=disp))
+    # print('local reactions')
+    # print(b.nodal_reactions(disps=disp)-structure.load_vector)

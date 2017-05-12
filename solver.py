@@ -21,15 +21,6 @@ def solve(structure, analysis=None):
         disps = sp.inv(structure.K_with_BC) * structure.load_vector
         structure.results['linear static'] = Results.LinearStaticResult(structure=structure, displacements=[disps])
 
-    # if analysis in ['nonlinear static', 'all']:
-    #     # https: // www.ethz.ch / content / dam / ethz / special - interest / baug / ibk / structural - mechanics - dam / education / femI / Lecture_2b.pdf
-    #     # do a linear
-    #     # calculate the geometrical stiffness matrix
-    #     # add them, do a linear
-    #     # linear static analysis
-    #     disps = inv(structure.K_with_BC) * structure.load_vector
-    #     structure.results['linear static'] = Results.LinearStaticResult(structure=structure, displacements=[disps])
-
     # modal analyse
     if analysis in ['modal', 'all']:
         # for details on unit choice see Modell/__init__.py

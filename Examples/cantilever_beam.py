@@ -12,7 +12,7 @@ A simple cantilever beam in vertical or horizontal position.
 """
 
 VERTICAL = False  # True/False for vertical/horizontal
-NR_BEAMS = 1  # number of finite elements
+NR_BEAMS = 2  # number of finite elements
 LENGTH = 200  # length of cantilever
 F_HORIZONTAL = 0
 F_VERTICAL = -1000
@@ -61,6 +61,10 @@ structure.draw(analysistype='linear static')
 # for i in range(3):
 #     structure.draw(analysistype='modal', mode=i)
 
+strudisp = structure.results['linear static'].displacement_results
+print(strudisp)
+print(structure.K_with_BC * strudisp)
+#
 for b in structure.beams:
     print('')
     print(b)

@@ -314,7 +314,8 @@ class HermitianBeam2D(object):
 
     def nodal_reactions(self, disps):
         """ reactions in the local coordinate system of the beam """
-        return self.Ke * disps
+        _ret = self.Ke * disps
+        return _ret
 
 
 if __name__ == '__main__':
