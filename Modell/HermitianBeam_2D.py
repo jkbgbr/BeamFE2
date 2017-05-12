@@ -5,6 +5,7 @@ from Modell.helpers import *
 import copy
 from Modell import BeamSections as sections
 from Modell import Structure
+from Modell import BeamLoads as BL
 from Modell import Node
 from solver import solve
 
@@ -36,6 +37,7 @@ class HermitianBeam2D(object):
 
     dof = 3  # degrees of freedom
     dofnames = 'ux', 'uy', 'rotz'
+    dynamnames = 'FX', 'FY', 'MZ'
     number_internal_points = 10
 
     def __init__(self, ID=None, i=None, j=None, E=None, crosssection=None, I=None, A=None, rho=None):
@@ -60,8 +62,8 @@ class HermitianBeam2D(object):
             self.A = A
             self.I = I
         self._end_DOFs = {'i': list(copy.deepcopy(self.dofnames)), 'j': list(copy.deepcopy(self.dofnames))}
-
         self.rho = rho  # density in g/m3 for the nodal analysis
+        self.internal_loads = []
 
         # displacements are the result from the analysis. Its a dictionary, where the keys are
         # the names of the analyses, and the results themselves are in the LOCAL system, separated
@@ -121,6 +123,27 @@ class HermitianBeam2D(object):
         _dy = self.j.y - self.i.y
         _dx = self.j.x - self.i.x
         return np.arctan2(_dy, _dx)
+
+    def add_internal_load(self, **kwargs):
+        _lt = kwargs['loadtype']
+        assert _lt in BL.LOADTYPES
+
+        if _lt == 'uniform perpendicular force':
+            self.internal_loads.append(BL.UniformPerpendicularForce(beam=self, **kwargs))
+        else:
+            raise NotImplementedError
+
+    @property
+    def reduced_internal_loads(self):
+        """
+        Summing the nodal foreces from the internal loads
+        :return: 
+        """
+        _ret = {self.i: {k: 0 for k in self.dynamnames}, self.j: {k: 0 for k in self.dynamnames}}
+        for component in self.dynamnames:
+            for node in self.nodes:
+                _ret[node][component] += sum([x.reactions[node][component] for x in self.internal_loads])
+        return _ret
 
     #
     # diverse matrices
@@ -263,7 +286,7 @@ class HermitianBeam2D(object):
     def deflected_shape(self, local=True, scale=1., disps=None):
         """
         The deflected shape of the beam, based on the local, non-partitioned displacements of the end nodes, 
-        provided in disps.
+        provided in disps. Internal loads are not considered here.
         (ux, uy) = N * load_vector
         :param local: if local = False, the values are transferred in the global coordinate system e.g. for plotting
         :param scale: displacement magnification scale

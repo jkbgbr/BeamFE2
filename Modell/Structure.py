@@ -2,6 +2,7 @@
 from drawing import draw_beam
 import copy
 from Modell.helpers import *
+from Modell.BeamLoads import *
 
 
 class Structure(object):
@@ -182,6 +183,27 @@ class Structure(object):
         # a vector containing the masses
         # currently no distinction between directions, defined massesact in all directions
         return self._mass_vector
+
+    def add_internal_loads(self, beam=None, **kwargs):
+        print('')
+        print(beam)
+        beam.add_internal_load(**kwargs)
+        print(beam.reduced_internal_loads)
+        for node in beam.nodes:
+            print('')
+            print(node)
+            self.add_single_dynam_to_node(nodeID=node.ID, dynam=beam.reduced_internal_loads[node])
+            print(self._load_vector)
+
+        print('')
+
+    def reduce_internal_loads(self):
+        """
+        Reduces the internal loads to the nodes.
+        :return: 
+        """
+        for b in self.beams:
+            print(b.reduced_internal_loads)
 
     def add_single_dynam_to_node(self, nodeID=None, dynam=None, clear=False):
         """
