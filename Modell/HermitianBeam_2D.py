@@ -5,7 +5,7 @@ from Modell.helpers import *
 import copy
 from Modell import BeamSections as sections
 from Modell import Structure
-from Modell import BeamLoads as BL
+from Modell import Loads as BL
 from Modell import Node
 from solver import solve
 
@@ -126,7 +126,7 @@ class HermitianBeam2D(object):
 
     def add_internal_load(self, **kwargs):
         _lt = kwargs['loadtype']
-        assert _lt in BL.LOADTYPES
+        assert _lt in BL.BEAM_LOAD_TYPES
 
         if _lt == 'uniform perpendicular force':
             self.internal_loads.append(BL.UniformPerpendicularForce(beam=self, **kwargs))
@@ -143,6 +143,18 @@ class HermitianBeam2D(object):
         for component in self.dynamnames:
             for node in self.nodes:
                 _ret[node][component] += sum([x.reactions[node][component] for x in self.internal_loads])
+        return _ret
+
+    @property
+    def reduced_internal_loads_asvector(self):
+        """
+        Summing the nodal foreces from the internal loads
+        :return: 
+        """
+        _ret = np.zeros([1, 6])
+        for x in self.internal_loads:
+            _ret += x.reactions_asvector
+        _ret = _ret.T
         return _ret
 
     #
@@ -312,10 +324,19 @@ class HermitianBeam2D(object):
             _deflected_shape.append(_val)
         return _deflected_shape
 
+    def nodal_reactions_asvector(self, disps):
+        """
+        reactions in the local coordinate system of the beam, from displacements and the internal loads
+        but not the nodal noads defined for the structure
+        """
+        return self.Ke * disps - self.reduced_internal_loads_asvector
+
     def nodal_reactions(self, disps):
-        """ reactions in the local coordinate system of the beam """
-        _ret = self.Ke * disps
-        return _ret
+        vals = self.nodal_reactions_asvector(disps)
+        return {
+            self.i: {'FX': vals[0, 0], 'FY': vals[1, 0], 'MZ': vals[2, 0]},
+            self.j: {'FX': vals[3, 0], 'FY': vals[4, 0], 'MZ': vals[5, 0]}
+        }
 
 
 if __name__ == '__main__':
