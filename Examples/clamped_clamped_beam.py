@@ -12,10 +12,10 @@ A simple cantilever beam in vertical or horizontal position.
 """
 
 VERTICAL = False  # True/False for vertical/horizontal
-NR_BEAMS = 2  # number of finite elements
+NR_BEAMS = 4  # number of finite elements
 LENGTH = 200  # length of cantilever
 F_HORIZONTAL = 0
-F_VERTICAL = -1000
+F_VERTICAL = 10000
 
 
 # nodes
@@ -36,11 +36,8 @@ _beams = [HB.HermitianBeam2D.from_dict(adict=
                                         'rho': rho, 'i': _nodes[i], 'j': _nodes[i+1]})
           for i in range(NR_BEAMS)]
 
-
-
-
 # supports
-BCs = {1: ['ux', 'uy', 'rotz'], NR_BEAMS+1: ['ux', 'uy', 'rotz']}  # supports as dict
+BCs = {1: ['ux', 'uy', 'rotz'], NR_BEAMS+1: ['ux', 'uy']}  # supports as dict
 
 # this is the cantilever itself, composed of the beams, complete with supports
 structure = Structure.Structure(beams=_beams, supports=BCs)
@@ -48,35 +45,18 @@ structure = Structure.Structure(beams=_beams, supports=BCs)
 # adding loads
 # directly defined nodal loads
 # structure.add_single_dynam_to_node(nodeID=4, dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL}, clear=True)
+structure.add_nodal_load(nodeID=3, dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL, 'MZ': 0}, clear=True)
+# (nodeID=4, dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL}, clear=True)
 # beam internal loads
 for b in structure.beams:
-    structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', q=23.00)
-
-print(structure.load_vector)
+    structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', q=3.00)
 
 # solving it
 solve(structure, analysis='linear static')
-
 
 # posprocessing
 structure.draw(analysistype='linear static')
 # for i in range(3):
 #     structure.draw(analysistype='modal', mode=i)
 
-strudisp = structure.results['linear static'].displacement_results
-print(structure.K_with_BC)
-print(strudisp[0])
-import numpy as np
-print(structure.K_with_BC * strudisp[0])
-
-exit()
-
-
-for b in structure.beams:
-    print('')
-    print(b)
-    disp = structure.results['linear static'].element_displacements(local=True, beam=b, asvector=True)
-    print(disp)
-    print(b.nodal_reactions(disps=disp))
-    # print('local reactions')
-    # print(b.nodal_reactions(disps=disp)-structure.load_vector)
+print(structure.results['linear static'].reaction_forces)

@@ -15,7 +15,7 @@ VERTICAL = False  # True/False for vertical/horizontal
 NR_BEAMS = 2  # number of finite elements
 LENGTH = 200  # length of cantilever
 F_HORIZONTAL = 0
-F_VERTICAL = -1000
+F_VERTICAL = 1000
 
 
 # nodes
@@ -34,9 +34,6 @@ _beams = [HB.HermitianBeam2D.from_dict(adict=
                                         'rho': rho, 'i': _nodes[i], 'j': _nodes[i+1]})
           for i in range(NR_BEAMS)]
 
-
-
-
 # supports
 BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
 
@@ -45,12 +42,10 @@ structure = Structure.Structure(beams=_beams, supports=BCs)
 
 # adding loads
 # directly defined nodal loads
-# structure.add_single_dynam_to_node(nodeID=len(_nodes), dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL}, clear=True)
+structure.add_nodal_load(nodeID=_nodes[-1].ID, dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL, 'MZ': 0}, clear=True)
 # beam internal loads
 structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform perpendicular force', q=2.3)
 # structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform perpendicular force', q=1.3)
-
-print(structure.load_vector)
 
 # solving it
 solve(structure, analysis='all')
@@ -58,8 +53,11 @@ solve(structure, analysis='all')
 
 # posprocessing
 structure.draw(analysistype='linear static')
-# for i in range(3):
-#     structure.draw(analysistype='modal', mode=i)
+
+print(structure.results['linear static'].reaction_forces)
+
+exit()
+
 
 strudisp = structure.results['linear static'].displacement_results
 print(strudisp)
