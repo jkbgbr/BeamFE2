@@ -143,18 +143,22 @@ class HermitianBeam2D(object):
         for component in self.dynamnames:
             for node in self.nodes:
                 _ret[node][component] += sum([x.reactions[node][component] for x in self.internal_loads])
+
         return _ret
 
     @property
     def reduced_internal_loads_asvector(self):
         """
-        Summing the nodal foreces from the internal loads
+        Summing the nodal foreces from the internal loads. The results are in the local system, 
+        transformed back from the global.
         :return: 
         """
         _ret = np.zeros([1, 6])
         for x in self.internal_loads:
             _ret += x.reactions_asvector
+
         _ret = _ret.T
+
         return _ret
 
     #
@@ -326,8 +330,9 @@ class HermitianBeam2D(object):
 
     def nodal_reactions_asvector(self, disps):
         """
-        reactions in the local coordinate system of the beam, from displacements and the internal loads
-        but not the nodal noads defined for the structure
+        Reactions in the local coordinate system of the beam, from displacements and the internal loads
+        but not the nodal noads defined for the structure.
+        For this to be true, disps must be in the local system, and 
         """
         return self.Ke * disps - self.reduced_internal_loads_asvector
 
