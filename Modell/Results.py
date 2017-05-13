@@ -106,7 +106,7 @@ class LinearStaticResult(AnalysisResult):
             print(b)
             print(b.nodal_forces(disps=disp))
 
-            _c += b.plot_internal_action(action='moment', disp=disp)
+            _c += b.plot_internal_action(action='shear', disp=disp)
 
             for nodeind, node in enumerate(b.nodes):
                 # position of the first dof in the result matrix
@@ -119,6 +119,7 @@ class LinearStaticResult(AnalysisResult):
                 _ret[_pos:_pos + 3] += _nodalreactions
 
         from drawing import _plotting_available, plt
+        print(_c)
         plt.plot(_c)
         plt.show()
         # loads defined directly on nodes - these will be substracted as these are ACTION formces

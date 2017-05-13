@@ -343,18 +343,14 @@ class HermitianBeam2D(object):
         :param disp: 
         :return: 
         """
+        # todo: as generator?
         assert action in self.internal_actions
 
-        print('')
-        print('')
-        print('')
-        print('')
-
-        def baseline(v1=0, v2=0, pos=0):
+        def baseline(_v1=0, _v2=0, _pos=0):
             # the baseline is the straight line between the values at the nodes
             # so this is just a linear interpolation
-            assert 0 <= pos <= 1
-            return v1 + (v2-v1) * pos
+            assert 0 <= _pos <= 1
+            return _v1 + (_v2 - _v1) * _pos
 
         # points of interrest from the internal loads
         pois = {0, 1}  # first, last point of the beam
@@ -363,21 +359,23 @@ class HermitianBeam2D(object):
 
         # values at the nodes
         ndx = self.internal_actions.index(action)
-        v1 = self.nodal_forces(disps=disp)[ndx, 0]
-        v2 = self.nodal_forces(disps=disp)[ndx+3, 0]
+
+        v1 = self.nodal_reactions_asvector(disps=disp)[ndx, 0]
+        v2 = self.nodal_reactions_asvector(disps=disp)[ndx+3, 0]
 
         _contour = []
         for pos in sorted(pois):
-            print(pos)
-            _base = baseline(v1, v2, pos)
-            print(_base)
+            _base = baseline(v1, -v2, pos)
             for load in self.internal_loads:
                 f = getattr(load, '%s_at_position' % action)
-                _base += f(xi=pos)
-            print(_base)
-            _contour.append([pos, _base])
+                _ = f(xi=pos)
+                _base += _
+            _contour.append([self.l * pos, _base])
 
-        return _contour
+        _tr = transfer_matrix(alpha=-self.direction, asdegree=False, blocks=1, blocksize=2)
+        pts = [np_matrix_tolist(x * _tr + self.i.coords) for x in _contour]
+
+        return pts
 
 
 

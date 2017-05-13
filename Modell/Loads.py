@@ -121,7 +121,7 @@ class UniformPerpendicularForce(BeamLoad):
         return ((xi * xi_bar) * self.q * self.beam.l ** 2) / 2.
 
     def shear_at_position(self, xi):
-        return (self.q * self.beam.l) / 2. - xi * self.beam.l * self.q
+        return 0
 
     @property
     def deflections(self):
