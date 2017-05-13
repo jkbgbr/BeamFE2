@@ -62,5 +62,4 @@ class Hermitian2D_Model(unittest.TestCase):
         # solver :-) whatever happens here is done by numpy.
 
         solve(structure, analysis='linear static')
-        solve(structure, analysis='buckling')
 

@@ -16,15 +16,8 @@ Time: [s]
 """
 
 # todo: currently
-
-
-# todo: when defining multiple internal loads, the system fails. (multiple nodals are OK)
-# reason is, the added loads always include all previously defined loads, not just the most recent one
-# to change is the way loads are reduced on the nodes and then added as nodal load of the structure
-# todo: when no load is present and a solve command is issued - check for loads
 # todo: enable drawing the structure without having an analysis performed previously
-# todo: round displacements below threshold not to have displacements displayed when these are infinitesimally small
-
+# todo: BCs -> support objects
 
 # use logging?
 # Tests:

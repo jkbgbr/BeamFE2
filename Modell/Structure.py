@@ -4,6 +4,7 @@ import copy
 from Modell.helpers import *
 from Modell.Loads import *
 from Modell import Loads as BL
+from Modell import Results
 
 
 class Structure(object):
@@ -16,7 +17,10 @@ class Structure(object):
         self._load_vector = None
         self._mass_vector = None
         self.supports = supports
-        self.results = {'linear static': None, 'modal': None, 'buckling': None}
+        self.results = {'linear static': Results.LinearStaticResult(),
+                        'modal': Results.ModalResult(),
+                        'buckling': Results.BucklingResult()
+                        }
 
     def add_nodal_load(self, nodeID=None, dynam=None, clear=False):
         # finding the node
@@ -37,7 +41,11 @@ class Structure(object):
         return [x.mass for x in self.beams]
 
     def draw(self, show=True, analysistype=None, mode=0):
-        draw_beam.draw_structure(self, show=show, analysistype=analysistype, mode=mode)
+        print(dir(self.results[analysistype]))
+        if self.results[analysistype].solved:
+            draw_beam.draw_structure(self, show=show, analysistype=analysistype, mode=mode)
+        else:
+            print('no results available, no printing')
 
     def node_by_ID(self, id=None):
         # return the Node object that has the ID
@@ -203,16 +211,25 @@ class Structure(object):
     def add_internal_loads(self, beam=None, **kwargs):
         beam.add_internal_load(**kwargs)
         for node in beam.nodes:
-            self.add_single_dynam_to_node(nodeID=node.ID, dynam=beam.reduced_internal_loads[node])
+            dynam_as_dict = beam.reduce_internal_load(load=beam.internal_loads[-1])
+            self.add_single_dynam_to_node(nodeID=node.ID, dynam=dynam_as_dict[node])
 
-    def reduce_internal_loads(self):
-        """
-        Reduces the internal loads to the nodes.
-        :return:
-        """
-        for b in self.beams:
-            print(b.reduced_internal_loads)
+    # def reduced_internal_loads(self, load):
+    #     """
+    #     Reduces the internal loads to the nodes.
+    #     :return:
+    #     """
+    #     _ret = {load.beam.i: {k: 0 for k in load.beam.dynamnames}, load.beam.j: {k: 0 for k in load.beam.dynamnames}}
+    #     for component in load.beam.dynamnames:
+    #         for node in self.nodes:
+    #             _ret[node][component] += sum([x.reactions[node][component] for x in load])
+    #     return _ret
+    #     # for b in self.beams:
+    #     #     print(b.reduced_internal_loads)
 
+
+    #
+    # @property
     # def reduced_internal_loads(self):
     #     """
     #     Summing the nodal foreces from the internal loads
@@ -224,7 +241,6 @@ class Structure(object):
     #             _ret[node][component] += sum([x.reactions[node][component] for x in self.internal_loads])
     #
     #     return _ret
-
 
 
 

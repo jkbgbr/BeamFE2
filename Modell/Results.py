@@ -26,7 +26,8 @@ class AnalysisResult(object):
 
     def __init__(self, structure=None):
         self.structure = structure
-        self.displacement_results = []  # will be a list, even if only with one element
+        self.displacement_results = []  # displacements (real, modal or buckling shape) will be a list, even if only with one element
+        self.solved = False
 
     def global_displacements(self, mode=0, asvector=False):
         # the displacements as a vector or partitioned in a dict by the dofs
@@ -91,15 +92,22 @@ class LinearStaticResult(AnalysisResult):
         Caclulates the global reaction forces. Results are in the global system.
         :return: 
         """
+        if not self.solved:
+            print('no results available, solve the model first')
+            return None
+
         _ret = np.zeros([len(self.structure.nodes)*3, 1])
 
         # nodal reactions from loads defined as beam internals - these will be added as these are REACTION formces
+        _c = []
         for b in self.structure.beams:
-            print('')
-            print(b)
             disp = self.structure.results['linear static'].element_displacements(local=True, beam=b, asvector=True)
             print('')
-            print(disp)
+            print(b)
+            print(b.nodal_forces(disps=disp))
+
+            _c += b.plot_internal_action(action='moment', disp=disp)
+
             for nodeind, node in enumerate(b.nodes):
                 # position of the first dof in the result matrix
                 _pos = self.structure.position_in_matrix(nodeID=node.ID, DOF='ux')
@@ -110,6 +118,9 @@ class LinearStaticResult(AnalysisResult):
                 _nodalreactions = transfer_matrix(alpha=b.direction, blocks=1) * _nodalreactions
                 _ret[_pos:_pos + 3] += _nodalreactions
 
+        from drawing import _plotting_available, plt
+        plt.plot(_c)
+        plt.show()
         # loads defined directly on nodes - these will be substracted as these are ACTION formces
         for x in self.structure.nodal_loads:
             _pos = self.structure.position_in_matrix(nodeID=x.node.ID, DOF='ux')
@@ -127,14 +138,26 @@ class ModalResult(AnalysisResult):
 
     @property
     def frequencies(self):
-        return [x/(2*math.pi) for x in self.circular_frequencies]
+        if not self.solved:
+            print('no results available, solve the model first')
+            return None
+        else:
+            return [x/(2*math.pi) for x in self.circular_frequencies]
 
     @property
     def periods(self):
-        return [1./x for x in self.frequencies]
+        if not self.solved:
+            print('no results available, solve the model first')
+            return None
+        else:
+            return [1./x for x in self.frequencies]
 
     def modeshape(self, mode=None):
-        return self.displacement_results[mode]
+        if not self.solved:
+            print('no results available, solve the model first')
+            return None
+        else:
+            return self.displacement_results[mode]
 
 
 class BucklingResult(AnalysisResult):

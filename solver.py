@@ -9,17 +9,28 @@ from Modell.helpers import *
 
 def solve(structure, analysis=None):
     """
-    solves the system, returns the vector of displacements.
-    :return: 
+    solves the system, fills the structure.results attribute with values
+    :return: False, if no appropriate loads are present. True, if the analysis gets done.
     """
     assert analysis in ['nonlinear static', 'linear static', 'modal', 'buckling', 'all']
     assert structure.stiffness_matrix_is_ok
     assert structure.node_numbering_is_ok
 
+    # check if solving makes sense. if not, return False so we know
+    if analysis in ['linear static', 'all']:
+        if np.count_nonzero(structure._load_vector) == 0:
+            return False
+    elif analysis in ['modal', 'all']:
+        if np.count_nonzero(structure.M_with_masses) == 0:
+            return False
+    else:
+        raise NotImplementedError
+
     if analysis in ['linear static', 'all']:
         # linear static analysis
         disps = sp.inv(structure.K_with_BC) * structure.load_vector
         structure.results['linear static'] = Results.LinearStaticResult(structure=structure, displacements=[disps])
+        structure.results['linear static'].solved = True
 
     # modal analyse
     if analysis in ['modal', 'all']:
@@ -54,6 +65,7 @@ def solve(structure, analysis=None):
                 _ret.append(sh)
 
         structure.results['modal'] = Results.ModalResult(structure=structure, circular_freq=circfreq, modalshapes=_ret)
+        structure.results['modal'].solved = True
 
     if analysis in ['buckling']:
         solve(structure, analysis='linear static')
