@@ -208,10 +208,28 @@ class Structure(object):
     def reduce_internal_loads(self):
         """
         Reduces the internal loads to the nodes.
-        :return: 
+        :return:
         """
         for b in self.beams:
             print(b.reduced_internal_loads)
+
+    # def reduced_internal_loads(self):
+    #     """
+    #     Summing the nodal foreces from the internal loads
+    #     :return:
+    #     """
+    #     _ret = {self.i: {k: 0 for k in self.dynamnames}, self.j: {k: 0 for k in self.dynamnames}}
+    #     for component in self.dynamnames:
+    #         for node in self.nodes:
+    #             _ret[node][component] += sum([x.reactions[node][component] for x in self.internal_loads])
+    #
+    #     return _ret
+
+
+
+
+
+
 
     def add_single_dynam_to_node(self, nodeID=None, dynam=None, clear=False):
         """

@@ -95,7 +95,11 @@ class LinearStaticResult(AnalysisResult):
 
         # nodal reactions from loads defined as beam internals - these will be added as these are REACTION formces
         for b in self.structure.beams:
+            print('')
+            print(b)
             disp = self.structure.results['linear static'].element_displacements(local=True, beam=b, asvector=True)
+            print('')
+            print(disp)
             for nodeind, node in enumerate(b.nodes):
                 # position of the first dof in the result matrix
                 _pos = self.structure.position_in_matrix(nodeID=node.ID, DOF='ux')

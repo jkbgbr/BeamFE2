@@ -15,7 +15,7 @@ VERTICAL = not True  # True/False for vertical/horizontal
 NR_BEAMS = 4  # number of finite elements
 LENGTH = 200  # length of cantilever
 F_HORIZONTAL = 0
-F_VERTICAL = 0
+F_VERTICAL = 1000
 
 
 # nodes
@@ -44,11 +44,17 @@ structure = Structure.Structure(beams=_beams, supports=BCs)
 # adding loads
 # directly defined nodal loads
 structure.add_nodal_load(nodeID=3, dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL}, clear=True)
+structure.add_nodal_load(nodeID=3, dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL})
 # beam internal loads
 for b in structure.beams:
+    # structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', q=6.00)
+    structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', q=3.00)
     structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', q=3.00)
 
-print(structure.load_vector)
+    print('')
+    print(structure.load_vector)
+
+exit()
 
 
 # solving it
