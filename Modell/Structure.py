@@ -25,11 +25,12 @@ class Structure(object):
             raise Exception('There is no node with ID %d' % nodeID)
         else:
             node = node[0]
-        # making sure the dynam is full
-        # todo we need FX, FY, MZ
+        # making sure the dynam is full, if some component is mssing we replace it with a zero
+        for ln in self.loadnames:
+            if ln not in dynam.keys():
+                dynam[ln] = 0
         self.nodal_loads.append(BL.NodalLoad(node=node, dynam=dynam))
         self.add_single_dynam_to_node(nodeID=nodeID, dynam=dynam, clear=clear)
-
 
     def mass(self):
         """ Structural mass """
