@@ -1,6 +1,10 @@
 
 import numpy as np
 import math
+from matplotlib.patches import Circle, Wedge, Polygon
+from matplotlib.collections import PatchCollection
+from Modell.helpers import *
+
 from drawing import _plotting_available, plt
 import sys
 import inspect
@@ -18,6 +22,20 @@ class NodalLoad(object):
     def asvector(self):
         d = self.dynam
         return np.matrix([d['FX'], d['FY'], d['MZ']])
+
+    def draw_load(self, scale=1.):
+        mp = self.node.coords  # starting point of the arrow
+        for component, load in self.dynam.items():
+            if load:
+                if component == 'FX':
+                    _norm = (load * scale / abs(load), 0,)
+                elif component == 'FY':
+                    _norm = (0, load * scale / abs(load))
+                else:
+                    _norm = False
+                # plotting, if there is a norm
+                ax = plt.gca()
+                ax.arrow(mp[0], mp[1], _norm[0], _norm[1], head_width=0.5 * scale, head_length=scale, fc='r', ec='r')
 
 
 class BeamLoad(object):
@@ -43,6 +61,21 @@ class UniformPerpendicularForce(BeamLoad):
         self.nr_points = beam.number_internal_points
         self.beam = beam
 
+    def draw_load(self, scale=1.):
+        p1 = [0, 0]
+        p2 = [0, scale * -self.q]
+        p3 = [self.beam.l, scale * -self.q]
+        p4 = [self.beam.l, 0]
+        pts = [p1, p2, p3, p4]
+        _tr = transfer_matrix(alpha=-self.beam.direction, asdegree=False, blocks=1, blocksize=2)
+        pts = [np_matrix_tolist(x * _tr + self.beam.i.coords) for x in pts]
+        polygon = Polygon(pts, True)
+        patches = [polygon]
+        p = PatchCollection(patches, alpha=0.4)
+        # p.set_array(np.array('b'))
+        ax = plt.gca()
+        ax.add_collection(p)
+
     @property
     def internal_points(self):
         """
@@ -53,6 +86,8 @@ class UniformPerpendicularForce(BeamLoad):
 
     @property
     def reactions_asvector(self):
+        # the nodal forces resulting from the beam internal load,
+        # acting on the nodes of the beam, in the local system
         _ret = np.matrix([[0, self.q * self.beam.l / 2, self.q * (self.beam.l ** 2) / 12,
                            0, self.q * self.beam.l / 2, - 1 * self.q * (self.beam.l ** 2) / 12.]])
         return _ret
@@ -60,10 +95,10 @@ class UniformPerpendicularForce(BeamLoad):
     @property
     def reactions(self):
         """
-        reactions at node i for the DOFs
+        reactions at node i for the DOFs, in the global system these will only be used in the assembly of the global load vector
         :return: 3-tuple for local FX, FY, MZ 
         """
-        _av = self.reactions_asvector
+        _av = self.reactions_asvector * transfer_matrix(alpha=-self.beam.direction)
         _ret = {
             self.beam.i: {'FX': _av[0, 0], 'FY': _av[0, 1], 'MZ': _av[0, 2]},
             self.beam.j: {'FX': _av[0, 3], 'FY': _av[0, 4], 'MZ': _av[0, 5]}
