@@ -38,6 +38,7 @@ class HermitianBeam2D(object):
     dof = 3  # degrees of freedom
     dofnames = 'ux', 'uy', 'rotz'
     dynamnames = 'FX', 'FY', 'MZ'
+    internal_actions = 'axial', 'shear', 'moment'
     number_internal_points = 10
 
     def __init__(self, ID=None, i=None, j=None, E=None, crosssection=None, I=None, A=None, rho=None):
@@ -133,8 +134,7 @@ class HermitianBeam2D(object):
         else:
             raise NotImplementedError
 
-    @property
-    def reduced_internal_loads(self):
+    def reduce_internal_load(self, load):
         """
         Summing the nodal foreces from the internal loads
         :return: 
@@ -142,7 +142,7 @@ class HermitianBeam2D(object):
         _ret = {self.i: {k: 0 for k in self.dynamnames}, self.j: {k: 0 for k in self.dynamnames}}
         for component in self.dynamnames:
             for node in self.nodes:
-                _ret[node][component] += sum([x.reactions[node][component] for x in self.internal_loads])
+                _ret[node][component] += load.reactions[node][component]
 
         return _ret
 
@@ -328,13 +328,78 @@ class HermitianBeam2D(object):
             _deflected_shape.append(_val)
         return _deflected_shape
 
+    def nodal_forces(self, disps):
+        """
+        Nodal forces in the local coordinate system of the beam, from displacements and the internal loads
+        but not the nodal noads defined for the structure.
+        For this to be true, disps must be in the local system 
+        """
+        return self.Ke * disps
+
+    def plot_internal_action(self, action=None, disp=None):
+        """
+        returns the node coordinates to be used for plotting
+        :param action: 
+        :param disp: 
+        :return: 
+        """
+        assert action in self.internal_actions
+
+        print('')
+        print('')
+        print('')
+        print('')
+
+        def baseline(v1=0, v2=0, pos=0):
+            # the baseline is the straight line between the values at the nodes
+            # so this is just a linear interpolation
+            assert 0 <= pos <= 1
+            return v1 + (v2-v1) * pos
+
+        # points of interrest from the internal loads
+        pois = {0, 1}  # first, last point of the beam
+        for load in self.internal_loads:  # points from the internal loads
+            pois = pois.union(set(load.internal_points))
+
+        # values at the nodes
+        ndx = self.internal_actions.index(action)
+        v1 = self.nodal_forces(disps=disp)[ndx, 0]
+        v2 = self.nodal_forces(disps=disp)[ndx+3, 0]
+
+        _contour = []
+        for pos in sorted(pois):
+            print(pos)
+            _base = baseline(v1, v2, pos)
+            print(_base)
+            for load in self.internal_loads:
+                f = getattr(load, '%s_at_position' % action)
+                _base += f(xi=pos)
+            print(_base)
+            _contour.append([pos, _base])
+
+        return _contour
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def nodal_reactions_asvector(self, disps):
         """
         Reactions in the local coordinate system of the beam, from displacements and the internal loads
         but not the nodal noads defined for the structure.
-        For this to be true, disps must be in the local system, and 
+        For this to be true, disps must be in the local system 
         """
-        return self.Ke * disps - self.reduced_internal_loads_asvector
+        return self.nodal_forces(disps) - self.reduced_internal_loads_asvector
 
     def nodal_reactions(self, disps):
         vals = self.nodal_reactions_asvector(disps)
