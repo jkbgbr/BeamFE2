@@ -87,6 +87,10 @@ class LinearStaticResult(AnalysisResult):
 
     @property
     def reaction_forces(self):
+        """
+        Caclulates the global reaction forces. Results are in the global system.
+        :return: 
+        """
         _ret = np.zeros([len(self.structure.nodes)*3, 1])
 
         # nodal reactions from loads defined as beam internals - these will be added as these are REACTION formces
@@ -96,7 +100,11 @@ class LinearStaticResult(AnalysisResult):
                 # position of the first dof in the result matrix
                 _pos = self.structure.position_in_matrix(nodeID=node.ID, DOF='ux')
                 # writing the value
-                _ret[_pos:_pos + 3] += b.nodal_reactions_asvector(disps=disp)[nodeind * 3:nodeind * 3 + 3]
+                # getting the nodal reactions - these are in the local system
+                _nodalreactions = b.nodal_reactions_asvector(disps=disp)[nodeind * 3:nodeind * 3 + 3]
+                # and we transfer them in the global system
+                _nodalreactions = transfer_matrix(alpha=b.direction, blocks=1) * _nodalreactions
+                _ret[_pos:_pos + 3] += _nodalreactions
 
         # loads defined directly on nodes - these will be substracted as these are ACTION formces
         for x in self.structure.nodal_loads:
