@@ -16,10 +16,20 @@ Time: [s]
 """
 
 # todo: currently
+
+
+# todo: when defining multiple internal loads, the system fails. (multiple nodals are OK)
+# reason is, the added loads always include all previously defined loads, not just the most recent one
+# to change is the way loads are reduced on the nodes and then added as nodal load of the structure
+# todo: when no load is present and a solve command is issued - check for loads
+# todo: enable drawing the structure without having an analysis performed previously
+
+
 # use logging?
 # Tests:
 #   linear and modal analysis, units should be checked. 100 % test coverage?
 # Lin stat:
+#   finish and fix global reaction force calculation
 #   internal actions in internal points, also plot them
 #   calculating stresses (Sections need stress points for this...)
 # Modal:
@@ -29,6 +39,12 @@ Time: [s]
 #   EC-based stuff: modal antwort, summation...
 # Buckling:
 #   implement.
+# draw:
+#   beautify: support size should be scaled to overall size, colors changed.
+#   draw structure with loads only
+#   draw global reaction forces
+#   draw moment loads, reactions
+
 
 # todo: LATER
 # Lin stat:
