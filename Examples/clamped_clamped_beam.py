@@ -11,7 +11,7 @@ from solver import solve
 A simple cantilever beam in vertical or horizontal position.
 """
 
-VERTICAL = not True  # True/False for vertical/horizontal
+VERTICAL = True  # True/False for vertical/horizontal
 NR_BEAMS = 1  # number of finite elements
 LENGTH = 200  # length of cantilever
 F_HORIZONTAL = 0
