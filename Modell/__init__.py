@@ -23,6 +23,7 @@ Time: [s]
 # to change is the way loads are reduced on the nodes and then added as nodal load of the structure
 # todo: when no load is present and a solve command is issued - check for loads
 # todo: enable drawing the structure without having an analysis performed previously
+# todo: round displacements below threshold not to have displacements displayed when these are infinitesimally small
 
 
 # use logging?
