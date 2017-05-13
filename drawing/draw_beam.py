@@ -11,10 +11,11 @@ ARROW_SCALE = 0.15  # scale for arrows
 
 def draw_structure(structure, show=True, analysistype=None, mode=0):
     if _plotting_available:
+
         for beam in structure.beams:
             # line width is in pixel
             plt.plot([p.x for p in beam.nodes], [p.y for p in beam.nodes], 'royalblue', linewidth=3, alpha=1, zorder=1)  # beams
-            plt.scatter([p.x for p in beam.nodes], [p.y for p in beam.nodes], marker='s', color='navy', alpha=0.5, s=30, zorder=2)  # nodes
+            plt.scatter([p.x for p in beam.nodes], [p.y for p in beam.nodes], marker='o', color='navy', alpha=0.5, s=30, zorder=2)  # nodes
 
         # length of the longes beam - this will be the base for the scaling
         _long = sorted(structure.beams, key=lambda x: x.l)[-1].l
@@ -56,7 +57,7 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
             _ydata = [p.y + dy * _scale for p, dy in zip(beam.nodes, dys)]
 
             # the nodes as squares
-            plt.scatter(_xdata, _ydata, marker='s', color='k', s=30, zorder=3)
+            plt.scatter(_xdata, _ydata, marker='o', color='k', s=30, zorder=3)
 
             # plot the deformed shape - using the internal points from the shape functions
             # beam.deflected_shape provides results in the GLOBAL system, based on the results in the LOCAL system coming from .results
@@ -64,22 +65,30 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
             plt.plot([x[0] for x in _deflected], [x[1] for x in _deflected], 'k-', zorder=3)
 
         if analysistype == 'linear static':
-            # plot loads - concentrated forces only for now
-            for lindex, load in enumerate(HeBe.np_matrix_tolist(structure.load_vector)):
-                if load != 0:
-                    _node, component = structure.nodenr_dof_from_position(position=lindex)
-                    mp = structure.node_by_ID(id=_node).coords  # starting point of the arrow
 
-                    if component == 'FX':
-                        _norm = (load * ARROW_SCALE * _long / abs(load), 0,)
-                    elif component == 'FY':
-                        _norm = (0, load * ARROW_SCALE * _long / abs(load))
-                    else:
-                        _norm = False
-                    # plotting, if there is a norm
-                    ax = plt.gca()
-                    if _norm:
-                        ax.arrow(mp[0], mp[1], _norm[0], _norm[1], head_width=0.5 * ARROW_SCALE * _long, head_length=ARROW_SCALE * _long, fc='r', ec='r')
+            for nodalload in structure.nodal_loads:
+                nodalload.draw_load(scale=ARROW_SCALE * _long)
+            for beam in structure.beams:
+                for intern in beam.internal_loads:
+                    intern.draw_load(scale=10)
+
+            # # plot loads - concentrated forces only for now
+            # print(structure.load_vector)
+            # for lindex, load in enumerate(HeBe.np_matrix_tolist(structure.load_vector)):
+            #     if load != 0:
+            #         _node, component = structure.nodenr_dof_from_position(position=lindex)
+            #         mp = structure.node_by_ID(id=_node).coords  # starting point of the arrow
+            #
+            #         if component == 'FX':
+            #             _norm = (load * ARROW_SCALE * _long / abs(load), 0,)
+            #         elif component == 'FY':
+            #             _norm = (0, load * ARROW_SCALE * _long / abs(load))
+            #         else:
+            #             _norm = False
+            #         # plotting, if there is a norm
+            #         ax = plt.gca()
+            #         if _norm:
+            #             ax.arrow(mp[0], mp[1], _norm[0], _norm[1], head_width=0.5 * ARROW_SCALE * _long, head_length=ARROW_SCALE * _long, fc='r', ec='r')
 
             # # uniformly distributed load
             # for b in structure.beams:
