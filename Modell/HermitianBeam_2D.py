@@ -129,6 +129,10 @@ class HermitianBeam2D(object):
 
         if _lt == 'uniform perpendicular force':
             self.internal_loads.append(BL.UniformPerpendicularForce(beam=self, **kwargs))
+        elif _lt == 'concentrated perpendicular force':
+            self.internal_loads.append(BL.ConcentratedPerpendicularForce(beam=self, **kwargs))
+        elif _lt == 'concentrated moment':
+            self.internal_loads.append(BL.ConcentratedMoment(beam=self, **kwargs))
         else:
             raise NotImplementedError
 
@@ -197,13 +201,11 @@ class HermitianBeam2D(object):
         # shape function for axial displacements, node 'j'
         x *= L
         return x / L
-        # return -1 * self.N1(x, L=L) + 1
 
     def N5(self, x, L=1.):
         # shape function for shear displacements, node 'j'
         x *= L
         return (3 * (x ** 2) / (L ** 2)) - (2 * (x ** 3) / (L ** 3))
-        # return -1 * self.N2(x, L=L) + 1
 
     def N6(self, x, L=1.):
         # shape function for bending, node 'j'
@@ -267,14 +269,6 @@ class HermitianBeam2D(object):
     @property
     def Ke_geom(self):
         return self._Ke_geom()
-
-
-
-
-    #
-    # @property
-    # def Ke_geom(self):
-    #     return self._Ke_geom()
 
     def _Ke(self):
         # full stiffness matrix of the beam element in the element coordinate system
@@ -345,10 +339,13 @@ class HermitianBeam2D(object):
         assert action in self.internal_actions
 
         def baseline(_v1=0, _v2=0, _pos=0):
-            # the baseline is the straight line between the values at the nodes
-            # so this is just a linear interpolation
-            assert 0 <= _pos <= 1
-            return _v1 + (_v2 - _v1) * _pos
+            if action == 'moment':
+                # the baseline is the straight line between the values at the nodes
+                # so this is just a linear interpolation
+                assert 0 <= _pos <= 1
+                return _v1 + (_v2 - _v1) * _pos
+            elif action in ['shear', 'axial']:
+                return -_v1
 
         # points of interrest from the internal loads
         pois = {0, 1}  # first, last point of the beam
@@ -372,6 +369,7 @@ class HermitianBeam2D(object):
 
         _contour.insert(0, [0, 0])
         _contour.append([self.l, 0])
+
         _contour = [[x[0],  x[1] / 10] for x in _contour]
         _tr = transfer_matrix(alpha=-self.direction, asdegree=False, blocks=1, blocksize=2)
         pts = [np_matrix_tolist(x * _tr + self.i.coords) for x in _contour]
