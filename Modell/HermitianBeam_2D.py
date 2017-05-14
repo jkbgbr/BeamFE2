@@ -3,11 +3,9 @@
 from __future__ import division
 from Modell.helpers import *
 import copy
-from Modell import BeamSections as sections
-from Modell import Structure
 from Modell import Loads as BL
-from Modell import Node
-from solver import solve
+from drawing import _plotting_available, plt, Polygon, PatchCollection
+import pprint as pp
 
 
 class HermitianBeam2D(object):
@@ -361,7 +359,7 @@ class HermitianBeam2D(object):
         ndx = self.internal_actions.index(action)
 
         v1 = self.nodal_reactions_asvector(disps=disp)[ndx, 0]
-        v2 = self.nodal_reactions_asvector(disps=disp)[ndx+3, 0]
+        v2 = self.nodal_reactions_asvector(disps=disp)[ndx+self.dof, 0]
 
         _contour = []
         for pos in sorted(pois):
@@ -372,24 +370,17 @@ class HermitianBeam2D(object):
                 _base += _
             _contour.append([self.l * pos, _base])
 
+        _contour.insert(0, [0, 0])
+        _contour.append([self.l, 0])
+        _contour = [[x[0],  x[1] / 10] for x in _contour]
         _tr = transfer_matrix(alpha=-self.direction, asdegree=False, blocks=1, blocksize=2)
         pts = [np_matrix_tolist(x * _tr + self.i.coords) for x in _contour]
+        patches = [Polygon(pts, True)]
+        p = PatchCollection(patches, alpha=0.5, facecolors=['salmon'], edgecolors=['red'])
+        ax = plt.gca()
+        ax.add_collection(p)
 
         return pts
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     def nodal_reactions_asvector(self, disps):
         """
