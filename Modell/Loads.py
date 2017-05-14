@@ -1,8 +1,7 @@
 
 import numpy as np
 import math
-from matplotlib.patches import Circle, Wedge, Polygon
-from matplotlib.collections import PatchCollection
+from drawing import _plotting_available, plt, Polygon, PatchCollection
 from Modell.helpers import *
 
 from drawing import _plotting_available, plt
@@ -71,7 +70,7 @@ class UniformPerpendicularForce(BeamLoad):
         pts = [np_matrix_tolist(x * _tr + self.beam.i.coords) for x in pts]
         polygon = Polygon(pts, True)
         patches = [polygon]
-        p = PatchCollection(patches, alpha=0.4)
+        p = PatchCollection(patches, alpha=0.4, facecolors=['lightblue'], edgecolors=['blue'])
         # p.set_array(np.array('b'))
         ax = plt.gca()
         ax.add_collection(p)
