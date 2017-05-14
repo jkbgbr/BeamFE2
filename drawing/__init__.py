@@ -3,6 +3,8 @@ __author__ = 'jakabgabor'
 
 try:
     import matplotlib.pyplot as plt
+    from matplotlib.patches import Polygon
+    from matplotlib.collections import PatchCollection
     _plotting_available = True
     # plt.xkcd()
 except ImportError:
