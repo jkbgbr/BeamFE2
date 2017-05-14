@@ -23,7 +23,6 @@ EE = 29000
 I = 320
 A = 63.41
 
-
 _nodes = [0]  # 0th element to have mathcing ID and list position
 _nodes.append(Node.Node.from_dict(adict={'ID': 1, 'coords': (0, 0)}))
 _nodes.append(Node.Node.from_dict(adict={'ID': 2, 'coords': (L, 0)}))
@@ -49,7 +48,7 @@ BCs = {1: ['ux', 'uy', 'rotz'], 2: ['ux', 'uy', 'rotz']}  # supports as dict
 # this is the cantilever itself, composed of the beams, complete with supports
 structure = Structure.Structure(beams=_beams, supports=BCs)
 
-# adding loads, masses
+# adding masses for the moda lanalysis
 structure.add_mass_to_node(nodeID=1, mass=10000000*mass_1/2., clear=True)  # clears previous loads
 structure.add_mass_to_node(nodeID=2, mass=10000000*mass_1/2.)
 structure.add_mass_to_node(nodeID=3, mass=mass_1)  # clears previous loads
@@ -57,7 +56,14 @@ structure.add_mass_to_node(nodeID=4, mass=mass_1)
 structure.add_mass_to_node(nodeID=5, mass=mass_1/2.)
 structure.add_mass_to_node(nodeID=6, mass=mass_1/2.)
 
+# adding loads; these are not taken into account when performing the modal analysis
+for b in structure.beams:
+    structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', q=5.00)
+
 # solving it
+solve(structure, analysis='linear static')
+structure.draw(analysistype='linear static')
+
 solve(structure, analysis='modal')
 
 # posprocessing

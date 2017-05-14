@@ -52,18 +52,11 @@ for b in structure.beams:
     # structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', q=3.00)
     # structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', q=3.00)
 
-# print('')
-# print(structure.load_vector)
-
-# exit()
-
-
 # solving it
 solve(structure, analysis='linear static')
 
-
 # posprocessing
-# structure.draw(analysistype='linear static')
+structure.draw(analysistype='linear static')
 # for i in range(3):
 #     structure.draw(analysistype='modal', mode=i)
 

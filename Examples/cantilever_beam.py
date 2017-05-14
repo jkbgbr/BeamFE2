@@ -55,18 +55,3 @@ solve(structure, analysis='all')
 structure.draw(analysistype='linear static')
 
 print(structure.results['linear static'].reaction_forces)
-
-exit()
-
-
-strudisp = structure.results['linear static'].displacement_results
-print(strudisp)
-print(structure.K_with_BC * strudisp)
-#
-for b in structure.beams:
-    print('')
-    print(b)
-    disp = structure.results['linear static'].element_displacements(local=True, beam=b, asvector=True)
-    print(b.nodal_reactions(disps=disp))
-    print('local reactions')
-    print(b.nodal_reactions(disps=disp)-structure.load_vector)
