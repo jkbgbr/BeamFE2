@@ -38,7 +38,6 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
         # plot the deformed shape
 
         # # displacements
-
         dre = 1.
         if structure.results[analysistype] is not None:
             dre = structure.results[analysistype].global_displacements(mode=0, asvector=True)
@@ -72,6 +71,10 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
             for beam in structure.beams:
                 for intern in beam.internal_loads:
                     intern.draw_load(scale=10)
+
+            for beam in structure.beams:
+                disp = structure.results['linear static'].element_displacements(local=True, beam=beam, asvector=True)
+                beam.plot_internal_action(disp=disp, action='moment')
 
             # # plot loads - concentrated forces only for now
             # print(structure.load_vector)
