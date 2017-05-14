@@ -314,9 +314,9 @@ class ConcentratedMoment(BeamLoad):
 
     def moment_at_position(self, xi):
         # added to the "baseline"
-        _ret = 6 * self.alpha * self.beta * self.value / self.beam.l
+        _ret = -(self.value / self.beam.l) * xi
         if xi > self.position:
-            _ret -= self.value
+            _ret += self.value
         return _ret
 
     def shear_at_position(self, xi):

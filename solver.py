@@ -23,6 +23,8 @@ def solve(structure, analysis=None):
     elif analysis in ['modal', 'all']:
         if np.count_nonzero(structure.M_with_masses) == 0:
             return False
+    elif analysis in ['buckling', 'all']:
+        pass
     else:
         raise NotImplementedError
 
@@ -74,6 +76,9 @@ def solve(structure, analysis=None):
         KG = structure.condense(mtrx=structure.K_geom)
         eigvals = namivan(a=K, b=KG)[0]
         eigvecs = namivan(a=K, b=KG)[1]
+
+        print(np.linalg.inv(structure.K_geom))
+        exit()
 
         print((math.pi**2)*beam.EI/(900**2))
         print([x for x in sorted(eigvals.real) if x>0])
