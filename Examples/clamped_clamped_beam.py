@@ -11,8 +11,8 @@ from solver import solve
 A simple cantilever beam in vertical or horizontal position.
 """
 
-VERTICAL = True  # True/False for vertical/horizontal
-NR_BEAMS = 1  # number of finite elements
+VERTICAL = not True  # True/False for vertical/horizontal
+NR_BEAMS = 3  # number of finite elements
 LENGTH = 200  # length of cantilever
 F_HORIZONTAL = 0
 F_VERTICAL = 1000
@@ -27,30 +27,28 @@ else:  # horizontal beam
 # beams
 section_column = sections.Rectangle(height=3, width=10)  # section
 mat = Material.Steel()
-rho = mat.rho
-EE = mat.E
 _beams = [HB.HermitianBeam2D.from_dict(adict=
-                                       {'ID': i, 'E': EE, 'I': section_column.I['x'], 'A': section_column.A,
-                                        'rho': rho, 'i': _nodes[i], 'j': _nodes[i+1]})
+                                       {'ID': i, 'E': mat.E, 'I': section_column.I['x'], 'A': section_column.A,
+                                        'rho': mat.rho, 'i': _nodes[i], 'j': _nodes[i+1]})
           for i in range(NR_BEAMS)]
 
 # supports
 BCs = {1: ['ux', 'uy', 'rotz'], NR_BEAMS+1: ['ux', 'uy', 'rotz']}  # supports as dict
-# BCs = {1: ['ux', 'uy'], NR_BEAMS+1: ['ux']}  # supports as dict
 
 # this is the cantilever itself, composed of the beams, complete with supports
 structure = Structure.Structure(beams=_beams, supports=BCs)
 
 # adding loads
 # directly defined nodal loads
-# structure.add_nodal_load(nodeID=1, dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL}, clear=True)
-# structure.add_nodal_load(nodeID=3, dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL})
+# structure.add_nodal_load(nodeID=2, dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL}, clear=True)
+# structure.add_nodal_load(nodeID=3, dynam={'FX': -F_HORIZONTAL, 'FY': -F_VERTICAL})
+
 # beam internal loads
 for b in structure.beams:
     pass
-    structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', q=6.00)
-    # structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', q=3.00)
-    # structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', q=3.00)
+    structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', value=-0.60)
+structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated perpendicular force', value=-30.00, position=0.7)
+structure.add_internal_loads(beam=structure.beams[-1], loadtype='concentrated moment', value=-500.00, position=0.2)
 
 # solving it
 solve(structure, analysis='linear static')
@@ -61,4 +59,3 @@ structure.draw(analysistype='linear static')
 #     structure.draw(analysistype='modal', mode=i)
 
 print(structure.results['linear static'].reaction_forces)
-

@@ -45,7 +45,7 @@ structure = Structure.Structure(beams=_beams, supports=BCs)
 structure.add_nodal_load(nodeID=_nodes[-1].ID, dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL, 'MZ': 0}, clear=True)
 # beam internal loads
 structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform perpendicular force', q=2.3)
-# structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform perpendicular force', q=1.3)
+# structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform perpendicular force', value=1.3)
 
 # solving it
 solve(structure, analysis='all')

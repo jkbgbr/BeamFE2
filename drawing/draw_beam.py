@@ -57,7 +57,7 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
             _ydata = [p.y + dy * _scale for p, dy in zip(beam.nodes, dys)]
 
             # the nodes as squares
-            plt.scatter(_xdata, _ydata, marker='o', color='k', s=30, zorder=3)
+            # plt.scatter(_xdata, _ydata, marker='o', color='k', s=30, zorder=3)
 
             # plot the deformed shape - using the internal points from the shape functions
             # beam.deflected_shape provides results in the GLOBAL system, based on the results in the LOCAL system coming from .results
@@ -97,7 +97,7 @@ def draw_structure(structure, show=True, analysistype=None, mode=0):
             # # uniformly distributed load
             # for b in structure.beams:
             #     for intload in b.internal_loads:
-            #         print(intload.q)
+            #         print(intload.value)
             # exit()
 
         # title
