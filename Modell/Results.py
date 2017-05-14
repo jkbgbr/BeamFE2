@@ -102,11 +102,6 @@ class LinearStaticResult(AnalysisResult):
         _c = []
         for b in self.structure.beams:
             disp = self.structure.results['linear static'].element_displacements(local=True, beam=b, asvector=True)
-            print('')
-            print(b)
-            print(b.nodal_forces(disps=disp))
-
-            _c += b.plot_internal_action(action='shear', disp=disp)
 
             for nodeind, node in enumerate(b.nodes):
                 # position of the first dof in the result matrix
@@ -118,10 +113,6 @@ class LinearStaticResult(AnalysisResult):
                 _nodalreactions = transfer_matrix(alpha=b.direction, blocks=1) * _nodalreactions
                 _ret[_pos:_pos + 3] += _nodalreactions
 
-        from drawing import _plotting_available, plt
-        print(_c)
-        plt.plot(_c)
-        plt.show()
         # loads defined directly on nodes - these will be substracted as these are ACTION formces
         for x in self.structure.nodal_loads:
             _pos = self.structure.position_in_matrix(nodeID=x.node.ID, DOF='ux')
