@@ -41,7 +41,6 @@ class Structure(object):
         return [x.mass for x in self.beams]
 
     def draw(self, show=True, analysistype=None, mode=0):
-        print(dir(self.results[analysistype]))
         if self.results[analysistype].solved:
             draw_beam.draw_structure(self, show=show, analysistype=analysistype, mode=mode)
         else:
