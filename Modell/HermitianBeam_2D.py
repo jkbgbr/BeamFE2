@@ -49,7 +49,6 @@ class HermitianBeam2D(object):
         :param I: Second moment of inertia of the cross-section
         :param A: cross-sectional area
         """
-
         self.ID = ID
         self.E = E
         self.i = i
@@ -399,9 +398,6 @@ class HermitianBeam2D(object):
         v1 = self.nodal_reactions_asvector(disps=disp)[ndx, 0]
         v2 = self.nodal_reactions_asvector(disps=disp)[ndx+self.dof, 0]
 
-        print(v1, -v2)
-
-
         # the internal actions
         """
         There is a base line defined by the nodal reactions calculated using the element stiffness matrix and the deformations
@@ -419,7 +415,7 @@ class HermitianBeam2D(object):
         _contour.append([self.l, 0])  # adding last point
 
         # scaling
-        _contour = [[x[0],  x[1] / 10] for x in _contour]  # scaling
+        _contour = [[x[0],  x[1] / 1000] for x in _contour]  # scaling
 
         # rotating the values in the global system for plotting
         _tr = transfer_matrix(alpha=-self.direction, asdegree=False, blocks=1, blocksize=2)

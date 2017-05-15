@@ -31,9 +31,10 @@ class NodalLoad(object):
                 elif component == 'FY':
                     _norm = (0, load * scale / abs(load))
                 else:
-                    _norm = False
+                    _norm = (0, 0)
                 # plotting, if there is a norm
                 ax = plt.gca()
+
                 ax.arrow(mp[0], mp[1], _norm[0], _norm[1], head_width=0.5 * scale, head_length=scale, fc='blue', ec='blue')
 
 
