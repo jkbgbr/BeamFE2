@@ -21,13 +21,13 @@ Time: [s]
 # todo: re-think plotting/drawing
 
 # Tests:
+#   todo: check reaction force signs
+#   todo internal action signs
 #   todo: the moment reactions in the linear elastic analyses are ALWAYS incorrect, when the node of reaction is a j node, the sign should be opposite
-#   parallel uniform, parallel concentrated loads
 # Lin stat:
-#   calculating stresses (Sections need stress points for this...)
+#   parallel uniform, parallel concentrated loads
 # Modal:
-#   check added mass etc. Chopra example with higher resolution
-#   tests
+#   check added mass etc.
 #   modal masses, modal participation
 #   EC-based stuff: modal antwort, summation...
 # Buckling:
@@ -43,6 +43,7 @@ Time: [s]
 # Lin stat:
 #   LATER: defining hinges?
 #   LATER: 3D Beam element?
+#   calculating stresses from internal actions (Sections need stress points for this...)
 # Modal:
 #   ability to convert loads to masses - through defining gravity and its direction
 #   LATER: ability to choose which directions mass act?
