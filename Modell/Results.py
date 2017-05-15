@@ -119,6 +119,8 @@ class LinearStaticResult(AnalysisResult):
             # writing the value
             _ret[_pos:_pos + 3] -= x.asvector.T
 
+        _ret = np.multiply(-1, _ret)
+
         return _ret
 
 
