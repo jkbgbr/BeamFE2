@@ -20,9 +20,8 @@ Time: [s]
 # todo: BCs -> support objects
 # todo: re-think plotting/drawing
 
-# use logging?
 # Tests:
-#   linear and modal analysis, units should be checked. 100 % test coverage?
+#   todo: the moment reactions in the linear elastic analyses are ALWAYS incorrect, when the node of reaction is a j node, the sign should be opposite
 # Lin stat:
 #   calculating stresses (Sections need stress points for this...)
 # Modal:
