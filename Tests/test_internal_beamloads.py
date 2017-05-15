@@ -46,13 +46,11 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         # structure.add_nodal_load(nodeID=2, dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL}, clear=True)
         # structure.add_nodal_load(nodeID=3, dynam={'FX': -F_HORIZONTAL, 'FY': -F_VERTICAL})
 
-    def test_uniform_perpendicular_force(self):
-
+    def test_uniform_perpendicular_force_bending(self):
         # beam internal loads
         self.structure.clear_loads()
         for b in self.structure.beams:
             self.structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', value=-1.0)
-
         solve(self.structure, analysis='linear static')
 
         # moment distribution - values on the hinged-hinged beam to modify endnode-based values
@@ -61,11 +59,25 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
             _expected = tuple([0.0, -937.5, -1250.0, -937.5, 0.0])
             self.assertEqual(_contour, _expected)
 
+    def test_uniform_perpendicular_force_shear(self):
+        # beam internal loads
+        self.structure.clear_loads()
+        for b in self.structure.beams:
+            self.structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', value=-1.0)
+        solve(self.structure, analysis='linear static')
+
         # shear force distribution - values on the hinged-hinged beam to modify endnode-based values
         for b in self.structure.beams:
             _contour = tuple(b.internal_action_distribution(action='shear'))
             _expected = tuple([0.0, 25.0, 50.0, 75.0, 100.0])
             self.assertEqual(_contour, _expected)
+
+    def test_uniform_perpendicular_force_reactions(self):
+        # beam internal loads
+        self.structure.clear_loads()
+        for b in self.structure.beams:
+            self.structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', value=-1.0)
+        solve(self.structure, analysis='linear static')
 
         # nodal reaction forces
         b = self.structure.beams[0]
@@ -73,11 +85,11 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         _soll = np.matrix([[0.], [50.], [833.33333333], [0.], [50.], [-833.33333333]])
         self.assertTrue(np.allclose(b.nodal_reactions_asvector(disps=disp), _soll))
 
-    def test_concentrated_perpendicular_force(self):
-
+    def test_concentrated_perpendicular_force_bending(self):
         # beam internal loads
         self.structure.clear_loads()
-        self.structure.add_internal_loads(beam=self.structure.beams[0], loadtype='concentrated perpendicular force', value=-30.00, position=0.3)
+        self.structure.add_internal_loads(
+            beam=self.structure.beams[0], loadtype='concentrated perpendicular force', value=-30.00, position=0.3)
         solve(self.structure, analysis='linear static')
 
         # moment distribution
@@ -86,11 +98,25 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
             _expected = tuple([0.0, -630., -630., 0.0])
             self.assertTrue(np.allclose(_contour, _expected))
 
+    def test_concentrated_perpendicular_force_shear(self):
+        # beam internal loads
+        self.structure.clear_loads()
+        self.structure.add_internal_loads(
+            beam=self.structure.beams[0], loadtype='concentrated perpendicular force', value=-30.00, position=0.3)
+        solve(self.structure, analysis='linear static')
+
         # shear force distribution
         for b in self.structure.beams:
             _contour = tuple(b.internal_action_distribution(action='shear'))
             _expected = tuple([0, 0, 30.0, 30.0])
             self.assertTrue(np.allclose(_contour, _expected))
+
+    def test_concentrated_perpendicular_force_reactions(self):
+        # beam internal loads
+        self.structure.clear_loads()
+        self.structure.add_internal_loads(
+            beam=self.structure.beams[0], loadtype='concentrated perpendicular force', value=-30.00, position=0.3)
+        solve(self.structure, analysis='linear static')
 
         # nodal reaction forces
         b = self.structure.beams[0]
@@ -99,10 +125,10 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         self.assertTrue(np.allclose(b.nodal_reactions_asvector(disps=disp), _soll))
 
     def test_concentrated_moment_bending(self):
-
         # beam internal loads
         self.structure.clear_loads()
-        self.structure.add_internal_loads(beam=self.structure.beams[0], loadtype='concentrated moment', value=500, position=0.3)
+        self.structure.add_internal_loads(
+            beam=self.structure.beams[0], loadtype='concentrated moment', value=500, position=0.3)
         solve(self.structure, analysis='linear static')
 
         # moment distribution
@@ -111,11 +137,25 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
             _expected = tuple([0.0, -149.99999999995, 349.99999999995, 0.0])
             self.assertTrue(np.allclose(_contour, _expected))
 
+    def test_concentrated_moment_shear(self):
+        # beam internal loads
+        self.structure.clear_loads()
+        self.structure.add_internal_loads(
+            beam=self.structure.beams[0], loadtype='concentrated moment', value=500, position=0.3)
+        solve(self.structure, analysis='linear static')
+
         # shear force distribution
         for b in self.structure.beams:
             _contour = tuple(b.internal_action_distribution(action='shear'))
             _expected = tuple([0., 0., 0., 0.])
             self.assertTrue(np.allclose(_contour, _expected))
+
+    def test_concentrated_moment_reactions(self):
+        # beam internal loads
+        self.structure.clear_loads()
+        self.structure.add_internal_loads(
+            beam=self.structure.beams[0], loadtype='concentrated moment', value=500, position=0.3)
+        solve(self.structure, analysis='linear static')
 
         # nodal reaction forces
         b = self.structure.beams[0]
