@@ -24,7 +24,6 @@ Time: [s]
 # Tests:
 #   linear and modal analysis, units should be checked. 100 % test coverage?
 # Lin stat:
-#   add internal concentrated force, moment
 #   calculating stresses (Sections need stress points for this...)
 # Modal:
 #   check added mass etc. Chopra example with higher resolution
