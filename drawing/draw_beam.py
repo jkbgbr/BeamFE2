@@ -76,7 +76,6 @@ def draw_structure(structure, show=True, analysistype=None, mode=0, intac=None):
 
             if intac is not None:
 
-
                 # scaling for the internal actions
                 react = -1e10
                 for b in structure.beams:

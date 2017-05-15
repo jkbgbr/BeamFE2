@@ -47,17 +47,19 @@ structure = Structure.Structure(beams=_beams, supports=BCs)
 # beam internal loads
 for b in structure.beams:
     pass
-    structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', value=-0.10)
+    structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', value=-.5)
 structure.add_internal_loads(beam=structure.beams[2], loadtype='concentrated perpendicular force', value=-30.00, position=0.2)
-structure.add_internal_loads(beam=structure.beams[5], loadtype='concentrated perpendicular force', value=30.00, position=0.2)
+structure.add_internal_loads(beam=structure.beams[5], loadtype='concentrated perpendicular force', value=60.00, position=0.2)
 structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated moment', value=500, position=0.3)
-structure.add_internal_loads(beam=structure.beams[5], loadtype='concentrated moment', value=-300, position=0.8)
+structure.add_internal_loads(beam=structure.beams[5], loadtype='concentrated moment', value=-500, position=0.8)
 
 # solving it
 solve(structure, analysis='linear static')
 
 # posprocessing
 structure.draw(analysistype='linear static')
+structure.draw(analysistype='linear static', internal_action='moment')
+structure.draw(analysistype='linear static', internal_action='shear')
 # for i in range(3):
 #     structure.draw(analysistype='modal', mode=i)
 
