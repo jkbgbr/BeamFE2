@@ -41,11 +41,6 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         # this is the cantilever itself, composed of the beams, complete with supports
         cls.structure = Structure.Structure(beams=[_b1], supports=BCs)
 
-        # adding nodal loads
-        # directly defined nodal loads
-        # structure.add_nodal_load(nodeID=2, dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL}, clear=True)
-        # structure.add_nodal_load(nodeID=3, dynam={'FX': -F_HORIZONTAL, 'FY': -F_VERTICAL})
-
     def test_uniform_perpendicular_force_bending(self):
         # beam internal loads
         self.structure.clear_loads()
