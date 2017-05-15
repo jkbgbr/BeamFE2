@@ -42,6 +42,7 @@ class BeamLoad(object):
         self.loadtype = loadtype  # type of load
         self.beam = beam  # length of beam
         self.value = value
+        self.EPS = 1e-15
 
     def reduce(self):
         raise NotImplementedError
@@ -92,13 +93,24 @@ class BeamLoad(object):
     def deflection_at_position(self, xi):
         raise NotImplementedError
 
-    def axial_at_position(self, xi):
-        raise NotImplementedError
+    """
+    Moment at position is understood as the value to be added to a base value.
+    The base value is the linear interpolation between the moment values at the nodes.
+    So this is like hanging a line on two poles.
+    """
 
     def moment_at_position(self, xi):
         raise NotImplementedError
 
+    """
+    Shear at position is the value that is to be added to the shear value at node i no get the correct value.
+    That is, this is the sum of the LOADS acting on the beam between node i and the positions.
+    """
+
     def shear_at_position(self, xi):
+        raise NotImplementedError
+
+    def axial_at_position(self, xi):
         raise NotImplementedError
 
     @property
@@ -112,6 +124,14 @@ class BeamLoad(object):
     @property
     def shears(self):
         return (self.shear_at_position(x) for x in self.internal_points)
+
+    def plot_line(self, line=None):
+        _line = []
+        for x in range(100):
+            f = getattr(self, '%s_at_position' % line)
+            _line.append(f(xi=x/100.))
+        plt.plot(_line)
+        plt.show()
 
 
 class UniformPerpendicularForce(BeamLoad):
@@ -217,7 +237,7 @@ class ConcentratedPerpendicularForce(BeamLoad):
         :return: 
         """
         # both ends and the point before and after the position of the force
-        return [0, self.position-0.001, self.position+0.001, 1]
+        return [0, self.position - self.beam.l * self.EPS, self.position + self.beam.l * self.EPS, 1]
 
     @property
     def reactions_asvector(self):
@@ -226,8 +246,8 @@ class ConcentratedPerpendicularForce(BeamLoad):
         # Schneider 4.8
         _a = self.alpha
         _b = self.beta
-        _ret = np.matrix([[0, (3 - 2 * _b) * (_b ** 2) * self.value, -_a * (_b ** 2) * self.value * self.beam.l,
-                           0, (3 - 2 * _a) * (_a ** 2) * self.value, -_b * (_a ** 2) * self.value * self.beam.l]])
+        _ret = np.matrix([[0, (3 - 2 * _b) * (_b ** 2) * self.value, _a * (_b ** 2) * self.value * self.beam.l,
+                           0, (3 - 2 * _a) * (_a ** 2) * self.value, -1 * _b * (_a ** 2) * self.value * self.beam.l]])
         return _ret
 
     def deflection_at_position(self, xi):
@@ -291,7 +311,7 @@ class ConcentratedMoment(BeamLoad):
         :return: 
         """
         # both ends and the point before and after the position of the force
-        return [0, self.position-0.001, self.position+0.001, 1]
+        return [0, self.position - self.beam.l * self.EPS, self.position + self.beam.l * self.EPS, 1]
 
     @property
     def reactions_asvector(self):
@@ -301,7 +321,7 @@ class ConcentratedMoment(BeamLoad):
         _a = self.alpha
         _b = self.beta
         MR = 6 * _a * _b * self.value / self.beam.l
-        _ret = np.matrix([[0, -MR, -1 * (3 * _b - 2) * _b * self.value,
+        _ret = np.matrix([[0, -MR, 1 * (3 * _b - 2) * _b * self.value,
                            0, MR, 1 * (3 * _a - 2) * _a * self.value]])
         return _ret
 
@@ -314,7 +334,7 @@ class ConcentratedMoment(BeamLoad):
 
     def moment_at_position(self, xi):
         # added to the "baseline"
-        _ret = -(self.value / self.beam.l) * xi
+        _ret = -(self.value / self.beam.l) * xi * self.beam.l
         if xi > self.position:
             _ret += self.value
         return _ret
