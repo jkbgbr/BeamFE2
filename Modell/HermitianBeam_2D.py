@@ -415,7 +415,7 @@ class HermitianBeam2D(object):
         _contour.append([self.l, 0])  # adding last point
 
         # scaling
-        _contour = [[x[0],  x[1] / 1000] for x in _contour]  # scaling
+        _contour = [[x[0],  x[1] / 10000] for x in _contour]  # scaling
 
         # rotating the values in the global system for plotting
         _tr = transfer_matrix(alpha=-self.direction, asdegree=False, blocks=1, blocksize=2)

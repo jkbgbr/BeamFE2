@@ -104,13 +104,13 @@ class Test_All_Results_1(unittest.TestCase):
                                  1326.485590168174, 2310.0531736149446, 3428.9430318147342, 4633.931252454926,
                                  5560.428871743147]
 
-        self.assertTrue(np.allclose(self.structure.results['modal'].frequencies, _expected_frequencies))
+        self.assertTrue(np.allclose(self.structure.results['modal'].frequencies, _expected_frequencies, atol=1e-5))
 
 
 class Test_All_Results_2(unittest.TestCase):
 
     """
-    a continuous beam to test reaction forces, modal results
+    a portal frame to test reaction forces, modal results
     """
 
     @classmethod
@@ -202,5 +202,33 @@ class Test_All_Results_2(unittest.TestCase):
                                            1231.6447012112453, 1861.2153655737682, 2520.6433978302216]
                                           )
 
-        self.assertTrue(np.allclose(self.structure.results['modal'].frequencies, _expected_frequencies))
+        self.assertTrue(np.allclose(self.structure.results['modal'].frequencies, _expected_frequencies, atol=1e-5))
 
+
+class Test_All_Results_3(unittest.TestCase):
+
+    """
+    a clamped beam to test reaction forces. essentially the same structure as in #1 but no vertical supports
+    """
+
+    @classmethod
+    def setUpClass(cls):
+
+        _nodes = [Node.Node(ID=x+1, coords=(500 * x, 0)) for x in range(7)]
+        mat = Material.Steel()
+        sect = sections.Rectangle(height=3, width=10)  # section
+        _beams = [HB.HermitianBeam2D(ID=x+1, E=mat.E, rho=mat.rho, I=sect.I['x'], A=sect.A, i=_nodes[x], j=_nodes[x+1]) for x in range(6)]
+        _supports = {7: ['ux', 'uy', 'rotz']}
+        cls.structure = Structure.Structure(beams=_beams, supports=_supports)
+
+        # adding nodal loads
+        cls.structure.clear_loads()
+        cls.structure.add_nodal_load(nodeID=1, dynam={'FY': -1000}, clear=True)
+
+    def test_reactions(self):
+        solve(structure=self.structure, analysis='linear static')
+        _expected_reactions = []
+
+        print(self.structure.results['linear static'].reaction_forces)
+
+        self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces, _expected_reactions, atol=1e-5))
