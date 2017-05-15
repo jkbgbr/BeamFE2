@@ -192,7 +192,7 @@ class Structure(object):
             for dof in v:  # dof to be fixed: 'ux', 'rotz' etc.
                 _pos = self.position_in_matrix(nodeID=k, DOF=dof)
                 # check, if the DOF has been released previously
-                _K[_pos, _pos] += 10e20
+                _K[_pos, _pos] += 10e40
                 # print('added support: nodeID %d, DOF %s' % (k, dof))
         return _K
 
@@ -241,10 +241,15 @@ class Structure(object):
     #
     #     return _ret
 
-
-
-
-
+    def clear_loads(self):
+        # clear all loads defined previously
+        # print('loads cleared')
+        for b in self.beams:
+            b.internal_loads = []
+        try:
+            self._load_vector[0, :-1] = 0
+        except TypeError:  # not initialaized before, value is None
+            pass
 
     def add_single_dynam_to_node(self, nodeID=None, dynam=None, clear=False):
         """
@@ -268,8 +273,7 @@ class Structure(object):
 
         # clear all loads defined previously
         if clear:
-            # print('loads cleared')
-            self._load_vector[0, :-1] = 0
+            self.clear_loads()
 
         for k, v in dynam.items():
             for name, number in zip(self.loadnames, range(self.dof)):  # pairs e.g. 'FX' with 0, 'FY' with 1 etc.
