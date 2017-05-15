@@ -328,6 +328,53 @@ class HermitianBeam2D(object):
         """
         return self.Ke * disps
 
+    def nodal_reactions_asvector(self, disps):
+        """
+        Reactions in the local coordinate system of the beam, from displacements and the internal loads
+        but not the nodal noads defined for the structure.
+        For this to be true, disps must be in the local system 
+        """
+        return self.nodal_forces(disps) - self.reduced_internal_loads_asvector
+
+    def nodal_reactions(self, disps):
+        vals = self.nodal_reactions_asvector(disps)
+        return {
+            self.i: {'FX': vals[0, 0], 'FY': vals[1, 0], 'MZ': vals[2, 0]},
+            self.j: {'FX': vals[3, 0], 'FY': vals[4, 0], 'MZ': vals[5, 0]}
+        }
+
+    @property
+    def internal_action_points(self):
+        """
+        Points of interst for the beam, based on the internal loads defined.
+        :return: 
+        """
+
+        pois = {0, 1}  # first, last point of the beam
+        for load in self.internal_loads:  # points from the internal loads
+            pois = pois.union(set(load.internal_points))
+        return sorted(list(pois))
+
+    def internal_action_at_position(self, action=None, pos=0):
+        """
+        The sum of the action internal action in pos.
+        Based on the local, length-normed values provided from the Loads module
+        :param pos: position of evaluation, normalized to [0, 1]
+        :param action: an element of self.internal_actions
+        :return: the sum of the actions from all defined internal loads
+        """
+        assert action in self.internal_actions
+
+        _intac = 0
+        for load in self.internal_loads:
+            f = getattr(load, '%s_at_position' % action)
+            _intac += f(xi=pos)
+        return _intac
+
+    def internal_action_distribution(self, action=None):
+        assert action in self.internal_actions
+        return [self.internal_action_at_position(action=action, pos=pos) for pos in self.internal_action_points]
+
     def plot_internal_action(self, action=None, disp=None):
         """
         returns the node coordinates to be used for plotting
@@ -347,30 +394,34 @@ class HermitianBeam2D(object):
             elif action in ['shear', 'axial']:
                 return -_v1
 
-        # points of interrest from the internal loads
-        pois = {0, 1}  # first, last point of the beam
-        for load in self.internal_loads:  # points from the internal loads
-            pois = pois.union(set(load.internal_points))
-
-        # values at the nodes
+        # values of the internal action at the nodes
         ndx = self.internal_actions.index(action)
-
         v1 = self.nodal_reactions_asvector(disps=disp)[ndx, 0]
         v2 = self.nodal_reactions_asvector(disps=disp)[ndx+self.dof, 0]
 
-        _contour = []
-        for pos in sorted(pois):
-            _base = baseline(v1, -v2, pos)
-            for load in self.internal_loads:
-                f = getattr(load, '%s_at_position' % action)
-                _ = f(xi=pos)
-                _base += _
-            _contour.append([self.l * pos, _base])
+        print(v1, -v2)
 
-        _contour.insert(0, [0, 0])
-        _contour.append([self.l, 0])
 
-        _contour = [[x[0],  x[1] / 10] for x in _contour]
+        # the internal actions
+        """
+        There is a base line defined by the nodal reactions calculated using the element stiffness matrix and the deformations
+        at the endpoints of the beam element. The base line would be our solution, if we did not consider the internal
+        loads.
+        The values added to this line are calculated on a hinged-hinged beam.
+        The result is then rotated in the global coordinate system for plotting.
+        """
+        pois = self.internal_action_points  # points of evaluation
+        iad = self.internal_action_distribution(action=action)  # internal actions at the points pois
+        bases = [baseline(v1, -v2, pos) for pos in pois]  # value of the base line at pois
+        _contour = [x+y for x, y in zip(iad, bases)]  # adding the base and the value of the internal action
+        _contour = [[x * self.l, y] for x, y in zip(pois, _contour)]  # making them point pairs
+        _contour.insert(0, [0, 0])  # adding first point
+        _contour.append([self.l, 0])  # adding last point
+
+        # scaling
+        _contour = [[x[0],  x[1] / 10] for x in _contour]  # scaling
+
+        # rotating the values in the global system for plotting
         _tr = transfer_matrix(alpha=-self.direction, asdegree=False, blocks=1, blocksize=2)
         pts = [np_matrix_tolist(x * _tr + self.i.coords) for x in _contour]
         patches = [Polygon(pts, True)]
@@ -379,21 +430,6 @@ class HermitianBeam2D(object):
         ax.add_collection(p)
 
         return pts
-
-    def nodal_reactions_asvector(self, disps):
-        """
-        Reactions in the local coordinate system of the beam, from displacements and the internal loads
-        but not the nodal noads defined for the structure.
-        For this to be true, disps must be in the local system 
-        """
-        return self.nodal_forces(disps) - self.reduced_internal_loads_asvector
-
-    def nodal_reactions(self, disps):
-        vals = self.nodal_reactions_asvector(disps)
-        return {
-            self.i: {'FX': vals[0, 0], 'FY': vals[1, 0], 'MZ': vals[2, 0]},
-            self.j: {'FX': vals[3, 0], 'FY': vals[4, 0], 'MZ': vals[5, 0]}
-        }
 
 
 if __name__ == '__main__':
