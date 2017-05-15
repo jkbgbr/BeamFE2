@@ -41,6 +41,10 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         # this is the cantilever itself, composed of the beams, complete with supports
         cls.structure = Structure.Structure(beams=[_b1], supports=BCs)
 
+    #
+    # uniform perpendicular
+    #
+
     def test_uniform_perpendicular_force_bending(self):
         # beam internal loads
         self.structure.clear_loads()
@@ -79,6 +83,10 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         disp = self.structure.results['linear static'].element_displacements(local=True, beam=b, asvector=True)
         _soll = np.matrix([[0.], [50.], [833.33333333], [0.], [50.], [-833.33333333]])
         self.assertTrue(np.allclose(b.nodal_reactions_asvector(disps=disp), _soll))
+
+    #
+    # concentrated perpendicular
+    #
 
     def test_concentrated_perpendicular_force_bending(self):
         # beam internal loads
@@ -119,6 +127,10 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         _soll = np.matrix([[0.], [23.52], [441.], [0.], [6.48], [-189.]])
         self.assertTrue(np.allclose(b.nodal_reactions_asvector(disps=disp), _soll))
 
+    #
+    # concentrated moment
+    #
+
     def test_concentrated_moment_bending(self):
         # beam internal loads
         self.structure.clear_loads()
@@ -157,3 +169,13 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         disp = self.structure.results['linear static'].element_displacements(local=True, beam=b, asvector=True)
         _soll = np.matrix([[0.], [6.3], [-35.], [0.], [-6.3], [165.]])
         self.assertTrue(np.allclose(b.nodal_reactions_asvector(disps=disp), _soll))
+
+    #
+    # concentrated parallel force
+    #
+
+
+
+    #
+    # uniform parallel load
+    #

@@ -40,9 +40,9 @@ class Structure(object):
         """ Structural mass """
         return [x.mass for x in self.beams]
 
-    def draw(self, show=True, analysistype=None, mode=0):
+    def draw(self, show=True, analysistype=None, mode=0, internal_action=None):
         if self.results[analysistype].solved:
-            draw_beam.draw_structure(self, show=show, analysistype=analysistype, mode=mode)
+            draw_beam.draw_structure(self, show=show, analysistype=analysistype, mode=mode, intac=internal_action)
         else:
             print('no results available, no printing')
 

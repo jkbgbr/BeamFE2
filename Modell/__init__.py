@@ -22,6 +22,7 @@ Time: [s]
 
 # Tests:
 #   todo: the moment reactions in the linear elastic analyses are ALWAYS incorrect, when the node of reaction is a j node, the sign should be opposite
+#   parallel uniform, parallel concentrated loads
 # Lin stat:
 #   calculating stresses (Sections need stress points for this...)
 # Modal:
