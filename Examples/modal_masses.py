@@ -4,10 +4,6 @@ from Modell import BeamSections as sections
 from Modell import Structure
 from Modell import Node
 
-"""
-A simple cantilever beam in vertical or horizontal position.
-"""
-
 NR_BEAMS = 3  # number of finite elements
 LENGTH = 1400  # length of cantilever
 
