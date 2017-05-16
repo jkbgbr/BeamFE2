@@ -3,7 +3,6 @@ from Modell import HermitianBeam_2D as HB
 from Modell import BeamSections as sections
 from Modell import Structure
 from Modell import Node
-from solver import solve
 
 """
 A simple cantilever beam in vertical or horizontal position.
@@ -32,12 +31,12 @@ structure = Structure.Structure(beams=_beams, supports=BCs)
 
 # adding loads, masses
 _last = max([x.ID for x in _nodes])
-structure.add_mass_to_node(nodeID=_last, mass=1./1000)
+structure.add_nodal_mass(nodeID=_last, mass={'mx': 1./1000, 'my': 1./1000})
 # # adding loads
 # structure.add_single_dynam_to_node(nodeID=len(_nodes), dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL}, clear=True)
 
 # solving it
-solve(structure, analysis='modal')
+structure.solver['modal'].solve()
 
 # posprocessing
 structure.draw(analysistype='modal')
