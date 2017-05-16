@@ -66,6 +66,9 @@ class Test_All_Results_1(unittest.TestCase):
                                          [-10061.298077],
                                          [1739182.692308]])
 
+        print(self.structure.results['linear static'].reaction_forces)
+        print(_expected_reactions)
+
         self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces, _expected_reactions))
 
     def test_deformations(self):
@@ -261,6 +264,7 @@ class Test_All_Results_3(unittest.TestCase):
                                          [-3000000.]])
 
         # todo: the moment reactions are ALWAYS incxorrect
+        print(self.structure.results['linear static'].reaction_forces)
         self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces, _expected_reactions, atol=1e-5))
 
     # def test_plotall(self):
