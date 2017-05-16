@@ -118,6 +118,7 @@ class Test_All_Results_1(unittest.TestCase):
     #     self.structure.draw(analysistype='linear static', internal_action='moment')
     #     self.structure.draw(analysistype='modal', mode=0)
 
+
 class Test_All_Results_2(unittest.TestCase):
 
     """
@@ -227,7 +228,7 @@ class Test_All_Results_2(unittest.TestCase):
         self.structure.draw(analysistype='linear static', internal_action='axial')
         self.structure.draw(analysistype='linear static', internal_action='shear')
         self.structure.draw(analysistype='linear static', internal_action='moment')
-        self.structure.draw(analysistype='modal', mode=0)
+        self.structure.draw(analysistype='modal', mode=3)
 
 
 class Test_All_Results_3(unittest.TestCase):
@@ -282,7 +283,7 @@ class Test_All_Results_3(unittest.TestCase):
         self.structure.draw(analysistype='linear static', internal_action='axial')
         self.structure.draw(analysistype='linear static', internal_action='shear')
         self.structure.draw(analysistype='linear static', internal_action='moment')
-        self.structure.draw(analysistype='modal', mode=0)
+        self.structure.draw(analysistype='modal', mode=3)
 
 
 class Test_All_Results_4(unittest.TestCase):
@@ -341,4 +342,4 @@ class Test_All_Results_4(unittest.TestCase):
         self.structure.draw(analysistype='linear static', internal_action='axial')
         self.structure.draw(analysistype='linear static', internal_action='shear')
         self.structure.draw(analysistype='linear static', internal_action='moment')
-        self.structure.draw(analysistype='modal', mode=0)
+        self.structure.draw(analysistype='modal', mode=3)
