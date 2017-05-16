@@ -12,7 +12,7 @@ A simple cantilever beam in vertical or horizontal position.
 """
 
 VERTICAL = not False  # True/False for vertical/horizontal
-NR_BEAMS = 2  # number of finite elements
+NR_BEAMS = 1  # number of finite elements
 LENGTH = 200  # length of cantilever
 F_HORIZONTAL = 0
 F_VERTICAL = 0
@@ -42,9 +42,9 @@ structure = Structure.Structure(beams=_beams, supports=BCs)
 
 # adding loads
 # directly defined nodal loads
-structure.add_nodal_load(nodeID=_nodes[-1].ID, dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL, 'MZ': 0}, clear=True)
+structure.add_nodal_load(nodeID=_nodes[-1].ID, dynam={'FX': 5000, 'FY': 0, 'MZ': 0}, clear=True)
 # beam internal loads
-structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform perpendicular force', q=2.3)
+# structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated moment', value=-1000000, position=0.5)
 # structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform perpendicular force', value=1.3)
 
 # solving it
@@ -53,5 +53,8 @@ solve(structure, analysis='all')
 
 # posprocessing
 structure.draw(analysistype='linear static')
+structure.draw(analysistype='linear static', internal_action='axial')
+structure.draw(analysistype='linear static', internal_action='shear')
+structure.draw(analysistype='linear static', internal_action='moment')
 
 print(structure.results['linear static'].reaction_forces)

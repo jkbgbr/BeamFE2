@@ -23,6 +23,15 @@ class Structure(object):
                         }
 
     def add_nodal_load(self, nodeID=None, dynam=None, clear=False):
+        """
+        
+        :param nodeID: ID of the node the last acts on
+        :param dynam: values of the load components
+        :param local_input: True: input is understood in the beams local system. False: in the global system
+        :param clear: clear all previously defined loads before applying this
+        :return: 
+        """
+
         # finding the node
         node = [x for x in self.nodes if nodeID == x.ID]
         if len(node) != 1:
@@ -33,8 +42,9 @@ class Structure(object):
         for ln in self.loadnames:
             if ln not in dynam.keys():
                 dynam[ln] = 0
-        self.nodal_loads.append(BL.NodalLoad(node=node, dynam=dynam))
         self.add_single_dynam_to_node(nodeID=nodeID, dynam=dynam, clear=clear)
+        self.nodal_loads.append(BL.NodalLoad(node=node, dynam=dynam))
+
 
     def mass(self):
         """ Structural mass """
@@ -243,13 +253,11 @@ class Structure(object):
 
     def clear_loads(self):
         # clear all loads defined previously
-        # print('loads cleared')
+        # loads defined on beams
         for b in self.beams:
             b.internal_loads = []
-        try:
-            self._load_vector[0, :-1] = 0
-        except TypeError:  # not initialaized before, value is None
-            pass
+        self.nodal_loads = []  # deleting all nodal loads
+        self._load_vector = None  # zeroing the load vector
 
     def add_single_dynam_to_node(self, nodeID=None, dynam=None, clear=False):
         """
@@ -268,12 +276,12 @@ class Structure(object):
         assert nodeID in [x.ID for x in self.nodes]
         assert all([x in self.loadnames for x in dynam.keys()])
 
-        if self._load_vector is None:
-            self._load_vector = np.matrix(np.zeros(self.sumdof))
-
         # clear all loads defined previously
         if clear:
             self.clear_loads()
+
+        if self._load_vector is None:
+            self._load_vector = np.matrix(np.zeros(self.sumdof))
 
         for k, v in dynam.items():
             for name, number in zip(self.loadnames, range(self.dof)):  # pairs e.g. 'FX' with 0, 'FY' with 1 etc.
@@ -281,7 +289,6 @@ class Structure(object):
                 if k == name:
                     _sti = self.position_in_matrix(nodeID=nodeID, dynam=k)
                     self._load_vector[0, _sti] += v
-                    # print('added: Node %d, dynam %s = %.2f' % (nodeID, k, v))
 
     def add_mass_to_node(self, nodeID=None, mass=None, clear=False):
         """

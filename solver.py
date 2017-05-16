@@ -6,6 +6,21 @@ from scipy.linalg import eig as namivan
 import Modell.Results as Results
 from Modell.helpers import *
 
+EPS = 1e-10
+
+def round_results(mtrx, EPS=1e-10):
+    """
+    Rounds the displacement values smaller than threshold to zero.
+    It is very much advised to use this ONLY on results like displacements, otherwise who know what happens.
+    :param mtrx: numpy array like
+    :return: 
+    """
+    mtrx = np.around(a=mtrx, decimals=10)  # rounding
+    print(mtrx[abs(mtrx) < EPS])
+    mtrx[abs(mtrx) < EPS] = 0  # values smaller than EPS will be zeroed
+    return mtrx
+
+
 
 def solve(structure, analysis=None):
     """
@@ -31,6 +46,7 @@ def solve(structure, analysis=None):
     if analysis in ['linear static', 'all']:
         # linear static analysis
         disps = sp.inv(structure.K_with_BC) * structure.load_vector
+
         structure.results['linear static'] = Results.LinearStaticResult(structure=structure, displacements=[disps])
         structure.results['linear static'].solved = True
 

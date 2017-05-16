@@ -325,6 +325,7 @@ class HermitianBeam2D(object):
         but not the nodal noads defined for the structure.
         For this to be true, disps must be in the local system 
         """
+
         return self.Ke * disps
 
     def nodal_reactions_asvector(self, disps):

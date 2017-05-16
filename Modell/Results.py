@@ -98,28 +98,28 @@ class LinearStaticResult(AnalysisResult):
 
         _ret = np.zeros([len(self.structure.nodes)*3, 1])
 
-        # # nodal reactions from loads defined as beam internals - these will be added as these are REACTION formces
-        # _c = []
-        # for b in self.structure.beams:
-        #     disp = self.structure.results['linear static'].element_displacements(local=True, beam=b, asvector=True)
-        #
-        #     for nodeind, node in enumerate(b.nodes):
-        #         # position of the first dof in the result matrix
-        #         _pos = self.structure.position_in_matrix(nodeID=node.ID, DOF='ux')
-        #         # writing the value
-        #         # getting the nodal reactions - these are in the local system
-        #         _nodalreactions = b.nodal_reactions_asvector(disps=disp)[nodeind * 3:nodeind * 3 + 3]
-        #         # and we transfer them in the global system
-        #         _nodalreactions = transfer_matrix(alpha=b.direction, blocks=1) * _nodalreactions
-        #         _ret[_pos:_pos + 3] += _nodalreactions
-        #
-        # # loads defined directly on nodes - these will be substracted as these are ACTION formces
-        # for x in self.structure.nodal_loads:
-        #     _pos = self.structure.position_in_matrix(nodeID=x.node.ID, DOF='ux')
-        #     # writing the value
-        #     _ret[_pos:_pos + 3] -= x.asvector.T
-        #
-        # _ret = np.multiply(-1, _ret)
+        # nodal reactions from loads defined as beam internals - these will be added as these are REACTION formces
+        _c = []
+        for b in self.structure.beams:
+            disp = self.structure.results['linear static'].element_displacements(local=True, beam=b, asvector=True)
+
+            for nodeind, node in enumerate(b.nodes):
+                # position of the first dof in the result matrix
+                _pos = self.structure.position_in_matrix(nodeID=node.ID, DOF='ux')
+                # writing the value
+                # getting the nodal reactions - these are in the local system
+                _nodalreactions = b.nodal_reactions_asvector(disps=disp)[nodeind * 3:nodeind * 3 + 3]
+                # and we transfer them in the global system
+                _nodalreactions = transfer_matrix(alpha=b.direction, blocks=1) * _nodalreactions
+                _ret[_pos:_pos + 3] += _nodalreactions
+
+        # loads defined directly on nodes - these will be substracted as these are ACTION formces
+        for x in self.structure.nodal_loads:
+            _pos = self.structure.position_in_matrix(nodeID=x.node.ID, DOF='ux')
+            # writing the value
+            _ret[_pos:_pos + 3] -= x.asvector.T
+
+        _ret = np.multiply(-1, _ret)
 
         return _ret
 

@@ -17,6 +17,11 @@ class NodalLoad(object):
         self.node = node  # length of beam
         self.dynam = dynam
 
+    # @property
+    # def reaction_asvector(self):
+    #     d = self.dynam
+    #     return np.matrix([d['FX'], d['FY'], d['MZ']])
+
     @property
     def asvector(self):
         d = self.dynam
