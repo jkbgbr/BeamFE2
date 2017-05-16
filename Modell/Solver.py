@@ -107,6 +107,8 @@ class BucklingSolver(Solver):
         eigvals = namivan(a=K, b=KG)[0]
         eigvecs = namivan(a=K, b=KG)[1]
 
+        # eigvals, eigvecs = sp.eigh(K, KG)
+
         # print(structure.K)
         # print('')
         # print(structure.K_with_BC)
@@ -115,11 +117,23 @@ class BucklingSolver(Solver):
         #
         # print(KG)
         # print(K)
+        #
 
-        # _eigs = sorted([x for x in eigvals.real if x>0])
-        # beam = structure.beams[0]
-        # ncr = math.pi ** 2 * beam.EI / (2 * beam.l) ** 2
-        # print([x/ncr for x in _eigs])
+        # print(eigvals)
+        #
+        # exit()
+
+        _eigs = sorted([x for x in eigvals.real if x>0])
+
+        print(_eigs)
+
+        exit()
+
+        beam = structure.beams[0]
+        ncr = math.pi ** 2 * beam.EI / (2 * beam.l) ** 2
+        print([x/ncr for x in _eigs])
+
+
 
 
         exit()

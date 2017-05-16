@@ -70,4 +70,5 @@ class Hermitian2D_Model(unittest.TestCase):
         # print(12*beam.EI/L**3)
 
         structure.solver['linear static'].solve()
+        structure.solver['modal'].solve()
         structure.solver['buckling'].solve()

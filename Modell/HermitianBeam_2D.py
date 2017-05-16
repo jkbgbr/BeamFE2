@@ -280,9 +280,13 @@ class HermitianBeam2D(object):
         _ret[2, 2] = 2 * (L ** 2) / 15
         _ret[2, 5] = _ret[5, 2] = -1 * (L ** 2) / 30
 
+        # _ret[0, 0] = _ret[3, 3] = 1.
+        # _ret[0, 3] = _ret[3, 0] = -1. * _ret[0, 0]
+
         _ret[2, 4] = _ret[4, 2] = _ret[4, 5] = _ret[5, 4] = -1 * _ret[1, 2]
         _ret[5, 5] = -1 * _ret[2, 2]
         _ret = np.multiply((N / L), _ret)
+
 
         # exit()
 
