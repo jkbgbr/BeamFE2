@@ -8,8 +8,9 @@ from solver import solve
 import math
 
 
-F_HORIZONTAL = 1000000
-F_VERTICAL = 1
+F_HORIZONTAL = 1
+F_VERTICAL = 0
+
 
 class Hermitian2D_Model(unittest.TestCase):
     """
@@ -29,15 +30,14 @@ class Hermitian2D_Model(unittest.TestCase):
         http://iitg.vlab.co.in/?sub=62&brch=175&sim=1080&cnt=1
         """
         _pieces = 1  # number of finite elements
-        _length = 450.  # mm
-        rho = 7.850e-8
+        _length = 850.  # mm
+        mat = Material.Steel()
         section_column = sections.Rectangle(height=1., width=1.)
-        E = 2.1e5
 
         # nodes
         _nodes = []
         for i in range(_pieces + 1):
-            _nodes.append(Node.Node.from_dict(adict={'ID': i + 1, 'coords': (0, i * _length / _pieces)}))
+            _nodes.append(Node.Node.from_dict(adict={'ID': i + 1, 'coords': (i * _length / _pieces, 0)}))
 
         # beams
         I = section_column.I['x']
@@ -45,8 +45,8 @@ class Hermitian2D_Model(unittest.TestCase):
         I = 1
         _beams = []
         for i in range(_pieces):
-            _beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': i, 'E': E, 'I': I,
-                                                              'A': A, 'rho': rho,
+            _beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': i, 'E': mat.E, 'I': I,
+                                                              'A': A, 'rho': mat.rho,
                                                               'i': _nodes[i], 'j': _nodes[i + 1]}))
 
         # supports
@@ -57,10 +57,19 @@ class Hermitian2D_Model(unittest.TestCase):
         structure = Structure.Structure(beams=_beams, supports=BCs)
 
         # adding loads
-        structure.add_single_dynam_to_node(nodeID=_last, dynam={'FX': 0, 'FY': -1*F_VERTICAL}, clear=True)
+        structure.add_single_dynam_to_node(nodeID=_last, dynam={'FX': -1 * F_HORIZONTAL, 'FY': -1*F_VERTICAL}, clear=True)
 
         # solver :-) whatever happens here is done by numpy.
 
-        solve(structure, analysis='linear static')
-        # solve(structure, analysis='buckling')
+        # beam = structure.beams[0]
+        # print(math.pi**2 * beam.EI / (2 * _length) ** 2)
+        # L = beam.l
+        # print(beam.E)
+        # print(beam.A)
+        # print(beam.l)
+        # print(beam.EA/L)
+        # print(12*beam.EI/L**3)
 
+
+        solve(structure, analysis='linear static')
+        solve(structure, analysis='buckling')

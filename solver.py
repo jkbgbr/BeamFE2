@@ -90,15 +90,35 @@ def solve(structure, analysis=None):
         beam = structure.beams[0]
         K = structure.condense(mtrx=structure.K_with_BC)
         KG = structure.condense(mtrx=structure.K_geom)
+
+        print('itt')
+
+        # eigvals = namivan(a=K-KG)[0]
+        # eigvecs = namivan(a=K-KG)[1]
+
         eigvals = namivan(a=K, b=KG)[0]
         eigvecs = namivan(a=K, b=KG)[1]
 
-        print(np.linalg.inv(structure.K_geom))
+        # print(structure.K)
+        # print('')
+        # print(structure.K_with_BC)
+        # print('')
+        # print(K)
+        #
+        # print(KG)
+        # print(K)
+
+        # _eigs = sorted([x for x in eigvals.real if x>0])
+        # beam = structure.beams[0]
+        # ncr = math.pi ** 2 * beam.EI / (2 * beam.l) ** 2
+        # print([x/ncr for x in _eigs])
+
+
         exit()
 
-        print((math.pi**2)*beam.EI/(900**2))
-        print([x for x in sorted(eigvals.real) if x>0])
-        print('')
+        # print((math.pi**2)*beam.EI/(900**2))
+        # print([x for x in sorted(eigvals.real) if x>0])
+        # print('')
 
         shapes = [np.matrix([eigvecs[:, x]]).T for x in range(len(eigvecs))]  # casting to list of column matrices
 

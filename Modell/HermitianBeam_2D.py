@@ -214,32 +214,32 @@ class HermitianBeam2D(object):
     def N(self, x, L=1.):
         # the N matrix, assembled. 2 x 6 matrix, multiplied with self.local_displacements yields the deflections
         # for the internal points as a tuple with ux, uy values in the local system.
-        return np.matrix([[self.N1(x=x, L=L),  0,                  0,                     self.N4(x=x, L=L),  0,                  0],
-                          [0,                  self.N2(x=x, L=L),  self.N3(x=x, L=L),     0,                  self.N5(x=x, L=L),  self.N6(x=x, L=L)]])
+        _ret = np.zeros((2, 6))
+        _ret[0, 0] = self.N1(x=x, L=L)
+        _ret[1, 1] = self.N2(x=x, L=L)
+        _ret[1, 2] = self.N2(x=x, L=L)
+        _ret[0, 3] = self.N4(x=x, L=L)
+        _ret[1, 4] = self.N5(x=x, L=L)
+        _ret[1, 5] = self.N6(x=x, L=L)
+        return _ret
 
     def _Me(self):
 
         L = self.l
-        _ret = self.rho * self.A * self.l / 420 * \
-               np.matrix([
-                   [140, 0, 0, 70, 0, 0],
-                   [0, 156, 22*L, 0, 54, -13*L],
-                   [0, 22*L, 4*(L**2), 0, 13*L, -3*(L**2)],
-                   [70, 0, 0, 140, 0, 0],
-                   [0, 54, 13*L, 0, 156, -22*L],
-                   [0, -13*L, -3*(L**2), 0, -22*L, 4*(L**2)]])
+        _ret = np.zeros((6, 6))
+        _ret[0, 0] = _ret[3, 3] = 140
+        _ret[0, 3] = _ret[3, 0] = 70
+        _ret[1, 1] = _ret[4, 4] = 156
+        _ret[1, 2] = _ret[2, 1] = 22 * L
+        _ret[1, 4] = _ret[4, 1] = 54
+        _ret[1, 5] = _ret[5, 1] = -13 * L
+        _ret[2, 2] = _ret[5, 5] = 4 * L ** 2
+        _ret[2, 4] = _ret[4, 2] = - 1 * _ret[1, 5]
+        _ret[2, 5] = _ret[5, 2] = -3 * L ** 2
+        _ret[4, 5] = _ret[5, 4] = -1 * _ret[1, 2]
+        _ret = np.multiply(self.rho * self.A * L / 420, _ret)
+
         return _ret
-
-        # _ret = self.rho * self.A * L / 2. * \
-        #        np.matrix([
-        #            [1, 0, 0, 70, 0, 0],
-        #            [0, 1, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 1, 0, 0],
-        #            [0, 0, 0, 0, 1, 0],
-        #            [0, 0, 0, 0, 0, 0]])
-        # return _ret
-
 
     @property
     def Me(self):
@@ -254,15 +254,35 @@ class HermitianBeam2D(object):
         # the geometrical stiffness matrix, from H-P. Gavin CEE 421L. Matrix Structural Anyalsis - Duke University
 
         L = self.l
-        _ret = np.matrix([
-            [0,     0,          0,              0,      0,          0],
-            [0,     6./5.,      L/10.,          0,      -(6./5.),   L/10.],
-            [0,     L/10.,      2*(L**2)/15.,   0,      -(L/10.),   -(L**2)/30.],
-            [0,     0,          0,              0,      0,          0],
-            [0,     -(6./5.),   -(L/10.),       0,      (6./5.),    -(L/10.)],
-            [0,     (L/10.),    -(L**2)/30.,    0,      -(L/10.),   -(2*(L**2))/15.]
-        ])
+        _ret = np.zeros((6, 6))
+        _ret[1, 1] = _ret[4, 4] = 6. / 5.
+        _ret[1, 2] = _ret[1, 4] = _ret[2, 1] = _ret[4, 1] = L / 10.
+        _ret[2, 2] = 2 * (L ** 2) / 15
+        _ret[2, 5] = _ret[5, 2] = -1 * (L ** 2) / 30
+
+        _ret[2, 4] = _ret[4, 2] = _ret[4, 5] = _ret[5, 4] = -1 * _ret[1, 2]
+        _ret[5, 5] = -1 * _ret[2, 2]
         _ret = np.multiply((N / L), _ret)
+
+        # exit()
+
+        # mi = _ret
+        #
+        #
+        # _ret = np.matrix([
+        #     [0,     0,          0,              0,      0,          0],
+        #     [0,     6./5.,      L/10.,          0,      -(6./5.),   L/10.],
+        #     [0,     L/10.,      2*(L**2)/15.,   0,      -(L/10.),   -(L**2)/30.],
+        #     [0,     0,          0,              0,      0,          0],
+        #     [0,     -(6./5.),   -(L/10.),       0,      (6./5.),    -(L/10.)],
+        #     [0,     (L/10.),    -(L**2)/30.,    0,      -(L/10.),   -(2*(L**2))/15.]
+        # ])
+        # _ret = np.multiply((N / L), _ret)
+        #
+        # print(_ret-mi)
+        #
+        # exit()
+
         return _ret
 
     @property
@@ -271,14 +291,16 @@ class HermitianBeam2D(object):
 
     def _Ke(self):
         # full stiffness matrix of the beam element in the element coordinate system
-        _ret = np.matrix([
-            np.array([self.EA / self.l, 0, 0, -self.EA / self.l, 0, 0]),
-            np.array([0, 12 * self.EI / (self.l ** 3), 6 * self.EI / (self.l ** 2), 0, -12 * self.EI / (self.l ** 3), 6 * self.EI / (self.l ** 2)]),
-            np.array([0, 6 * self.EI / (self.l ** 2), 4 * self.EI / self.l, 0, -6 * self.EI / (self.l ** 2), 2 * self.EI / self.l]),
-            np.array([-self.EA / self.l, 0, 0, self.EA / self.l,  0, 0]),
-            np.array([0, -12 * self.EI / (self.l ** 3), -6 * self.EI / (self.l ** 2), 0, 12 * self.EI / (self.l ** 3), -6 * self.EI / (self.l ** 2)]),
-            np.array([0, 6 * self.EI / (self.l ** 2), 2 * self.EI / self.l, 0, -6 * self.EI / (self.l ** 2), 4 * self.EI / self.l]),
-            ])
+        _ret = np.zeros((6, 6))
+        _ret[0, 0] = _ret[3, 3] = self.EA / self.l
+        _ret[1, 1] = _ret[4, 4] = 12 * self.EI / (self.l ** 3)
+        _ret[1, 2] = _ret[2, 1] = _ret[1, 5] = _ret[5, 1] = 6 * self.EI / (self.l ** 2)
+        _ret[2, 2] = _ret[5, 5] = 4 * self.EI / self.l
+        _ret[2, 5] = _ret[5, 2] = 2 * self.EI / self.l
+
+        _ret[0, 3] = _ret[3, 0] = -1 * _ret[0, 0]
+        _ret[1, 4] = _ret[4, 1] = -1 * _ret[1, 1]
+        _ret[2, 4] = _ret[4, 2] = _ret[4, 5] = _ret[5, 4] = -1 * _ret[1, 2]
 
         return _ret
 
