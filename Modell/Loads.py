@@ -8,7 +8,9 @@ from drawing import _plotting_available, plt
 import sys
 import inspect
 
-BEAM_LOAD_TYPES = 'uniform perpendicular force', 'concentrated perpendicular force', 'concentrated moment'
+BEAM_LOAD_TYPES = 'concentrated perpendicular force', 'concentrated moment', \
+                  'uniform axial force', 'uniform perpendicular force',
+
 NODAL_LOAD_TYPES = ['force', 'moment']
 
 
@@ -28,6 +30,7 @@ class NodalMass(object):
             if mass > 0:
                 ax = plt.gca()
                 ax.scatter(mp[0], mp[1], marker='o', color='gray', s=scale * 100, zorder=2)  # nodes
+
 
 class NodalLoad(object):
     def __init__(self, node=None, dynam=None, *args, **kwargs):
@@ -157,6 +160,71 @@ class BeamLoad(object):
         plt.show()
 
 
+class UniformAxialForce(BeamLoad):
+    """
+    Distributed axial load acting on a beam, defined in the beams local system.
+    Everything is calculated in the elements local system.
+    The load acts between node i and node j (interval xi = [0, 1]) 
+    The distributed load acts on the full length of the beam with uniform intensity.
+    A positive value acts from node i to node j.
+    """
+
+    def __init__(self, loadtype='uniform axial force', value=None, beam=None):
+        super(UniformAxialForce, self).__init__(loadtype, beam, value)
+        self.nr_points = beam.number_internal_points
+        self.beam = beam
+
+    def draw_load(self, scale=1.):
+        pass
+        # todo
+        # p1 = [0, 0]
+        # p2 = [0, scale * -self.value]
+        # p3 = [self.beam.l, scale * -self.value]
+        # p4 = [self.beam.l, 0]
+        # pts = [p1, p2, p3, p4]
+        # _tr = transfer_matrix(alpha=-self.beam.direction, asdegree=False, blocks=1, blocksize=2)
+        # pts = [np_matrix_tolist(x * _tr + self.beam.i.coords) for x in pts]
+        # polygon = Polygon(pts, True)
+        # patches = [polygon]
+        # p = PatchCollection(patches, alpha=0.4, facecolors=['lightblue'], edgecolors=['blue'])
+        # # p.set_array(np.array('b'))
+        # ax = plt.gca()
+        # ax.add_collection(p)
+
+    @property
+    def internal_points(self):
+        """
+        The points to calculate the internal actions - points of interest.
+        :return: 
+        """
+        return []  # internal points where the load is evaluated
+
+    @property
+    def reactions_asvector(self):
+        # the nodal forces resulting from the beam internal load,
+        # acting on the nodes of the beam, in the local system
+        _ret = np.matrix([[self.value * self.beam.l / 2, 0, 0,
+                           self.value * self.beam.l / 2, 0, 0]])
+        return _ret
+
+    def deflection_at_position(self, xi):
+        # Schneider Bautabellen 4.2, einfeldträger mit verteilten Last
+        return 0
+
+    def axial_at_position(self, xi):
+        # no axial action from perpendicular load
+        return -xi * self.value * self.beam.l
+
+    def moment_at_position(self, xi):
+        # Schneider Bautabellen 4.2, einfeldträger mit verteilten Last
+        # the value to be added to the value interpolated between the values at node i, node j
+        return 0
+
+    def shear_at_position(self, xi):
+        # the value to be added to the value at node i
+        return 0
+
+
 class UniformPerpendicularForce(BeamLoad):
     """
     Distributed, perpendicular load acting on a beam.
@@ -191,7 +259,7 @@ class UniformPerpendicularForce(BeamLoad):
         The points to calculate the internal actions - points of interest.
         :return: 
         """
-        return [x / self.nr_points for x in range(self.nr_points+1)]  # points where the load is
+        return [x / self.nr_points for x in range(self.nr_points+1)]  # internal points where the load is evaluated
 
     @property
     def reactions_asvector(self):

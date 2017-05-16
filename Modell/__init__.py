@@ -27,7 +27,6 @@ Time: [s]
 # Lin stat:
 #   parallel uniform, parallel concentrated loads
 # Modal:
-#   check added mass etc.
 #   modal masses, modal participation
 #   EC-based stuff: modal antwort, summation...
 # Buckling:

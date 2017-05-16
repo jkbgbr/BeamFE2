@@ -5,7 +5,7 @@ from Modell import BeamSections as sections
 from Modell import Material
 from Modell import Structure
 from Modell import Node
-from solver import solve
+
 
 """
 A simple cantilever beam in vertical or horizontal position.
@@ -42,13 +42,14 @@ structure = Structure.Structure(beams=_beams, supports=BCs)
 
 # adding loads
 # directly defined nodal loads
-structure.add_nodal_load(nodeID=_nodes[-1].ID, dynam={'FX': 5000, 'FY': 0, 'MZ': 0}, clear=True)
+structure.add_nodal_load(nodeID=_nodes[-1].ID, dynam={'FX': 0, 'FY': -200, 'MZ': 0}, clear=True)
 # beam internal loads
+structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform axial force', value=1)
 # structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated moment', value=-1000000, position=0.5)
 # structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform perpendicular force', value=1.3)
 
 # solving it
-solve(structure, analysis='all')
+structure.solver['linear static'].solve()
 
 
 # posprocessing
