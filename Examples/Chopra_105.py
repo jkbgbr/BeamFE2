@@ -61,10 +61,10 @@ for b in structure.beams:
     structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', q=5.00)
 
 # solving it
-solve(structure, analysis='linear static')
+structure.solver['linear static'].solve()
 structure.draw(analysistype='linear static')
 
-solve(structure, analysis='modal')
+structure.solver['modal'].solve()
 
 # posprocessing
 om_1 = (2.198 * math.sqrt(EE * I / (mass_1 * h ** 3))) / (2 * math.pi)

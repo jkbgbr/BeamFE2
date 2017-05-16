@@ -37,7 +37,6 @@ Time: [s]
 #   draw global reaction forces
 #   draw moment loads
 
-
 # todo: LATER
 # Lin stat:
 #   LATER: defining hinges?

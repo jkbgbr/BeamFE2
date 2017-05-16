@@ -40,7 +40,7 @@ structure.add_mass_to_node(nodeID=2, mass=mass * L / 2.)
 structure.add_mass_to_node(nodeID=3, mass=mass * L / 4.)
 
 # solving it
-solve(structure, analysis='modal')
+structure.solver['modal'].solve()
 
 # posprocessing
 om_1 = (3.15623 * math.sqrt(EE * I / (mass * L ** 4))) / (2 * math.pi)

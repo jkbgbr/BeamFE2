@@ -222,11 +222,12 @@ class Test_All_Results_2(unittest.TestCase):
                                  46.307812940599206, 56.707579685571524]
         self.assertTrue(np.allclose(self.structure.results['modal'].frequencies[0:5], _expected_frequencies, atol=1e-5))
 
-    # def test_plotall(self):
-    #     self.structure.draw(analysistype='linear static')
-    #     self.structure.draw(analysistype='linear static', internal_action='shear')
-    #     self.structure.draw(analysistype='linear static', internal_action='moment')
-    #     self.structure.draw(analysistype='modal', mode=0)
+    def test_plotall(self):
+        self.structure.draw(analysistype='linear static')
+        self.structure.draw(analysistype='linear static', internal_action='axial')
+        self.structure.draw(analysistype='linear static', internal_action='shear')
+        self.structure.draw(analysistype='linear static', internal_action='moment')
+        self.structure.draw(analysistype='modal', mode=0)
 
 
 class Test_All_Results_3(unittest.TestCase):
@@ -276,11 +277,12 @@ class Test_All_Results_3(unittest.TestCase):
         # todo: the moment reactions are ALWAYS incxorrect
         self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces, _expected_reactions, atol=1e-5))
 
-    # def test_plotall(self):
-    #     self.structure.draw(analysistype='linear static')
-    #     self.structure.draw(analysistype='linear static', internal_action='shear')
-    #     self.structure.draw(analysistype='linear static', internal_action='moment')
-    #     self.structure.draw(analysistype='modal', mode=0)
+    def test_plotall(self):
+        self.structure.draw(analysistype='linear static')
+        self.structure.draw(analysistype='linear static', internal_action='axial')
+        self.structure.draw(analysistype='linear static', internal_action='shear')
+        self.structure.draw(analysistype='linear static', internal_action='moment')
+        self.structure.draw(analysistype='modal', mode=0)
 
 
 class Test_All_Results_4(unittest.TestCase):
@@ -333,10 +335,10 @@ class Test_All_Results_4(unittest.TestCase):
         # todo: the moment reactions are ALWAYS incxorrect
         self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces, _expected_reactions, atol=1e-5))
 
-    # def test_plotall(self):
-    #     self.structure.solver['linear static'].solve()
-    #     self.structure.draw(analysistype='linear static')
-    #     self.structure.draw(analysistype='linear static', internal_action='axial')
-    #     self.structure.draw(analysistype='linear static', internal_action='shear')
-    #     self.structure.draw(analysistype='linear static', internal_action='moment')
-    #     self.structure.draw(analysistype='modal', mode=0)
+    def test_plotall(self):
+        self.structure.solver['linear static'].solve()
+        self.structure.draw(analysistype='linear static')
+        self.structure.draw(analysistype='linear static', internal_action='axial')
+        self.structure.draw(analysistype='linear static', internal_action='shear')
+        self.structure.draw(analysistype='linear static', internal_action='moment')
+        self.structure.draw(analysistype='modal', mode=0)

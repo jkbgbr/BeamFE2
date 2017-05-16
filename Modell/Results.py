@@ -132,26 +132,26 @@ class ModalResult(AnalysisResult):
 
     @property
     def frequencies(self):
-        if not self.solved:
+        if self.solved:
+            return [x/(2.*math.pi) for x in self.circular_frequencies]
+        else:
             print('no results available, solve the model first')
             return None
-        else:
-            return [x/(2*math.pi) for x in self.circular_frequencies]
 
     @property
     def periods(self):
-        if not self.solved:
+        if self.solved:
+            return [1./x for x in self.frequencies]
+        else:
             print('no results available, solve the model first')
             return None
-        else:
-            return [1./x for x in self.frequencies]
 
     def modeshape(self, mode=None):
-        if not self.solved:
+        if self.solved:
+            return self.displacement_results[mode]
+        else:
             print('no results available, solve the model first')
             return None
-        else:
-            return self.displacement_results[mode]
 
 
 class BucklingResult(AnalysisResult):
