@@ -3,7 +3,6 @@
 from Modell import HermitianBeam_2D as HB
 from Modell import Structure
 from Modell import Node
-from solver import solve
 import math
 
 """
@@ -13,8 +12,8 @@ Kinda OK.
 
 
 L = 10
-mass = 100 / 386.
-rho = 0  # consistent mass matrix but density=0 -> only the masses are considered.
+mass = 100000 / 386.
+rho = 0.1  # consistent mass matrix but density=0 -> only the masses are considered.
 EE = 29000
 I = 320
 A = 63.41
@@ -36,8 +35,8 @@ BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
 structure = Structure.Structure(beams=_beams, supports=BCs)
 
 # adding loads, masses
-structure.add_mass_to_node(nodeID=2, mass=mass * L / 2.)
-structure.add_mass_to_node(nodeID=3, mass=mass * L / 4.)
+structure.add_nodal_mass(nodeID=2, mass={'mx': mass * L / 2., 'my': mass * L / 2.})
+structure.add_nodal_mass(nodeID=3, mass={'mx': mass * L / 4., 'my': mass * L / 4.})
 
 # solving it
 structure.solver['modal'].solve()

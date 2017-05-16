@@ -5,7 +5,6 @@ from Modell import BeamSections as sections
 from Modell import Material
 from Modell import Structure
 from Modell import Node
-from drawing import _plotting_available, plt
 
 """
 A simple cantilever beam in vertical or horizontal position.

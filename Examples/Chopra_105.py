@@ -3,7 +3,6 @@
 from Modell import HermitianBeam_2D as HB
 from Modell import Structure
 from Modell import Node
-from solver import solve
 import math
 
 """
@@ -17,8 +16,8 @@ Kinda OK.
 
 h = 120  # story heigth
 L = 2 * h  # bay width
-mass_1 = 1000 / 386.
-rho = 0  # steel / 1000
+mass_1 = 1000000 / 386.
+rho = 0.01  # steel / 1000
 EE = 29000
 I = 320
 A = 63.41
@@ -49,16 +48,14 @@ BCs = {1: ['ux', 'uy', 'rotz'], 2: ['ux', 'uy', 'rotz']}  # supports as dict
 structure = Structure.Structure(beams=_beams, supports=BCs)
 
 # adding masses for the moda lanalysis
-structure.add_mass_to_node(nodeID=1, mass=10000000*mass_1/2., clear=True)  # clears previous loads
-structure.add_mass_to_node(nodeID=2, mass=10000000*mass_1/2.)
-structure.add_mass_to_node(nodeID=3, mass=mass_1)  # clears previous loads
-structure.add_mass_to_node(nodeID=4, mass=mass_1)
-structure.add_mass_to_node(nodeID=5, mass=mass_1/2.)
-structure.add_mass_to_node(nodeID=6, mass=mass_1/2.)
+structure.add_nodal_mass(nodeID=3, mass={'mx': mass_1, 'my': mass_1})
+structure.add_nodal_mass(nodeID=4, mass={'mx': mass_1, 'my': mass_1})
+structure.add_nodal_mass(nodeID=5, mass={'mx': mass_1/2., 'my': mass_1/2.})
+structure.add_nodal_mass(nodeID=6, mass={'mx': mass_1/2., 'my': mass_1/2.})
 
 # adding loads; these are not taken into account when performing the modal analysis
 for b in structure.beams:
-    structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', q=5.00)
+    structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', value=5.00)
 
 # solving it
 structure.solver['linear static'].solve()
