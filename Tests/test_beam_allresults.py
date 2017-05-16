@@ -303,6 +303,8 @@ class Test_All_Results_4(unittest.TestCase):
         cls.structure.clear_loads()
         cls.structure.add_nodal_load(nodeID=1, dynam={'FY': -1000, 'FX': -1000}, clear=True)
         cls.structure.add_internal_loads(beam=cls.structure.beams[0], loadtype='uniform axial force', value=1)
+        cls.structure.add_internal_loads(beam=cls.structure.beams[2], loadtype='concentrated axial force', value=-1000, position=0.4)
+        cls.structure.add_internal_loads(beam=cls.structure.beams[4], loadtype='concentrated axial force', value=1000, position=0.99)
 
     def test_reactions(self):
         self.structure.solver['linear static'].solve()
@@ -336,5 +338,5 @@ class Test_All_Results_4(unittest.TestCase):
         self.structure.draw(analysistype='linear static')
         self.structure.draw(analysistype='linear static', internal_action='axial')
         self.structure.draw(analysistype='linear static', internal_action='shear')
-        # self.structure.draw(analysistype='linear static', internal_action='moment')
+        self.structure.draw(analysistype='linear static', internal_action='moment')
         self.structure.draw(analysistype='modal', mode=0)

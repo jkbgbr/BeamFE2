@@ -25,7 +25,7 @@ Time: [s]
 #   todo internal action signs
 #   todo: the moment reactions in the linear elastic analyses are ALWAYS incorrect, when the node of reaction is a j node, the sign should be opposite
 # Lin stat:
-#   parallel uniform, parallel concentrated loads
+#   parallel concentrated loads
 # Modal:
 #   modal masses, modal participation
 #   EC-based stuff: modal antwort, summation...

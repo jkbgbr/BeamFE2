@@ -45,6 +45,7 @@ structure = Structure.Structure(beams=_beams, supports=BCs)
 structure.add_nodal_load(nodeID=_nodes[-1].ID, dynam={'FX': 0, 'FY': -200, 'MZ': 0}, clear=True)
 # beam internal loads
 structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform axial force', value=1)
+structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated axial force', value=200, position=0.3)
 # structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated moment', value=-1000000, position=0.5)
 # structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform perpendicular force', value=1.3)
 

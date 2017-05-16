@@ -8,7 +8,7 @@ from drawing import _plotting_available, plt
 import sys
 import inspect
 
-BEAM_LOAD_TYPES = 'concentrated perpendicular force', 'concentrated moment', \
+BEAM_LOAD_TYPES = 'concentrated perpendicular force', 'concentrated moment', 'concentrated axial force', \
                   'uniform axial force', 'uniform perpendicular force',
 
 NODAL_LOAD_TYPES = ['force', 'moment']
@@ -363,6 +363,73 @@ class ConcentratedPerpendicularForce(BeamLoad):
         else:
             _ret = -self.value
         return _ret
+
+
+class ConcentratedAxialForce(BeamLoad):
+    """
+    Single perpendicular load acting on a beam.
+    Everything is calculated in the elements local system.
+    The load position a, c are understood as values normalized over the beam length L. 
+    The distributed load acts on the full length of the beam with uniform intensity.
+    """
+
+    def __init__(self, loadtype='concentrated axial force', value=None, position=0, beam=None):
+        super(ConcentratedAxialForce, self).__init__(loadtype, beam, value)
+        self.position = position
+        self.nr_points = beam.number_internal_points
+        self.beam = beam
+
+    @property
+    def alpha(self):
+        # ratio of node i to position to 1.0
+        return self.position
+
+    @property
+    def beta(self):
+        # ratio of node j to position to 1.0
+        return 1 - self.position
+
+    def draw_load(self, scale=1.):
+        mp = [self.beta * self.beam.i.coords[0] + self.alpha * self.beam.j.coords[0],
+              self.beta * self.beam.i.coords[1] + self.alpha * self.beam.j.coords[1]]
+        _norm = [1 * self.value / abs(self.value), 0] * transfer_matrix(alpha=-self.beam.direction, blocks=1, blocksize=2)
+        _norm = np_matrix_tolist(_norm)
+        ax = plt.gca()
+        ax.arrow(mp[0], mp[1], _norm[0], _norm[1], head_width=0.5 * scale, head_length=scale, fc='blue', ec='blue')
+
+    @property
+    def internal_points(self):
+        """
+        The points to calculate the internal actions - points of interest.
+        :return: 
+        """
+        # both ends and the point before and after the position of the force
+        return [0, self.position - self.beam.l * self.EPS, self.position + self.beam.l * self.EPS, 1]
+
+    @property
+    def reactions_asvector(self):
+        # the nodal forces resulting from the beam internal load,
+        # acting on the nodes of the beam, in the local system
+        # Schneider 4.8
+        _ret = np.matrix([[self.value / 2., 0, 0,
+                           self.value / 2., 0, 0]])
+        return _ret
+
+    def deflection_at_position(self, xi):
+        return 0
+
+    def axial_at_position(self, xi):
+        if xi < self.position:
+            _ret = 0
+        else:
+            _ret = -self.value
+        return _ret
+
+    def moment_at_position(self, xi):
+        return 0
+
+    def shear_at_position(self, xi):
+        return 0
 
 
 class ConcentratedMoment(BeamLoad):

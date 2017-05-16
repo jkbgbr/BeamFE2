@@ -133,6 +133,8 @@ class HermitianBeam2D(object):
             self.internal_loads.append(BL.UniformAxialForce(beam=self, **kwargs))
         elif _lt == 'concentrated perpendicular force':
             self.internal_loads.append(BL.ConcentratedPerpendicularForce(beam=self, **kwargs))
+        elif _lt == 'concentrated axial force':
+            self.internal_loads.append(BL.ConcentratedAxialForce(beam=self, **kwargs))
         elif _lt == 'concentrated moment':
             self.internal_loads.append(BL.ConcentratedMoment(beam=self, **kwargs))
 

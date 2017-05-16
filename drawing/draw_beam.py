@@ -103,6 +103,12 @@ def draw_structure(structure, show=True, analysistype=None, mode=0, intac=None):
             _res = structure.results[analysistype]
             _title += " %d. mode, f=%.3f Hz, T=%.3f sec" % (mode+1, _res.frequencies[mode], _res.periods[mode])
 
+        if analysistype == 'linear static':
+            if intac is None:
+                _title += ", deformed shape"
+            else:
+                _title += ", %s" % intac
+
         if show:
             plt.suptitle(_title)
             plt.axis('tight')
