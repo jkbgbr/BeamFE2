@@ -25,9 +25,10 @@ Missing / todo:
 * signs of reaction moments are not correct
 * buckling analysis
 * proper scaling of the displayed results
-* moment loads need a symbol
+* moment loads need a graphical symbol
 * global reaction forces should be displayed
 * modal masses, modal participations
+* jupyter notebooks?
 * code optimization
 * code for displaying needs a cleanup
 
