@@ -4,7 +4,6 @@ from Modell import HermitianBeam_2D as HB
 from Modell import BeamSections as sections
 from Modell import Structure
 from Modell import Node
-from solver import solve
 
 """
 A simple vertical cantilever beam with a horizontal endbeam.
@@ -37,9 +36,12 @@ structure = Structure.Structure(beams=_beams, supports=BCs)
 structure.add_single_dynam_to_node(nodeID=len(_nodes), dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL}, clear=True)  # clears previous loads
 
 # solving it
-solve(structure, analysis='all')
+structure.solver['linear static'].solve()
+structure.solver['modal'].solve()
 # posprocessing
 
-structure.draw(analysistype='linear static')
+structure.draw(analysistype='linear static', internal_action='axial')
+structure.draw(analysistype='linear static', internal_action='shear')
+structure.draw(analysistype='linear static', internal_action='moment')
 for i in range(10):
     structure.draw(analysistype='modal', mode=i)
