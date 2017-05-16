@@ -223,7 +223,7 @@ class HermitianBeam2D(object):
         _ret = np.zeros((2, 6))
         _ret[0, 0] = self.N1(x=x, L=L)
         _ret[1, 1] = self.N2(x=x, L=L)
-        _ret[1, 2] = self.N2(x=x, L=L)
+        _ret[1, 2] = self.N3(x=x, L=L)
         _ret[0, 3] = self.N4(x=x, L=L)
         _ret[1, 4] = self.N5(x=x, L=L)
         _ret[1, 5] = self.N6(x=x, L=L)
@@ -265,11 +265,6 @@ class HermitianBeam2D(object):
         else:
             raise Exception
 
-    # def _Ke_geom(self):
-    #     # the geometrical stiffness matrix, from H-P. Gavin CEE 421L. Matrix Structural Anyalsis - Duke University
-    #     # not implemented yet
-    #     raise NotImplementedError
-
     def _Ke_geom(self, N=-1):
         # the geometrical stiffness matrix, from H-P. Gavin CEE 421L. Matrix Structural Anyalsis - Duke University
 
@@ -286,26 +281,6 @@ class HermitianBeam2D(object):
         _ret[2, 4] = _ret[4, 2] = _ret[4, 5] = _ret[5, 4] = -1 * _ret[1, 2]
         _ret[5, 5] = -1 * _ret[2, 2]
         _ret = np.multiply((N / L), _ret)
-
-
-        # exit()
-
-        # mi = _ret
-        #
-        #
-        # _ret = np.matrix([
-        #     [0,     0,          0,              0,      0,          0],
-        #     [0,     6./5.,      L/10.,          0,      -(6./5.),   L/10.],
-        #     [0,     L/10.,      2*(L**2)/15.,   0,      -(L/10.),   -(L**2)/30.],
-        #     [0,     0,          0,              0,      0,          0],
-        #     [0,     -(6./5.),   -(L/10.),       0,      (6./5.),    -(L/10.)],
-        #     [0,     (L/10.),    -(L**2)/30.,    0,      -(L/10.),   -(2*(L**2))/15.]
-        # ])
-        # _ret = np.multiply((N / L), _ret)
-        #
-        # print(_ret-mi)
-        #
-        # exit()
 
         return _ret
 
