@@ -14,16 +14,24 @@ The module provides the essentials for a 2D Beam FE calculation:
 * graphical result display for displacements, internal actions, mode shapes etc.
 * numerical results are easily accessible
 * about 55 tests, test coverage at cca. 85%
+* no pre-processor
+
+Requirements are:
+* numpy (linear static solver), scipy (modal solver), matplotlib (display)
 
 Missing / todo:
 * setup.py
-* checking the signs of internal loads; signs of reaction moments are not correct
+* checking the signs of internal loads
+* signs of reaction moments are not correct
 * buckling analysis
 * proper scaling of the displayed results
 * moment loads need a symbol
 * global reaction forces should be displayed
 * modal masses, modal participations
+* code optimization
 * code for displaying needs a cleanup
 
 Further plans:
 * enable hinges at element ends
+
+Currently the most welcome help would be to impolement a solver for the buckling analysis.
