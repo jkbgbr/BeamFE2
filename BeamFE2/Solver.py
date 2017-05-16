@@ -3,8 +3,8 @@ import scipy
 # from scipy.linalg import eigh, inv, eig
 import scipy.linalg as sp
 from scipy.linalg import eig as namivan
-import Modell.Results as Results
-from Modell.helpers import *
+import BeamFE2.Results as Results
+from BeamFE2.helpers import *
 
 EPS = 1e-10
 
@@ -31,7 +31,7 @@ class ModalSolver(Solver):
             return False
 
         # modal analyse
-        # for details on unit choice see Modell/__init__.py
+        # for details on unit choice see BeamFE2/__init__.py
         K = structure.condense(mtrx=structure.K_with_BC)
         M = structure.condense(mtrx=massmatrix)
         eigvals, eigvecs = sp.eigh(K, M)
@@ -224,7 +224,7 @@ class BucklingSolver(Solver):
 #
 #     # modal analyse
 #     if analysis in ['modal', 'all']:
-#         # for details on unit choice see Modell/__init__.py
+#         # for details on unit choice see BeamFE2/__init__.py
 #         K = structure.condense(mtrx=structure.K_with_BC)
 #         M = structure.condense(mtrx=structure.M_with_masses)
 #         eigvals, eigvecs = sp.eigh(K, M)

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from Modell import HermitianBeam_2D as HB
-from Modell import BeamSections as sections
-from Modell import Material
-from Modell import Structure
-from Modell import Node
+from BeamFE2 import HermitianBeam_2D as HB
+from BeamFE2 import BeamSections as sections
+from BeamFE2 import Material
+from BeamFE2 import Structure
+from BeamFE2 import Node
 
 """
 A simple cantilever beam in vertical or horizontal position.

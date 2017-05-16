@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from Modell.BeamSections import *
+from BeamFE2.BeamSections import *
 
 
 class Material_Test(unittest.TestCase):

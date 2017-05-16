@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import math
-from Modell.helpers import *
+from BeamFE2.helpers import *
 
 
 class AnalysisResult(object):

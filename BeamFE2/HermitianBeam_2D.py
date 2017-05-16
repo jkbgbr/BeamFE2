@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division
-from Modell.helpers import *
+from BeamFE2.helpers import *
 import copy
-from Modell import Loads as BL
+from BeamFE2 import Loads as BL
 from drawing import _plotting_available, plt, Polygon, PatchCollection
 import pprint as pp
 

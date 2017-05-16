@@ -1,15 +1,15 @@
 import unittest
-from Modell import HermitianBeam_2D as HB
-from Modell import BeamSections as sections
-from Modell import Structure
-from Modell import Node
-from Modell import Material
+from BeamFE2 import HermitianBeam_2D as HB
+from BeamFE2 import BeamSections as sections
+from BeamFE2 import Structure
+from BeamFE2 import Node
+from BeamFE2 import Material
 import math
 
 
 class Hermitian2D_Model(unittest.TestCase):
     """
-    tests for the modal analysis of the FE Modell
+    tests for the modal analysis of the FE BeamFE2
     """
 
     @classmethod

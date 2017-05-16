@@ -2,7 +2,7 @@
 import numpy as np
 import math
 from drawing import _plotting_available, plt, Polygon, PatchCollection
-from Modell.helpers import *
+from BeamFE2.helpers import *
 
 from drawing import _plotting_available, plt
 import sys

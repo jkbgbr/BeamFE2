@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from drawing import draw_beam
 import copy
-from Modell.helpers import *
-from Modell.Loads import *
-from Modell import Loads as BL
-from Modell import Results
-from Modell import Solver
+from BeamFE2.helpers import *
+from BeamFE2.Loads import *
+from BeamFE2 import Loads as BL
+from BeamFE2 import Results
+from BeamFE2 import Solver
 
 
 class Structure(object):

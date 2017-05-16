@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from drawing import _plotting_available, plt
-from Modell import HermitianBeam_2D as HeBe
-from Modell.helpers import *
+from BeamFE2 import HermitianBeam_2D as HeBe
+from BeamFE2.helpers import *
 
 # all scaling values are multipliers on the calculated values
 DISP_SCALE = 0.15  # scale for displacements
