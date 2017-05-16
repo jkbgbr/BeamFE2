@@ -12,6 +12,6 @@ setup(name='beamFE',
       url='http://github.com/jkbgbr/beamFE2',
       author='jake77',
       author_email='jkbgbr@gmail.com',
-      license='MIT',
+      license='GNU GPLv3',
       packages=['BeamFE2'],
       zip_safe=False)
