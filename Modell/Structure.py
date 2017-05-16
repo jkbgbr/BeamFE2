@@ -9,12 +9,16 @@ from Modell import Solver
 
 
 class Structure(object):
+
+    massnames = 'mx', 'my'
+
     """
     The Structure, composed of the FE Beams.
     """
     def __init__(self, beams=None, supports=None):
         self.beams = beams
         self.nodal_loads = []
+        self.nodal_masses = []
         self._load_vector = None
         self._mass_vector = None
         self.supports = supports
@@ -36,6 +40,29 @@ class Structure(object):
             for beam in self.beams:
                 if beam.ID in beam_IDs:
                     beam.mass_matrix = matrixtype
+
+    def add_nodal_mass(self, nodeID=None, mass=None, clear=False):
+        """
+        
+        :param clear: 
+        :param nodeID: 
+        :param mass: 
+        :return: 
+        """
+
+        # finding the node
+        node = [x for x in self.nodes if nodeID == x.ID]
+        if len(node) != 1:
+            raise Exception('There is no node with ID %d' % nodeID)
+        else:
+            node = node[0]
+        # making sure the dynam is full, if some component is mssing we replace it with a zero
+        for ln in self.massnames:
+            if ln not in mass.keys():
+                mass[ln] = 0
+
+        self.add_mass_to_node(nodeID=nodeID, mass=mass, clear=clear)
+        self.nodal_masses.append(BL.NodalMass(node=node, mass=mass))
 
     def add_nodal_load(self, nodeID=None, dynam=None, clear=False):
         """
@@ -60,10 +87,16 @@ class Structure(object):
         self.add_single_dynam_to_node(nodeID=nodeID, dynam=dynam, clear=clear)
         self.nodal_loads.append(BL.NodalLoad(node=node, dynam=dynam))
 
-
-    def mass(self):
-        """ Structural mass """
-        return [x.mass for x in self.beams]
+    # @property
+    # def beam_mass(self):
+    #     """ Structural mass of the beams"""
+    #     return [x.mass for x in self.beams]
+    #
+    # def mass_of_nodal_masses(self, direction='x'):
+    #     """ Nodal masses defined for a given direction"""
+    #     _dir = 'm%s' % direction
+    #     assert _dir in self.massnames
+    #     return [x[_dir] for x in self.nodal_masses]
 
     def draw(self, show=True, analysistype=None, mode=0, internal_action=None):
         if self.results[analysistype].solved:
@@ -119,27 +152,6 @@ class Structure(object):
         # sum of DOFs, without eliminating for BCs
         return self.dof * len(self.nodes)
 
-    # def zero_BC(self, mtrx=None):
-    #     """
-    #     Eliminates the rows and columns of the BC
-    #     """
-    #     mtrx = copy.deepcopy(mtrx)
-    #     print(mtrx.size)
-    #     _to_eliminate = []  # list of rows and columns to eliminate
-    #     for nodeID, DOFs in self.supports.items():
-    #         print(nodeID)
-    #         for DOF in DOFs:
-    #             print(DOF)
-    #             _to_eliminate.append(self.position_in_matrix(nodeID=nodeID, DOF=DOF))
-    #
-    #     _to_eliminate.sort()
-    #
-    #     for _ in _to_eliminate[::-1]:
-    #         mtrx[_] = 0
-    #         mtrx[:, _] = 0
-    #
-    #     return mtrx
-
     @property
     def positions_to_eliminate(self):
         """
@@ -168,18 +180,6 @@ class Structure(object):
             mtrx = np.delete(mtrx, _, axis=1)
 
         return mtrx
-
-    # def repopulate(self, mtrx):
-    #     """
-    #     The opposite of condense
-    #     """
-    #     for _ in self.positions_to_eliminate:
-    #         mtrx = np.insert(mtrx, _, axis=0)
-    #         mtrx = np.insert(mtrx, _, axis=1)
-    #
-    #     return mtrx
-
-
 
     @property
     def M(self):
@@ -238,34 +238,6 @@ class Structure(object):
             dynam_as_dict = beam.reduce_internal_load(load=beam.internal_loads[-1])
             self.add_single_dynam_to_node(nodeID=node.ID, dynam=dynam_as_dict[node])
 
-    # def reduced_internal_loads(self, load):
-    #     """
-    #     Reduces the internal loads to the nodes.
-    #     :return:
-    #     """
-    #     _ret = {load.beam.i: {k: 0 for k in load.beam.dynamnames}, load.beam.j: {k: 0 for k in load.beam.dynamnames}}
-    #     for component in load.beam.dynamnames:
-    #         for node in self.nodes:
-    #             _ret[node][component] += sum([x.reactions[node][component] for x in load])
-    #     return _ret
-    #     # for b in self.beams:
-    #     #     print(b.reduced_internal_loads)
-
-
-    #
-    # @property
-    # def reduced_internal_loads(self):
-    #     """
-    #     Summing the nodal foreces from the internal loads
-    #     :return:
-    #     """
-    #     _ret = {self.i: {k: 0 for k in self.dynamnames}, self.j: {k: 0 for k in self.dynamnames}}
-    #     for component in self.dynamnames:
-    #         for node in self.nodes:
-    #             _ret[node][component] += sum([x.reactions[node][component] for x in self.internal_loads])
-    #
-    #     return _ret
-
     def clear_loads(self):
         # clear all loads defined previously
         # loads defined on beams
@@ -307,10 +279,8 @@ class Structure(object):
 
     def add_mass_to_node(self, nodeID=None, mass=None, clear=False):
         """
-        Adds a dynam (FX, FY, MZ) to the chosen Node of the model.
-        Checks if the node exists.
-        Checks if the name of the dynam is OK.
-        clears previous loads on the node, if clear is True
+        Adds a mass point (mx, my, mz) to the chosen Node of the model.
+        clears previous masses on the node, if clear is True
         
         :param nodeID: ID of the node the mass is added to
         :param mass: mass to be added in [kg]
@@ -324,16 +294,14 @@ class Structure(object):
         if self._mass_vector is None:
             self._mass_vector = np.matrix(np.zeros(self.sumdof))
 
-        # clear all loads defined previously
+        # clear all masses defined previously
         if clear:
-            # print('loads cleared')
-            self._mass_vector[0, :-1] = 0
+            self._mass_vector = np.matrix(np.zeros(self.sumdof))
 
-        _sti = self.position_in_matrix(nodeID=nodeID, DOF='ux')
-        for p in range(3):
-            self._mass_vector[0, _sti + p] += mass
-            # print('added: Node %d, mass %.2f' % (nodeID, mass))
-
+        for k, v in mass.items():
+            dofname = self.dofnames[self.massnames.index(k)]
+            _sti = self.position_in_matrix(nodeID=nodeID, DOF=dofname)
+            self._mass_vector[0, _sti] += v
 
     @property
     def stiffness_matrix_is_symmetric(self):

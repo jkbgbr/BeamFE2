@@ -12,6 +12,23 @@ BEAM_LOAD_TYPES = 'uniform perpendicular force', 'concentrated perpendicular for
 NODAL_LOAD_TYPES = ['force', 'moment']
 
 
+class NodalMass(object):
+    def __init__(self, node=None, mass=None, *args, **kwargs):
+        self.node = node  # length of beam
+        self.mass = mass
+
+    @property
+    def asvector(self):
+        d = self.mass
+        return np.matrix([d['mx'], d['my']])
+
+    def draw_load(self, scale=1.):
+        mp = self.node.coords  # starting point of the arrow
+        for component, mass in self.mass.items():
+            if mass > 0:
+                ax = plt.gca()
+                ax.scatter(mp[0], mp[1], marker='o', color='gray', s=scale * 100, zorder=2)  # nodes
+
 class NodalLoad(object):
     def __init__(self, node=None, dynam=None, *args, **kwargs):
         self.node = node  # length of beam
@@ -30,7 +47,7 @@ class NodalLoad(object):
     def draw_load(self, scale=1.):
         mp = self.node.coords  # starting point of the arrow
         for component, load in self.dynam.items():
-            if load:
+            if load > 0:
                 if component == 'FX':
                     _norm = (load * scale / abs(load), 0,)
                 elif component == 'FY':

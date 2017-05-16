@@ -66,6 +66,10 @@ def draw_structure(structure, show=True, analysistype=None, mode=0, intac=None):
             _deflected = beam.deflected_shape(local=False, scale=_displacement_scaling, disps=structure.results[analysistype].element_displacements(local=True, mode=mode, beam=beam, asvector=True))
             plt.plot([x[0] for x in _deflected], [x[1] for x in _deflected], 'k-', zorder=3)
 
+        if analysistype == 'modal':
+            for nodalmass in structure.nodal_masses:
+                nodalmass.draw_load()
+
         if analysistype == 'linear static':
 
             for nodalload in structure.nodal_loads:

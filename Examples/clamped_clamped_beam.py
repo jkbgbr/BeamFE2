@@ -5,7 +5,6 @@ from Modell import BeamSections as sections
 from Modell import Material
 from Modell import Structure
 from Modell import Node
-from solver import solve
 from drawing import _plotting_available, plt
 
 """
@@ -53,14 +52,18 @@ structure.add_nodal_load(nodeID=2, dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL},
 # structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated moment', value=500, position=0.3)
 # structure.add_internal_loads(beam=structure.beams[5], loadtype='concentrated moment', value=-500, position=0.8)
 
+# directly defined masses
+structure.add_nodal_mass(nodeID=2, mass={'mx': 2, 'my': 2})
+
 # solving it
-solve(structure, analysis='linear static')
+structure.solver['linear static'].solve()
+structure.solver['modal'].solve()
 
 # posprocessing
-structure.draw(analysistype='linear static')
-structure.draw(analysistype='linear static', internal_action='moment')
-structure.draw(analysistype='linear static', internal_action='shear')
-# for i in range(3):
-#     structure.draw(analysistype='modal', mode=i)
+# structure.draw(analysistype='linear static')
+# structure.draw(analysistype='linear static', internal_action='moment')
+# structure.draw(analysistype='linear static', internal_action='shear')
+for i in range(3):
+    structure.draw(analysistype='modal', mode=i)
 
 print(structure.results['linear static'].reaction_forces)

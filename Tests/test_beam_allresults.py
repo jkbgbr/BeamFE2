@@ -11,7 +11,7 @@ import numpy as np
 class Test_All_Results_1(unittest.TestCase):
 
     """
-    a continuous beam to test reaction forces, modal results
+    a continuous beam
     """
 
     @classmethod
@@ -104,6 +104,13 @@ class Test_All_Results_1(unittest.TestCase):
                                  5560.428871743147]
 
         self.assertTrue(np.allclose(self.structure.results['modal'].frequencies, _expected_frequencies, atol=1e-5))
+
+    def test_frequencies_with_mass(self):
+        self.structure.add_nodal_mass(nodeID=4, mass={'mx': 1, 'my': 1})
+        self.structure.solver['modal'].solve()
+        _expected_frequencies = [0.10469612329002663, 9.231045221012806, 10.311990761936627,
+                                 13.586565471302825, 32.34979734510168]
+        self.assertTrue(np.allclose(self.structure.results['modal'].frequencies[0:5], _expected_frequencies, atol=1e-5))
 
     # def test_plotall(self):
     #     self.structure.draw(analysistype='linear static')
@@ -207,6 +214,13 @@ class Test_All_Results_2(unittest.TestCase):
                                           )
 
         self.assertTrue(np.allclose(self.structure.results['modal'].frequencies, _expected_frequencies, atol=1e-5))
+
+    def test_frequencies_with_mass(self):
+        self.structure.add_nodal_mass(nodeID=4, mass={'mx': 15})
+        self.structure.solver['modal'].solve()
+        _expected_frequencies = [0.531783218671432, 11.802244251990954, 15.313592559544537,
+                                 46.307812940599206, 56.707579685571524]
+        self.assertTrue(np.allclose(self.structure.results['modal'].frequencies[0:5], _expected_frequencies, atol=1e-5))
 
     # def test_plotall(self):
     #     self.structure.draw(analysistype='linear static')
