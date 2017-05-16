@@ -4,7 +4,6 @@ from Modell import BeamSections as sections
 from Modell import Structure
 from Modell import Node
 from Modell import Material
-from solver import solve
 import math
 
 
@@ -15,55 +14,71 @@ class Hermitian2D_Model(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        steel = Material.Steel()
-        cls.rho = steel.rho
-        cls.E = steel.E
 
-    def test_clamped_rod(self):
         """
         A beam with clamped end under self weight.
         Results are accepted if circular frequencies are within 1% of the analytical solution.
         http://iitg.vlab.co.in/?sub=62&brch=175&sim=1080&cnt=1
         """
-        _pieces = 8  # number of finite elements
+
+        # steel = Material.Steel()
+        # cls.rho = steel.rho
+        # cls.E = steel.E
+
+        _pieces = 30  # number of finite elements
         for i in range(2):
             if i == 0:
-                _length = 450.  # mm
-                rho = 7.850e-9
+                cls._length = 450.  # mm
+                cls.rho = 7.850e-9
                 section_column = sections.Rectangle(height=3., width=20.)
-                E = 2.1e5
+                cls.E = 2.1e5
             else:
-                _length = 0.45  # m
-                rho = 7850
+                cls._length = 0.45  # m
+                cls.rho = 7850
                 section_column = sections.Rectangle(height=0.003, width=0.02)
-                E = 2.1e11
+                cls.E = 2.1e11
 
             # nodes
             _nodes = []
             for i in range(_pieces + 1):
-                _nodes.append(Node.Node.from_dict(adict={'ID': i + 1, 'coords': (i * _length / _pieces, 0)}))
+                _nodes.append(Node.Node.from_dict(adict={'ID': i + 1, 'coords': (i * cls._length / _pieces, 0)}))
 
             # beams
-            I = section_column.I['x']
-            A = section_column.A
+            cls.I = section_column.I['x']
+            cls.A = section_column.A
             _beams = []
             for i in range(_pieces):
-                _beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': i, 'E': E, 'I': I,
-                                                                  'A': A, 'rho': rho,
+                _beams.append(HB.HermitianBeam2D.from_dict(adict={'ID': i, 'E': cls.E, 'I': section_column.I['x'],
+                                                                  'A': section_column.A, 'rho': cls.rho,
                                                                   'i': _nodes[i], 'j': _nodes[i + 1]}))
 
             # supports
-            _last = max([x.ID for x in _nodes])
             BCs = {1: ['ux', 'uy', 'rotz']}  # supports as dict
 
             # this is the structure
-            structure = Structure.Structure(beams=_beams, supports=BCs)
+            cls.structure = Structure.Structure(beams=_beams, supports=BCs)
 
-            # solver :-) whatever happens here is done by numpy.
-            solve(structure, analysis='modal')
+    def test_clamped_rod(self):
+        # testing using the consistent mass matrix
+        # note: would work with 8 elements as well
 
-            _base = math.sqrt((I * E) / ((A * rho) * _length ** 4))
-            omegas = [3.52, 22.03, 61.7, 121, 200]  # clamped at one end
-            omegas = [x * _base for x in omegas]
-            for pre, f in zip(omegas, structure.results['modal'].circular_frequencies[0:5]):
-                self.assertAlmostEqual(pre, f, delta=pre*0.01)
+        self.structure.solver['modal'].solve()
+
+        _base = math.sqrt((self.I * self.E) / ((self.A * self.rho) * self._length ** 4))
+        omegas = [3.52, 22.03, 61.7, 121, 200]  # clamped at one end
+        omegas = [x * _base for x in omegas]
+        for pre, f in zip(omegas, self.structure.results['modal'].circular_frequencies[0:5]):
+            self.assertAlmostEqual(pre, f, delta=pre*0.01)
+
+    def test_clamped_rod_lumped(self):
+        # testing using the lumped mass matrix
+        # note: nr. of elements should be high, about 30
+
+        self.structure.set_mass_matrix_type(matrixtype='lumped')
+        self.structure.solver['modal'].solve()
+
+        _base = math.sqrt((self.I * self.E) / ((self.A * self.rho) * self._length ** 4))
+        omegas = [3.52, 22.03, 61.7, 121, 200]  # clamped at one end
+        omegas = [x * _base for x in omegas]
+        for pre, f in zip(omegas, self.structure.results['modal'].circular_frequencies[0:5]):
+            self.assertAlmostEqual(pre, f, delta=pre*0.01)

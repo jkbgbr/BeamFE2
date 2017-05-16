@@ -4,7 +4,6 @@ from Modell import BeamSections as sections
 from Modell import Structure
 from Modell import Node
 from Modell import Material
-from solver import solve
 from Tests import ATOL
 import numpy as np
 
@@ -42,7 +41,7 @@ class Test_All_Results_1(unittest.TestCase):
         cls.structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', value=-20.0)
 
     def test_reactions(self):
-        solve(structure=self.structure, analysis='linear static')
+        self.structure.solver['linear static'].solve()
 
         _expected_reactions = np.matrix([[0.],
                                          [-481.971154],
@@ -69,7 +68,7 @@ class Test_All_Results_1(unittest.TestCase):
         self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces, _expected_reactions))
 
     def test_deformations(self):
-        solve(structure=self.structure, analysis='linear static')
+        self.structure.solver['linear static'].solve()
 
         _expected_deformations = [np.matrix([[-0.47619],
                                             [-0.],
@@ -96,7 +95,7 @@ class Test_All_Results_1(unittest.TestCase):
         self.assertTrue(np.allclose(self.structure.results['linear static'].displacement_results, _expected_deformations))
 
     def test_frequencies(self):
-        solve(structure=self.structure, analysis='modal')
+        self.structure.solver['modal'].solve()
 
         _expected_frequencies = [7.613434040661384, 11.09323127793537, 15.326172330326486,
                                  32.693985190216615, 41.63737293315384, 54.555488726848836,
@@ -152,7 +151,7 @@ class Test_All_Results_2(unittest.TestCase):
         cls.structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', value=2.0)
 
     def test_reactions(self):
-        solve(structure=self.structure, analysis='linear static')
+        self.structure.solver['linear static'].solve()
 
         _expected_reactions = np.matrix([[-2848.39394],
                                          [669.678788],
@@ -164,7 +163,7 @@ class Test_All_Results_2(unittest.TestCase):
         self.assertTrue(np.allclose(refo[-3:-1], _expected_reactions[2:4, 0]))
 
     def test_deformations(self):
-        solve(structure=self.structure, analysis='linear static')
+        self.structure.solver['linear static'].solve()
 
         _expected_deformations = [np.matrix([[0.],
                                              [0.],
@@ -197,7 +196,7 @@ class Test_All_Results_2(unittest.TestCase):
         self.assertTrue(np.allclose(self.structure.results['linear static'].displacement_results, _expected_deformations, atol=1e-5))
 
     def test_frequencies(self):
-        solve(structure=self.structure, analysis='modal')
+        self.structure.solver['modal'].solve()
 
         _expected_frequencies = np.matrix([1.8098134635564367, 11.886156983577484, 15.868886208391775, 46.8696497539431,
                                            56.91143213363919,82.10962203501121, 101.00378682424322, 146.20319107194706,
@@ -237,7 +236,7 @@ class Test_All_Results_3(unittest.TestCase):
         cls.structure.add_nodal_load(nodeID=1, dynam={'FY': -1000}, clear=True)
 
     def test_reactions(self):
-        solve(structure=self.structure, analysis='linear static')
+        self.structure.solver['linear static'].solve()
         _expected_reactions = np.matrix([[      -0.],
                                          [      -0.],
                                          [      -0.],

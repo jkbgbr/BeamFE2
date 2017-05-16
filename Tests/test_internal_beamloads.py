@@ -4,7 +4,6 @@ from Modell import BeamSections as sections
 from Modell import Structure
 from Modell import Node
 from Modell import Material
-from solver import solve
 from drawing import _plotting_available, plt
 import numpy as np
 import math
@@ -50,7 +49,8 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         self.structure.clear_loads()
         for b in self.structure.beams:
             self.structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', value=-1.0)
-        solve(self.structure, analysis='linear static')
+        self.structure.solver['linear static'].solve()
+        self.structure.solver['linear static'].solve()
 
         # moment distribution - values on the hinged-hinged beam to modify endnode-based values
         for b in self.structure.beams:
@@ -63,7 +63,7 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         self.structure.clear_loads()
         for b in self.structure.beams:
             self.structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', value=-1.0)
-        solve(self.structure, analysis='linear static')
+        self.structure.solver['linear static'].solve()
 
         # shear force distribution - values on the hinged-hinged beam to modify endnode-based values
         for b in self.structure.beams:
@@ -76,7 +76,7 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         self.structure.clear_loads()
         for b in self.structure.beams:
             self.structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', value=-1.0)
-        solve(self.structure, analysis='linear static')
+        self.structure.solver['linear static'].solve()
 
         # nodal reaction forces
         b = self.structure.beams[0]
@@ -93,7 +93,7 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         self.structure.clear_loads()
         self.structure.add_internal_loads(
             beam=self.structure.beams[0], loadtype='concentrated perpendicular force', value=-30.00, position=0.3)
-        solve(self.structure, analysis='linear static')
+        self.structure.solver['linear static'].solve()
 
         # moment distribution
         for b in self.structure.beams:
@@ -106,7 +106,7 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         self.structure.clear_loads()
         self.structure.add_internal_loads(
             beam=self.structure.beams[0], loadtype='concentrated perpendicular force', value=-30.00, position=0.3)
-        solve(self.structure, analysis='linear static')
+        self.structure.solver['linear static'].solve()
 
         # shear force distribution
         for b in self.structure.beams:
@@ -119,7 +119,7 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         self.structure.clear_loads()
         self.structure.add_internal_loads(
             beam=self.structure.beams[0], loadtype='concentrated perpendicular force', value=-30.00, position=0.3)
-        solve(self.structure, analysis='linear static')
+        self.structure.solver['linear static'].solve()
 
         # nodal reaction forces
         b = self.structure.beams[0]
@@ -136,7 +136,7 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         self.structure.clear_loads()
         self.structure.add_internal_loads(
             beam=self.structure.beams[0], loadtype='concentrated moment', value=500, position=0.3)
-        solve(self.structure, analysis='linear static')
+        self.structure.solver['linear static'].solve()
 
         # moment distribution
         for b in self.structure.beams:
@@ -149,7 +149,7 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         self.structure.clear_loads()
         self.structure.add_internal_loads(
             beam=self.structure.beams[0], loadtype='concentrated moment', value=500, position=0.3)
-        solve(self.structure, analysis='linear static')
+        self.structure.solver['linear static'].solve()
 
         # shear force distribution
         for b in self.structure.beams:
@@ -162,7 +162,7 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         self.structure.clear_loads()
         self.structure.add_internal_loads(
             beam=self.structure.beams[0], loadtype='concentrated moment', value=500, position=0.3)
-        solve(self.structure, analysis='linear static')
+        self.structure.solver['linear static'].solve()
 
         # nodal reaction forces
         b = self.structure.beams[0]

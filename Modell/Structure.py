@@ -5,6 +5,7 @@ from Modell.helpers import *
 from Modell.Loads import *
 from Modell import Loads as BL
 from Modell import Results
+from Modell import Solver
 
 
 class Structure(object):
@@ -21,6 +22,20 @@ class Structure(object):
                         'modal': Results.ModalResult(),
                         'buckling': Results.BucklingResult()
                         }
+        self.solver = {'linear static': Solver.LinearStaticSolver(self),
+                       'modal': Solver.ModalSolver(self),
+                       'buckling': Solver.BucklingSolver(self)
+                       }
+
+    def set_mass_matrix_type(self, matrixtype='consistent', beam_IDs='all'):
+        if beam_IDs == 'all':
+            for beam in self.beams:
+                beam.mass_matrix = matrixtype
+        else:
+            assert all([x in [y.ID for y in self.beams] for x in beam_IDs])
+            for beam in self.beams:
+                if beam.ID in beam_IDs:
+                    beam.mass_matrix = matrixtype
 
     def add_nodal_load(self, nodeID=None, dynam=None, clear=False):
         """

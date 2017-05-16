@@ -4,7 +4,6 @@ from Modell import BeamSections as sections
 from Modell import Structure
 from Modell import Node
 from Modell import Material
-from solver import solve
 
 import numpy as np
 import math
@@ -72,7 +71,7 @@ class Hermitian2D_Element(unittest.TestCase):
 
     def test_FX_load(self):
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 1}, clear=True)
-        solve(self.beam_as_structure, analysis='linear static')
+        self.beam_as_structure.solver['linear static'].solve()
         disps = self.beam_as_structure.results['linear static'].element_displacements(local=True, beam=self.beam_as_structure.beams[0])
         _expected = {'ux': np.matrix([[0.], [1.]]),
                      'uy': np.matrix([[0.], [0.]]),
@@ -88,7 +87,7 @@ class Hermitian2D_Element(unittest.TestCase):
         L = self.beam1.l
         EI = self.beam1.EI
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': P}, clear=True)
-        solve(self.beam_as_structure, analysis='linear static')
+        self.beam_as_structure.solver['linear static'].solve()
         disps = self.beam_as_structure.results['linear static'].element_displacements(local=True, beam=self.beam_as_structure.beams[0])
         _expected = {'ux': np.matrix([[0.], [0.]]),
                      'uy': np.matrix([[0.], [(P * L ** 3) / (3 * EI)]]),
@@ -105,7 +104,7 @@ class Hermitian2D_Element(unittest.TestCase):
         L = self.beam1.l
         EI = self.beam1.EI
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'MZ': M}, clear=True)
-        solve(self.beam_as_structure, analysis='linear static')
+        self.beam_as_structure.solver['linear static'].solve()
         disps = self.beam_as_structure.results['linear static'].element_displacements(local=True, beam=self.beam_as_structure.beams[0])
         _expected = {'ux': np.matrix([[0.], [0.]]),
                      'uy': np.matrix([[0.], [(M * L ** 2) / (2 * EI)]]),
@@ -118,24 +117,24 @@ class Hermitian2D_Element(unittest.TestCase):
     def test_nodal_reactions(self):
         # FX
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'FX': 1}, clear=True)
-        solve(self.beam_as_structure, analysis='linear static')
+        self.beam_as_structure.solver['linear static'].solve()
         for beam in self.beam_as_structure.beams:
             disps = self.beam_as_structure.results['linear static'].element_displacements(local=True, beam=beam, asvector=True)
         #     print(beam.Ke * disps)
         # print('')
         # FY
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'FY': 1}, clear=True)
-        solve(self.beam_as_structure, analysis='linear static')
+        self.beam_as_structure.solver['linear static'].solve()
         for beam in self.beam_as_structure.beams:
             disps = self.beam_as_structure.results['linear static'].element_displacements(local=True, beam=beam, asvector=True)
         #     print(beam.Ke * disps)
         # print('')
         # MZ
         self.beam_as_structure.add_single_dynam_to_node(nodeID=2, dynam={'MZ': 1}, clear=True)
-        solve(self.beam_as_structure, analysis='linear static')
+        self.beam_as_structure.solver['linear static'].solve()
         for beam in self.beam_as_structure.beams:
             disps = self.beam_as_structure.results['linear static'].element_displacements(local=True, beam=beam, asvector=True)
-            solve(self.beam_as_structure, analysis='linear static')
+            self.beam_as_structure.solver['linear static'].solve()
 
     # tests on the rotated structure
     def test_element_stiffness_matrix_rotated(self):
@@ -162,7 +161,7 @@ class Hermitian2D_Element(unittest.TestCase):
 
     def test_FX_load_rotated(self):
         self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'FX': 1., 'FY': 0.5}, clear=True)
-        solve(self.beam_as_structure_2, analysis='linear static')
+        self.beam_as_structure_2.solver['linear static'].solve()
 
         # checking the displacements in the global system - results of the structure
         disps = self.beam_as_structure_2.results['linear static'].element_displacements(local=False, beam=self.beam_as_structure_2.beams[0])
@@ -195,7 +194,7 @@ class Hermitian2D_Element(unittest.TestCase):
         _load = _t * np.matrix([[0, P]]).T
 
         self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'FX': _load[0], 'FY': _load[1]}, clear=True)
-        solve(self.beam_as_structure_2, analysis='linear static')
+        self.beam_as_structure_2.solver['linear static'].solve()
         disps = self.beam_as_structure_2.results['linear static'].element_displacements(local=True, beam=self.beam_as_structure_2.beams[0], asvector=True)
         _expected = np.matrix([[0.0],
                                [0.0],
@@ -212,7 +211,7 @@ class Hermitian2D_Element(unittest.TestCase):
         L = self.beam3.l
         EI = self.beam3.EI
         self.beam_as_structure_2.add_single_dynam_to_node(nodeID=2, dynam={'MZ': M}, clear=True)
-        solve(self.beam_as_structure_2, analysis='linear static')
+        self.beam_as_structure_2.solver['linear static'].solve()
         disps = self.beam_as_structure_2.results['linear static'].element_displacements(local=True, beam=self.beam_as_structure_2.beams[0], asvector=True)
         _expected = np.matrix([[0.0],
                                [0.0],
@@ -252,7 +251,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_1(self):
         # assertion #1: single Axial force on Node #4
         self.structure_1.add_single_dynam_to_node(nodeID=4, dynam={'FX': 1}, clear=True)
-        solve(self.structure_1, analysis='linear static')
+        self.structure_1.solver['linear static'].solve()
         disps = self.structure_1.results['linear static'].global_displacements()
         _expected = {'ux': np.matrix([[0.], [4.76190476e-06], [9.52380952e-06], [1.42857143e-05]]),
                      'uy': np.matrix([[0.], [0.], [0.], [0.]]),
@@ -284,7 +283,7 @@ class Hermitian2D_Structure(unittest.TestCase):
 
         # since the elements were previously rotated by 45 degrees, now we rotate the results by -45 degrees back...
         T = HB.transfer_matrix(-45, asdegree=True, blocks=len(structure.nodes))
-        solve(structure, analysis='linear static')
+        structure.solver['linear static'].solve()
         disps = structure.results['linear static'].global_displacements(asvector=True)
         disps = T * disps  # in linear static only one solution
         _expected = np.matrix([[0.0],
@@ -326,7 +325,7 @@ class Hermitian2D_Structure(unittest.TestCase):
 
         # since the elements were previously rotated by -60 degrees, now we rotate the results by 60 degrees back...
         T = HB.transfer_matrix(60, asdegree=True, blocks=len(structure.nodes))
-        solve(structure, analysis='linear static')
+        structure.solver['linear static'].solve()
         disps = structure.results['linear static'].global_displacements(asvector=True)
         disps = T * disps
         _expected = np.matrix([[0.0],
@@ -346,7 +345,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_2(self):
         # assertion #2: single shear load at Node 2
         self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FY': -1}, clear=True)
-        solve(self.structure_1, analysis='linear static')
+        self.structure_1.solver['linear static'].solve()
         disps = self.structure_1.results['linear static'].global_displacements(asvector=True)
         _expected = np.matrix([[0.000000e+00],
                                [-1.000000e-21],
@@ -365,7 +364,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_3(self):
         # assertion #3: single concentrated moment at node 3
         self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'MZ': 1000000}, clear=True)
-        solve(self.structure_1, analysis='linear static')
+        self.structure_1.solver['linear static'].solve()
         disps = self.structure_1.results['linear static'].global_displacements(asvector=True)
         _expected = np.matrix([[0.000000e+00],
                                [-1.040834e-61],
@@ -384,7 +383,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_4(self):
         # assertion #4: lots of loads at Node 3
         self.structure_1.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1000, 'FY': 1000, 'MZ': 1000000}, clear=True)
-        solve(self.structure_1, analysis='linear static')
+        self.structure_1.solver['linear static'].solve()
         disps = self.structure_1.results['linear static'].global_displacements(asvector=True)
         _expected = np.matrix([[1.000000e-48],
                                [1.000000e-48],
@@ -403,7 +402,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_5(self):
         # assertion #4: lots of loads at Node 4
         self.structure_1.add_single_dynam_to_node(nodeID=4, dynam={'FX': 1000, 'FY': 1000, 'MZ': 1000000}, clear=True)
-        solve(self.structure_1, analysis='linear static')
+        self.structure_1.solver['linear static'].solve()
         disps = self.structure_1.results['linear static'].global_displacements(asvector=True)
         _expected = np.matrix([[1.000000e-48],
                                [1.000000e-48],
@@ -424,7 +423,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_6(self):
         # assertion #5: shear load on node 3
         self.structure_2.add_single_dynam_to_node(nodeID=3, dynam={'FY': -1000}, clear=True)
-        solve(self.structure_2, analysis='linear static')
+        self.structure_2.solver['linear static'].solve()
         disps = self.structure_2.results['linear static'].global_displacements(asvector=True)
         _expected = np.matrix([[0.],
                                [0.],
@@ -443,7 +442,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_7(self):
         # assertion #5: shear load on node 2 and node 3
         self.structure_2.add_single_dynam_to_node(nodeID=3, dynam={'FX': 1000, 'FY': 1000, 'MZ': 1000000}, clear=True)
-        solve(self.structure_2, analysis='linear static')
+        self.structure_2.solver['linear static'].solve()
         disps = self.structure_2.results['linear static'].global_displacements(asvector=True)
         _expected = np.matrix([[1.000000e-48],
                                [1.000000e-48],
@@ -462,7 +461,7 @@ class Hermitian2D_Structure(unittest.TestCase):
     def test_nodal_displacements_8(self):
         # assertion #5: shear load on node 2 and node 3
         self.structure_2.add_single_dynam_to_node(nodeID=4, dynam={'FX': 0, 'FY': -1, 'MZ': 0}, clear=True)
-        solve(self.structure_2, analysis='linear static')
+        self.structure_2.solver['linear static'].solve()
         disps = self.structure_2.results['linear static'].global_displacements(asvector=True)
         # todo: this one fails, probably the transformation is not OK
         _expected = np.matrix([[0.000000e+00],

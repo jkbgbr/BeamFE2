@@ -4,7 +4,6 @@ from Modell import BeamSections as sections
 from Modell import Structure
 from Modell import Node
 from Modell import Material
-from solver import solve
 import math
 
 
@@ -70,6 +69,5 @@ class Hermitian2D_Model(unittest.TestCase):
         # print(beam.EA/L)
         # print(12*beam.EI/L**3)
 
-
-        solve(structure, analysis='linear static')
-        solve(structure, analysis='buckling')
+        structure.solver['linear static'].solve()
+        structure.solver['buckling'].solve()

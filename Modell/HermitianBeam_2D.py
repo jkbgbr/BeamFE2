@@ -62,6 +62,7 @@ class HermitianBeam2D(object):
         self._end_DOFs = {'i': list(copy.deepcopy(self.dofnames)), 'j': list(copy.deepcopy(self.dofnames))}
         self.rho = rho  # density in g/m3 for the nodal analysis
         self.internal_loads = []
+        self.mass_matrix = 'consistent'
 
         # displacements are the result from the analysis. Its a dictionary, where the keys are
         # the names of the analyses, and the results themselves are in the LOCAL system, separated
@@ -223,8 +224,16 @@ class HermitianBeam2D(object):
         _ret[1, 5] = self.N6(x=x, L=L)
         return _ret
 
-    def _Me(self):
+    def _Me_lumped(self):
+        # the lumped mass matrix
+        m = 0.5 * self.A * self.l * self.rho
+        _ret = np.zeros((6, 6))
+        _ret[0, 0] = _ret[1, 1] = _ret[3, 3] = _ret[4, 4] = m
+        _ret[2, 2] = _ret[5, 5] = m * 1e-10
+        return _ret
 
+    def _Me(self):
+        # the consistent mass matrix
         L = self.l
         _ret = np.zeros((6, 6))
         _ret[0, 0] = _ret[3, 3] = 140
@@ -243,7 +252,13 @@ class HermitianBeam2D(object):
 
     @property
     def Me(self):
-        return self._Me()
+        assert self.mass_matrix in ['consistent', 'lumped']
+        if self.mass_matrix == 'consistent':
+            return self._Me()
+        elif self.mass_matrix == 'lumped':
+            return self._Me_lumped()
+        else:
+            raise Exception
 
     # def _Ke_geom(self):
     #     # the geometrical stiffness matrix, from H-P. Gavin CEE 421L. Matrix Structural Anyalsis - Duke University
