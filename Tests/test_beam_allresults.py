@@ -333,10 +333,10 @@ class Test_All_Results_4(unittest.TestCase):
         # todo: the moment reactions are ALWAYS incxorrect
         self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces, _expected_reactions, atol=1e-5))
 
-    def test_plotall(self):
-        self.structure.solver['linear static'].solve()
-        self.structure.draw(analysistype='linear static')
-        self.structure.draw(analysistype='linear static', internal_action='axial')
-        self.structure.draw(analysistype='linear static', internal_action='shear')
-        self.structure.draw(analysistype='linear static', internal_action='moment')
-        self.structure.draw(analysistype='modal', mode=0)
+    # def test_plotall(self):
+    #     self.structure.solver['linear static'].solve()
+    #     self.structure.draw(analysistype='linear static')
+    #     self.structure.draw(analysistype='linear static', internal_action='axial')
+    #     self.structure.draw(analysistype='linear static', internal_action='shear')
+    #     self.structure.draw(analysistype='linear static', internal_action='moment')
+    #     self.structure.draw(analysistype='modal', mode=0)
