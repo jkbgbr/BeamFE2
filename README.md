@@ -12,7 +12,6 @@ The module provides the essentials for a 2D Beam FE calculation:
     * force uniformly distributed along the length (axial or perpendicular)
 * solvers
 * graphical result display for displacements, internal actions, mode shapes etc.
-* numerical results are easily accessible
 * about 55 tests, test coverage at cca. 85%
 * no pre-processor
 
@@ -21,8 +20,9 @@ Requirements are:
 
 Missing / todo:
 * setup.py
+* pypi
+* query for the results
 * checking the signs of internal loads
-* signs of reaction moments are not correct
 * buckling analysis
 * proper scaling of the displayed results
 * moment loads need a graphical symbol
