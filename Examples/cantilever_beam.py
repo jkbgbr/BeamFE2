@@ -11,7 +11,7 @@ from BeamFE2 import Node
 A simple cantilever beam in vertical or horizontal position.
 """
 
-VERTICAL = not False  # True/False for vertical/horizontal
+VERTICAL = False  # True/False for vertical/horizontal
 NR_BEAMS = 1  # number of finite elements
 LENGTH = 200  # length of cantilever
 F_HORIZONTAL = 0
@@ -44,10 +44,10 @@ structure = Structure.Structure(beams=_beams, supports=BCs)
 # directly defined nodal loads
 structure.add_nodal_load(nodeID=_nodes[-1].ID, dynam={'FX': 0, 'FY': -200, 'MZ': 0}, clear=True)
 # beam internal loads
-structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform axial force', value=1)
-structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated axial force', value=200, position=0.3)
-structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated moment', value=-1000000, position=0.5)
-structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform perpendicular force', value=1.3)
+# structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform axial force', value=1)
+# structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated axial force', value=200, position=0.3)
+# structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated moment', value=-1000000, position=0.5)
+# structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform perpendicular force', value=1.3)
 
 # solving it
 structure.solver['linear static'].solve()

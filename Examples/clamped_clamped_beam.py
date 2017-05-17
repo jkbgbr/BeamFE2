@@ -10,7 +10,7 @@ from BeamFE2 import Node
 A simple cantilever beam in vertical or horizontal position.
 """
 
-VERTICAL = not True  # True/False for vertical/horizontal
+VERTICAL = False  # True/False for vertical/horizontal
 NR_BEAMS = 2  # number of finite elements
 LENGTH = 200  # length of cantilever
 F_HORIZONTAL = 0
@@ -46,13 +46,13 @@ structure.add_nodal_load(nodeID=2, dynam={'FX': F_HORIZONTAL, 'FY': F_VERTICAL},
 # for b in structure.beams:
 #     pass
 #     structure.add_internal_loads(beam=b, loadtype='uniform perpendicular force', value=-.5)
-# structure.add_internal_loads(beam=structure.beams[2], loadtype='concentrated perpendicular force', value=-30.00, position=0.2)
+structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated perpendicular force', value=-30.00, position=0.5)
 # structure.add_internal_loads(beam=structure.beams[5], loadtype='concentrated perpendicular force', value=60.00, position=0.2)
 # structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated moment', value=500, position=0.3)
 # structure.add_internal_loads(beam=structure.beams[5], loadtype='concentrated moment', value=-500, position=0.8)
 
 # directly defined masses
-structure.add_nodal_mass(nodeID=2, mass={'mx': 2, 'my': 2})
+# structure.add_nodal_mass(nodeID=2, mass={'mx': 2, 'my': 2})
 
 # solving it
 structure.solver['linear static'].solve()

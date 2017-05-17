@@ -6,6 +6,10 @@ from scipy.linalg import eig as namivan
 import BeamFE2.Results as Results
 from BeamFE2.helpers import *
 
+
+# todo: more rigorous conditions on the solvability of the problems.
+# clamped-clamped with a single element?
+
 EPS = 1e-10
 
 
@@ -30,8 +34,6 @@ class ModalSolver(Solver):
         if np.count_nonzero(massmatrix) == 0:
             return False
 
-        # modal analyse
-        # for details on unit choice see BeamFE2/__init__.py
         K = structure.condense(mtrx=structure.K_with_BC)
         M = structure.condense(mtrx=massmatrix)
         eigvals, eigvecs = sp.eigh(K, M)
