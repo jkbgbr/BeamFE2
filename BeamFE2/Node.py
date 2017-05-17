@@ -5,10 +5,11 @@ class Node(object):
     """
     Node objects to be used with the FE Model
     """
-
     def __init__(self, ID=None, coords=()):
         self.ID = ID
         self.coords = coords
+        # self.DOF = 'ux', 'uy', 'uz', 'rotx', 'roty', 'rotz'
+        self.DOF = 'ux', 'uy', 'rotz'
 
     def __repr__(self):
         return 'Node(ID=%d, coords=(%.2f, %.2f)' % (self.ID, self.x, self.y)
