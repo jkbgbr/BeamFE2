@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-__author__ = 'jakabgabor'
 
 try:
     import matplotlib.pyplot as plt

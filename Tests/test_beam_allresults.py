@@ -344,7 +344,7 @@ class Test_All_Results_4(unittest.TestCase):
         self.assertAlmostEqual(beam.internal_action(disp=disp, action='axial', pos=0.), 1000, delta=1e-8)
         self.assertAlmostEqual(beam.internal_action(disp=disp, action='axial', pos=0.5), 750, delta=1e-8)
         self.assertAlmostEqual(beam.internal_action(disp=disp, action='axial', pos=1.), 500, delta=1e-8)
-        self.assertAlmostEqual(beam.internal_action(disp=disp, action='moment', pos=0.), 1.421431e-07, delta=1e-8)
+        self.assertAlmostEqual(beam.internal_action(disp=disp, action='moment', pos=0.), 1.421431e-07, delta=1e-3)
         self.assertAlmostEqual(beam.internal_action(disp=disp, action='shear', pos=0.5), 1000, delta=1e-8)
         self.assertRaises(AssertionError, beam.internal_action, {'action': 'axial', 'pos': 1.2, 'disp': disp})
         self.assertRaises(AssertionError, beam.internal_action, {'action': 'woos', 'pos': 0.2, 'disp': disp})
