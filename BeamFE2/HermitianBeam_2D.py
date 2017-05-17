@@ -423,7 +423,7 @@ class HermitianBeam2D(object):
             elif action in ['shear', 'axial']:
                 return -_v1
 
-        # we do everything in [0 ,1] and then scale up if necessary
+        # we do everything in [0 ,1]
         if not pos_normed:
             pos /= self.l
 
@@ -432,8 +432,9 @@ class HermitianBeam2D(object):
         v1 = self.nodal_reactions_asvector(disps=disp)[ndx, 0]
         v2 = self.nodal_reactions_asvector(disps=disp)[ndx+self.dof, 0]
 
-        ia = self.internal_action_at_position(action=action, pos=pos)
-        base = baseline(v1, -v2, pos)  # value of the base line at pois
+        ia = self.internal_action_at_position(action=action, pos=pos)  # value from beam internal loads
+        base = baseline(v1, -v2, pos)  # value of the base line at pos
+
         return ia + base
 
     def plot_internal_action(self, action=None, disp=None, scale=1.):

@@ -341,8 +341,6 @@ class Test_All_Results_4(unittest.TestCase):
         self.structure.solver['linear static'].solve()
         beam = self.structure.beams[0]
         disp = self.structure.results['linear static'].element_displacements(local=True, beam=beam, asvector=True)
-
-        self.structure.draw(analysistype='linear static', internal_action='moment')
         self.assertAlmostEqual(beam.internal_action(disp=disp, action='axial', pos=0.), 1000, delta=1e-8)
         self.assertAlmostEqual(beam.internal_action(disp=disp, action='axial', pos=0.5), 750, delta=1e-8)
         self.assertAlmostEqual(beam.internal_action(disp=disp, action='axial', pos=1.), 500, delta=1e-8)
