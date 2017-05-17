@@ -25,7 +25,7 @@ else:  # horizontal beam
     _nodes = [Node.Node.from_dict(adict={'ID': i+1, 'coords': (i*LENGTH/NR_BEAMS, 0)}) for i in range(NR_BEAMS+1)]
 
 # beams
-section_column = sections.Rectangle(height=10, width=3)  # section
+section_column = sections.Rectangle(height=3, width=10)  # section
 mat = Material.Steel()
 rho = mat.rho
 EE = mat.E
@@ -42,21 +42,27 @@ structure = Structure.Structure(beams=_beams, supports=BCs)
 
 # adding loads
 # directly defined nodal loads
-structure.add_nodal_load(nodeID=_nodes[-1].ID, dynam={'FX': 0, 'FY': -200, 'MZ': 0}, clear=True)
+# structure.add_nodal_load(nodeID=_nodes[-1].ID, dynam={'FX': -100, 'FY': -200, 'MZ': 0}, clear=True)
 # beam internal loads
 # structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform axial force', value=1)
 # structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated axial force', value=200, position=0.3)
 # structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated moment', value=-1000000, position=0.5)
-# structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform perpendicular force', value=1.3)
+structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform perpendicular force', value=-10)
 
 # solving it
 structure.solver['linear static'].solve()
 
 
 # posprocessing
-structure.draw(analysistype='linear static')
+# structure.draw(analysistype='linear static')
 structure.draw(analysistype='linear static', internal_action='axial')
-structure.draw(analysistype='linear static', internal_action='shear')
+# structure.draw(analysistype='linear static', internal_action='shear')
 structure.draw(analysistype='linear static', internal_action='moment')
 
 print(structure.results['linear static'].reaction_forces)
+print(structure.results['linear static'].displacement_results)
+
+for beam in structure.beams:
+    disp = structure.results['linear static'].element_displacements(local=True, beam=beam, asvector=True)
+    print(beam.internal_action_distribution(action='axial'))
+    print(beam.internal_action_distribution(action='moment'))

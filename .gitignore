@@ -8,3 +8,9 @@
 
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info
+.idea/
+*/__pycache__/
+*.pas
+__pycache__/
+build/
+
