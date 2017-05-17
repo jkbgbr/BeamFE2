@@ -5,6 +5,7 @@ Material models for the FE elements.
 Consult __init__.py for units
 """
 
+VERY_LARGE_NUMBER = 1e40
 
 class Material(object):
     def __init__(self, name=None):
@@ -50,7 +51,7 @@ class LinearElasticMaterial(Material):
             self.name = ' '.join(['weightless', self.name])
 
     def set_rigid(self):
-        self._E = 1e20
+        self._E = VERY_LARGE_NUMBER
         if 'rigid' not in self.name:
             self.name = ' '.join(['rigid', self.name])
 

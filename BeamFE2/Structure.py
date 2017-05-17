@@ -8,8 +8,13 @@ from BeamFE2 import Results
 from BeamFE2 import Solver
 
 
+VERY_LARGE_NUMBER = 10e40
+
 class Structure(object):
 
+    dof = 3
+    loadnames = 'FX', 'FY', 'MZ'
+    dofnames = 'ux', 'uy', 'rotz'
     massnames = 'mx', 'my'
 
     """
@@ -110,30 +115,30 @@ class Structure(object):
         assert len(_ret) == 1
         return _ret[0]
 
-    @property
-    def dof(self):
-        return self.beams[0].dof
-
-    @property
-    def loadnames(self):
-        assert self.dof in [3, 6]
-        if self.dof == 3:
-            return 'FX', 'FY', 'MZ'
-        else:
-            return 'FX', 'FY', 'FZ', 'MX', 'MY', 'MZ'
-
-    # todo: string helyett valtozonev, konstanssal
-    # type hinting-et hasznalni, de csak ott igazan fontos amiket kivulrol is hivhatnak
-    # egyszerubb refraktor
-
-    @property
-    def dofnames(self):
-        assert self.dof in [3, 6]
-        if self.dof == 3:
-            return 'ux', 'uy', 'rotz'
-        else:
-            return 'ux', 'uy', 'uz', 'rotx', 'roty', 'rotz'
-
+    # @property
+    # def dof(self):
+    #     return self.beams[0].dof
+    #
+    # @property
+    # def loadnames(self):
+    #     assert self.dof in [3, 6]
+    #     if self.dof == 3:
+    #         return 'FX', 'FY', 'MZ'
+    #     else:
+    #         return 'FX', 'FY', 'FZ', 'MX', 'MY', 'MZ'
+    #
+    # # todo: string helyett valtozonev, konstanssal
+    # # type hinting-et hasznalni, de csak ott igazan fontos amiket kivulrol is hivhatnak
+    # # egyszerubb refraktor
+    #
+    # @property
+    # def dofnames(self):
+    #     assert self.dof in [3, 6]
+    #     if self.dof == 3:
+    #         return 'ux', 'uy', 'rotz'
+    #     else:
+    #         return 'ux', 'uy', 'uz', 'rotx', 'roty', 'rotz'
+    #
     # @property
     # def dofnumbers(self):
     #     assert self.dof in [3, 6]
@@ -217,7 +222,7 @@ class Structure(object):
             for dof in v:  # dof to be fixed: 'ux', 'rotz' etc.
                 _pos = self.position_in_matrix(nodeID=k, DOF=dof)
                 # check, if the DOF has been released previously
-                _K[_pos, _pos] += 10e40
+                _K[_pos, _pos] += VERY_LARGE_NUMBER
                 # print('added support: nodeID %d, DOF %s' % (k, dof))
         return _K
 
@@ -383,5 +388,3 @@ class Structure(object):
             assert dynam in self.loadnames
             return (nodeID - 1) * self.dof + self.loadnames.index(dynam)
         # print('Adding support to Node %d, DOF %s at index %d' % (nodeID, DOF, _ret))
-        # return _ret
-
