@@ -64,5 +64,7 @@ print(structure.results['linear static'].displacement_results)
 
 for beam in structure.beams:
     disp = structure.results['linear static'].element_displacements(local=True, beam=beam, asvector=True)
+    print(beam.internal_action(disp=disp, action='moment', pos=0.5))
+    print(beam.internal_action(disp=disp, action='moment', pos=.99999))
     print(beam.internal_action_distribution(action='axial'))
     print(beam.internal_action_distribution(action='moment'))
