@@ -393,6 +393,12 @@ class HermitianBeam2D(object):
         return _intac
 
     def internal_action_distribution(self, action=None):
+        """
+        ordinates of the internal action given in action from all beam internal loads, for all relevant points
+        these are the values that can be added to the internal action resulting from the nodal loads
+        :param action: 
+        :return: 
+        """
         assert action in self.internal_actions
         return [self.internal_action_at_position(action=action, pos=pos) for pos in self.internal_action_points]
 
