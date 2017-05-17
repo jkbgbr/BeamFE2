@@ -402,6 +402,40 @@ class HermitianBeam2D(object):
         assert action in self.internal_actions
         return [self.internal_action_at_position(action=action, pos=pos) for pos in self.internal_action_points]
 
+    def internal_action(self, action=None, disp=None, pos=0, pos_normed=True):
+        """
+        returns the internal action from disp at pos.
+        :param pos_normed: for True pos is understood as in [0, 1], if False, absolute position in [0, self.l]
+        :param pos: position along the length of the beam, 
+        :param action: member of self.internal_actions
+        :param disp: displacement vector
+        :return: value at the point
+        """
+        assert 0 <= pos <= min(1, self.l)
+        assert action in self.internal_actions
+
+        def baseline(_v1=0, _v2=0, _pos=0):
+            if action == 'moment':
+                # the baseline is the straight line between the values at the nodes
+                # so this is just a linear interpolation
+                assert 0 <= _pos <= 1
+                return _v1 + (_v2 - _v1) * _pos
+            elif action in ['shear', 'axial']:
+                return -_v1
+
+        # we do everything in [0 ,1] and then scale up if necessary
+        if not pos_normed:
+            pos /= self.l
+
+        # values of the internal action at the nodes
+        ndx = self.internal_actions.index(action)
+        v1 = self.nodal_reactions_asvector(disps=disp)[ndx, 0]
+        v2 = self.nodal_reactions_asvector(disps=disp)[ndx+self.dof, 0]
+
+        ia = self.internal_action_at_position(action=action, pos=pos)
+        base = baseline(v1, -v2, pos)  # value of the base line at pois
+        return ia + base
+
     def plot_internal_action(self, action=None, disp=None, scale=1.):
         """
         returns the node coordinates to be used for plotting

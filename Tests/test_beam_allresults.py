@@ -336,6 +336,22 @@ class Test_All_Results_4(unittest.TestCase):
         # todo: the moment reactions are ALWAYS incxorrect
         self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces, _expected_reactions, atol=1e-5))
 
+    def test_internal_actions(self):
+        # tests the query of the internal actions
+        self.structure.solver['linear static'].solve()
+        beam = self.structure.beams[0]
+        disp = self.structure.results['linear static'].element_displacements(local=True, beam=beam, asvector=True)
+
+        self.structure.draw(analysistype='linear static', internal_action='moment')
+        self.assertAlmostEqual(beam.internal_action(disp=disp, action='axial', pos=0.), 1000, delta=1e-8)
+        self.assertAlmostEqual(beam.internal_action(disp=disp, action='axial', pos=0.5), 750, delta=1e-8)
+        self.assertAlmostEqual(beam.internal_action(disp=disp, action='axial', pos=1.), 500, delta=1e-8)
+        self.assertAlmostEqual(beam.internal_action(disp=disp, action='moment', pos=0.), 1.421431e-07, delta=1e-8)
+        self.assertAlmostEqual(beam.internal_action(disp=disp, action='shear', pos=0.5), 1000, delta=1e-8)
+        self.assertRaises(AssertionError, beam.internal_action, {'action': 'axial', 'pos': 1.2, 'disp': disp})
+        self.assertRaises(AssertionError, beam.internal_action, {'action': 'woos', 'pos': 0.2, 'disp': disp})
+
+
     def test_plotall(self):
         self.structure.solver['linear static'].solve()
         self.structure.draw(analysistype='linear static')
