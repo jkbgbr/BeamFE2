@@ -18,20 +18,10 @@ The module provides the essentials for a 2D Beam FE calculation:
 Requirements are:
 * numpy (linear static solver), scipy (modal solver), matplotlib (display)
 
-Missing / todo:
-* setup.py
-* pypi
-* query for the results as written in BeamFE2/__init__.py
-* buckling analysis
-* proper scaling of the displayed results
-* moment loads need a graphical symbol
-* global reaction forces should be displayed
-* modal masses, modal participations
-* jupyter notebooks?
-* code optimization
-* code for displaying needs a cleanup
-
 Further plans:
 * enable hinges at element ends
+* pinned ends
+* temperature load
+* support displacement as load
 
 Currently the most welcome help would be to impolement a solver for the buckling analysis.

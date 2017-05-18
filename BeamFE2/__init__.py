@@ -14,37 +14,3 @@ Mass: [t] -> Density: [t/mm3]!
 Young's module: [N/mm2, MPa]
 Time: [s]
 """
-
-# todo: currently
-# todo: enable drawing the structure without having an analysis performed previously
-# todo: BCs -> support objects
-# todo: re-think plotting/drawing
-
-# Tests:
-#   todo: check reaction force signs
-#   todo internal action signs
-#   todo: the moment reactions in the linear elastic analyses are ALWAYS incorrect, when the node of reaction is a j node, the sign should be opposite
-# Lin stat:
-#   query maximum values/positions for all internal actions within a beam element
-#   calculate stresses due to N, M, V in the sections
-#   query maximum stresses on given beams / in interval
-#   list nodal reactions for nodes with supports only
-# Modal:
-#   modal masses, modal participation
-#   EC-based stuff: modal antwort, summation...
-# Buckling:
-#   implement.
-# draw:
-#   beautify: scaling all drawn elements.
-#   draw with subplots for lin stat
-#   draw global reaction forces
-#   draw moment loads
-
-# todo: LATER
-# Lin stat:
-#   LATER: defining hinges?
-#   LATER: 3D Beam element?
-#   calculating stresses from internal actions (Sections need stress points for this...)
-# Modal:
-#   ability to convert loads to masses - through defining gravity and its direction
-#   LATER: ability to choose which directions mass act?
