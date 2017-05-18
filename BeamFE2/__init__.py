@@ -27,7 +27,8 @@ Time: [s]
 # Lin stat:
 #   query maximum values/positions for all internal actions within a beam element
 #   calculate stresses due to N, M, V in the sections
-#   query maximum stresses on given beams / in intervall
+#   query maximum stresses on given beams / in interval
+#   list nodal reactions for nodes with supports only
 # Modal:
 #   modal masses, modal participation
 #   EC-based stuff: modal antwort, summation...
