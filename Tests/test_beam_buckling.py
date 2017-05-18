@@ -71,4 +71,4 @@ class Hermitian2D_Model(unittest.TestCase):
 
         structure.solver['linear static'].solve()
         structure.solver['modal'].solve()
-        structure.solver['buckling'].solve()
+        # structure.solver['buckling'].solve()

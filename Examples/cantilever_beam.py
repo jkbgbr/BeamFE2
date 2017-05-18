@@ -45,7 +45,7 @@ structure = Structure.Structure(beams=_beams, supports=BCs)
 # structure.add_nodal_load(nodeID=_nodes[-1].ID, dynam={'FX': -100, 'FY': -200, 'MZ': 0}, clear=True)
 # beam internal loads
 # structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform axial force', value=1)
-# structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated axial force', value=200, position=0.3)
+structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated axial force', value=200, position=0.3)
 # structure.add_internal_loads(beam=structure.beams[0], loadtype='concentrated moment', value=-1000000, position=0.5)
 structure.add_internal_loads(beam=structure.beams[0], loadtype='uniform perpendicular force', value=-10)
 
@@ -54,13 +54,14 @@ structure.solver['linear static'].solve()
 
 
 # posprocessing
-# structure.draw(analysistype='linear static')
+structure.draw(analysistype='linear static')
 structure.draw(analysistype='linear static', internal_action='axial')
-# structure.draw(analysistype='linear static', internal_action='shear')
+structure.draw(analysistype='linear static', internal_action='shear')
 structure.draw(analysistype='linear static', internal_action='moment')
 
-print(structure.results['linear static'].reaction_forces_asvector)
+# print(structure.results['linear static'].reaction_forces_asvector)
 print(structure.results['linear static'].reaction_forces)
+# print(structure.supports)
 
 exit()
 

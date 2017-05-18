@@ -4,6 +4,9 @@ import math
 from BeamFE2.helpers import *
 
 
+REACTION_SOLUTION_ROUNDOFF = 5
+
+
 class AnalysisResult(object):
     """
     This function creates the somehow ordered results of the analyses.
@@ -113,7 +116,7 @@ class LinearStaticResult(AnalysisResult):
                 _nodalreactions = transfer_matrix(alpha=b.direction, blocks=1) * _nodalreactions
                 _ret[_pos:_pos + 3] += _nodalreactions
 
-        # loads defined directly on nodes - these will be substracted as these are ACTION formces
+        # loads defined directly on nodes - these will be substracted as these are ACTION forces
         for x in self.structure.nodal_loads:
             _pos = self.structure.position_in_matrix(nodeID=x.node.ID, DOF='ux')
             # writing the value
@@ -135,7 +138,7 @@ class LinearStaticResult(AnalysisResult):
             for dof in self.structure.supports[s.ID]:
                 _pos = self.structure.position_in_matrix(nodeID=s.ID, DOF=dof)
                 _ret[s.ID][self.structure.loadnames[self.structure.dofnames.index(dof)]] = \
-                    self.reaction_forces_asvector[_pos, 0]
+                    round(self.reaction_forces_asvector[_pos, 0], REACTION_SOLUTION_ROUNDOFF)
 
         return _ret
 

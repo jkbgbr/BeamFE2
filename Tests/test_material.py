@@ -34,7 +34,7 @@ class Material_Test(unittest.TestCase):
         steel = Steel()
         steel.set_rigid()
         self.assertFalse(steel.E == 2.1e5)
-        self.assertTrue(steel.E == 1e20)
+        self.assertTrue(steel.E == 1e40)
         self.assertTrue('rigid' in steel.name)
         steel.set_rigid()
         self.assertTrue(steel.name.count('rigid') == 1)

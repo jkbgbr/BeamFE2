@@ -90,9 +90,9 @@ def draw_structure(structure, show=True, analysistype=None, mode=0, intac=None):
                     v2 = b.nodal_reactions_asvector(disps=disp)[ndx + b.dof, 0]
                     react = max(react, max([abs(val) for val in [v1, v2]]))
 
-                _internal_action_scaling = min(1e10, ((_scale_base / pixel_size) * INTAC_SCALE) / react)
+                # _internal_action_scaling = min(1e10, ((_scale_base / pixel_size) * INTAC_SCALE) / react)
 
-                # _internal_action_scaling = 1.
+                _internal_action_scaling = 1.
                 for beam in structure.beams:
                     disp = structure.results['linear static'].element_displacements(local=True, beam=beam, asvector=True)
                     beam.plot_internal_action(disp=disp, action=intac, scale=_internal_action_scaling)
