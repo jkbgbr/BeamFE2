@@ -87,7 +87,7 @@ class LinearStaticResult(AnalysisResult):
         self.displacement_results = displacements  # the result as a one-element vector
 
     @property
-    def reaction_forces(self):
+    def reaction_forces_asvector(self):
         """
         Caclulates the global reaction forces. Results are in the global system.
         :return: 
@@ -120,6 +120,19 @@ class LinearStaticResult(AnalysisResult):
             _ret[_pos:_pos + 3] -= x.asvector.T
 
         _ret = np.multiply(-1, _ret)
+
+        return _ret
+
+    @property
+    def reaction_forces(self):
+        """
+        Reaction forces as a dict, only for the relevant nodes
+        :return: 
+        """
+        _ret = {}
+        print(self.reaction_forces_asvector)
+        print([x.ID for x in self.structure.nodes if x in self.structure.supports.keys()])
+        exit()
 
         return _ret
 

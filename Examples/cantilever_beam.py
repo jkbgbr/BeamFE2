@@ -59,7 +59,12 @@ structure.draw(analysistype='linear static', internal_action='axial')
 # structure.draw(analysistype='linear static', internal_action='shear')
 structure.draw(analysistype='linear static', internal_action='moment')
 
+print(structure.results['linear static'].reaction_forces_asvector)
 print(structure.results['linear static'].reaction_forces)
+
+exit()
+
+
 print(structure.results['linear static'].displacement_results)
 
 for beam in structure.beams:
@@ -68,3 +73,4 @@ for beam in structure.beams:
     print(beam.internal_action(disp=disp, action='moment', pos=.99999))
     print(beam.internal_action_distribution(action='axial'))
     print(beam.internal_action_distribution(action='moment'))
+

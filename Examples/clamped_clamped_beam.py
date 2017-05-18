@@ -65,4 +65,4 @@ structure.solver['modal'].solve()
 for i in range(3):
     structure.draw(analysistype='modal', mode=i)
 
-print(structure.results['linear static'].reaction_forces)
+print(structure.results['linear static'].reaction_forces_asvector)

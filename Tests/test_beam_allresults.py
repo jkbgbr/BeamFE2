@@ -65,7 +65,7 @@ class Test_All_Results_1(unittest.TestCase):
                                          [-10061.298077],
                                          [1739182.692308]])
 
-        self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces, _expected_reactions))
+        self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces_asvector, _expected_reactions))
 
     def test_deformations(self):
         self.structure.solver['linear static'].solve()
@@ -165,7 +165,7 @@ class Test_All_Results_2(unittest.TestCase):
                                          [669.678788],
                                          [-1651.60606],
                                          [3830.321212]])
-        refo = self.structure.results['linear static'].reaction_forces
+        refo = self.structure.results['linear static'].reaction_forces_asvector
         # _relevant_forces = np.concatenate(refo[0:2, 0], refo[-3:-1, 0])
         self.assertTrue(np.allclose(refo[0:2], _expected_reactions[0:2, 0]))
         self.assertTrue(np.allclose(refo[-3:-1], _expected_reactions[2:4, 0]))
@@ -276,7 +276,7 @@ class Test_All_Results_3(unittest.TestCase):
                                          [ 3000000.]])
 
         # todo: the moment reactions are ALWAYS incxorrect
-        self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces, _expected_reactions, atol=1e-5))
+        self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces_asvector, _expected_reactions, atol=1e-5))
 
     def test_plotall(self):
         self.structure.draw(analysistype='linear static')
@@ -334,7 +334,7 @@ class Test_All_Results_4(unittest.TestCase):
                                          [ 3000000.]])
 
         # todo: the moment reactions are ALWAYS incxorrect
-        self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces, _expected_reactions, atol=1e-5))
+        self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces_asvector, _expected_reactions, atol=1e-5))
 
     def test_internal_actions(self):
         # tests the query of the internal actions
