@@ -44,28 +44,28 @@ class Test_All_Results_1(unittest.TestCase):
         self.structure.solver['linear static'].solve()
 
         _expected_reactions = np.matrix([[0.],
-                                         [-481.971154],
+                                         [481.971154],
                                          [0.],
                                          [0.],
                                          [-0.],
                                          [0.],
                                          [0.],
-                                         [-608.173077],
+                                         [608.173077],
                                          [-0.],
                                          [0.],
                                          [0.],
                                          [0.],
                                          [0.],
-                                         [-4848.557692],
+                                         [4848.557692],
                                          [0.],
                                          [0.],
                                          [0.],
                                          [-0.],
-                                         [-1000.],
-                                         [-10061.298077],
-                                         [1739182.692308]])
+                                         [1000.],
+                                         [10061.298077],
+                                         [-1739182.692308]])
 
-        self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces_asvector, _expected_reactions))
+        self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces_asvector, _expected_reactions, atol=1e-5))
 
     def test_deformations(self):
         self.structure.solver['linear static'].solve()
@@ -92,7 +92,7 @@ class Test_All_Results_1(unittest.TestCase):
                                             [-0.],
                                             [0.]])]
 
-        self.assertTrue(np.allclose(self.structure.results['linear static'].displacement_results, _expected_deformations))
+        self.assertTrue(np.allclose(self.structure.results['linear static'].displacement_results, _expected_deformations, atol=1e-3))
 
     def test_frequencies(self):
         self.structure.solver['modal'].solve()
@@ -161,14 +161,14 @@ class Test_All_Results_2(unittest.TestCase):
     def test_reactions(self):
         self.structure.solver['linear static'].solve()
 
-        _expected_reactions = np.matrix([[-2848.39394],
-                                         [669.678788],
-                                         [-1651.60606],
-                                         [3830.321212]])
+        _expected_reactions = np.matrix([[2848.39394],
+                                         [-669.678788],
+                                         [1651.60606],
+                                         [-3830.321212]])
         refo = self.structure.results['linear static'].reaction_forces_asvector
         # _relevant_forces = np.concatenate(refo[0:2, 0], refo[-3:-1, 0])
-        self.assertTrue(np.allclose(refo[0:2], _expected_reactions[0:2, 0]))
-        self.assertTrue(np.allclose(refo[-3:-1], _expected_reactions[2:4, 0]))
+        self.assertTrue(np.allclose(refo[0:2], _expected_reactions[0:2, 0], atol=1e-5))
+        self.assertTrue(np.allclose(refo[-3:-1], _expected_reactions[2:4, 0], atol=1e-5))
 
     def test_deformations(self):
         self.structure.solver['linear static'].solve()
@@ -253,29 +253,28 @@ class Test_All_Results_3(unittest.TestCase):
 
     def test_reactions(self):
         self.structure.solver['linear static'].solve()
-        _expected_reactions = np.matrix([[      -0.],
-                                         [      -0.],
-                                         [      -0.],
-                                         [      -0.],
-                                         [       0.],
-                                         [      -0.],
-                                         [      -0.],
-                                         [      -0.],
-                                         [       0.],
-                                         [      -0.],
-                                         [       0.],
-                                         [      -0.],
-                                         [      -0.],
-                                         [       0.],
-                                         [       0.],
-                                         [      -0.],
-                                         [      -0.],
-                                         [       0.],
-                                         [      -0.],
-                                         [   -1000.],
-                                         [ 3000000.]])
+        _expected_reactions = np.matrix([[      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [   1000.],
+                                         [-3000000.]])
 
-        # todo: the moment reactions are ALWAYS incxorrect
         self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces_asvector, _expected_reactions, atol=1e-5))
 
     # def test_plotall(self):
@@ -311,27 +310,27 @@ class Test_All_Results_4(unittest.TestCase):
 
     def test_reactions(self):
         self.structure.solver['linear static'].solve()
-        _expected_reactions = np.matrix([[      -0.],
-                                         [      -0.],
-                                         [      -0.],
-                                         [      -0.],
-                                         [       0.],
-                                         [      -0.],
-                                         [      -0.],
-                                         [      -0.],
-                                         [       0.],
-                                         [      -0.],
-                                         [       0.],
-                                         [      -0.],
-                                         [      -0.],
-                                         [       0.],
-                                         [       0.],
-                                         [      -0.],
-                                         [      -0.],
-                                         [       0.],
-                                         [    -500.],
-                                         [   -1000.],
-                                         [ 3000000.]])
+        _expected_reactions = np.matrix([[      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [      0.],
+                                         [    500.],
+                                         [   1000.],
+                                         [-3000000.]])
 
         # todo: the moment reactions are ALWAYS incxorrect
         self.assertTrue(np.allclose(self.structure.results['linear static'].reaction_forces_asvector, _expected_reactions, atol=1e-5))
