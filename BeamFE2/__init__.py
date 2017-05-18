@@ -25,7 +25,9 @@ Time: [s]
 #   todo internal action signs
 #   todo: the moment reactions in the linear elastic analyses are ALWAYS incorrect, when the node of reaction is a j node, the sign should be opposite
 # Lin stat:
-#
+#   query maximum values/positions for all internal actions within a beam element
+#   calculate stresses due to N, M, V in the sections
+#   query maximum stresses on given beams / in intervall
 # Modal:
 #   modal masses, modal participation
 #   EC-based stuff: modal antwort, summation...
