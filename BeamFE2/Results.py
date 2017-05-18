@@ -127,12 +127,15 @@ class LinearStaticResult(AnalysisResult):
     def reaction_forces(self):
         """
         Reaction forces as a dict, only for the relevant nodes
-        :return: 
+        :return: nested dict, k: v = force component: value for each supported node
         """
         _ret = {}
-        print(self.reaction_forces_asvector)
-        print([x.ID for x in self.structure.nodes if x in self.structure.supports.keys()])
-        exit()
+        for s in self.structure.supported_nodes:  # nodes with support
+            _ret[s.ID] = {}
+            for dof in self.structure.supports[s.ID]:
+                _pos = self.structure.position_in_matrix(nodeID=s.ID, DOF=dof)
+                _ret[s.ID][self.structure.loadnames[self.structure.dofnames.index(dof)]] = \
+                    self.reaction_forces_asvector[_pos, 0]
 
         return _ret
 

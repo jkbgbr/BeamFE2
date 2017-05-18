@@ -36,6 +36,10 @@ class Structure(object):
                        'buckling': Solver.BucklingSolver(self)
                        }
 
+    @property
+    def supported_nodes(self):
+        return (x for x in self.nodes if x.ID in self.supports.keys())
+
     def set_mass_matrix_type(self, matrixtype='consistent', beam_IDs='all'):
         if beam_IDs == 'all':
             for beam in self.beams:
