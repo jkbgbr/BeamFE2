@@ -3,17 +3,17 @@ Beam Finite element suite under development with linear static and modal analysi
 
 The module provides the essentials for a 2D Beam FE calculation:
 
-* 2D cubic beam element (Bernoulli-Euler assumptions) with 3 DOF each node
+* 2D, 2 node 3 DOF cubic Bernoulli-Euler beam element with consistent mass matrix
 * linear elastic materials
 * nodal loads (force, moment) and masses
 * beam internal loads
     * concentrated moment
     * concentrated force (axial or perpendicular)
     * force uniformly distributed along the length (axial or perpendicular)
-* solvers
-* graphical result display for displacements, internal actions, mode shapes etc.
-* about 55 tests, test coverage at cca. 85%
+* solvers for linear static and modal analysis
+* about 60 tests, test coverage at cca. 90%
 * no pre-processor
+* some post-processing abilities: graphical display for displacements/shapes, internal actions, query of results
 
 Requirements are:
 * numpy (linear static solver), scipy (modal solver), matplotlib (display)
@@ -21,8 +21,7 @@ Requirements are:
 Missing / todo:
 * setup.py
 * pypi
-* query for the results
-* checking the signs of internal loads
+* query for the results as written in BeamFE2/__init__.py
 * buckling analysis
 * proper scaling of the displayed results
 * moment loads need a graphical symbol
