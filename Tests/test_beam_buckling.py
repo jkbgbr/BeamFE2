@@ -39,7 +39,7 @@ class Hermitian2D_Model(unittest.TestCase):
             _nodes.append(Node.Node.from_dict(adict={'ID': i + 1, 'coords': (i * _length / _pieces, 0)}))
 
         # beams
-        I = section_column.I['x']
+        I = section_column.I.x
         A = section_column.A
         I = 1
         _beams = []

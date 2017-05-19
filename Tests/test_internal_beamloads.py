@@ -31,7 +31,7 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
         # beams
         section_column = sections.Rectangle(height=3, width=10)  # section
         mat = Material.Steel()
-        _b1 = HB.HermitianBeam2D.from_dict(adict={'ID': 1, 'E': mat.E, 'I': section_column.I['x'], 'A': section_column.A, 'rho': mat.rho, 'i': _n1, 'j': _n2})
+        _b1 = HB.HermitianBeam2D.from_dict(adict={'ID': 1, 'E': mat.E, 'I': section_column.I.x, 'A': section_column.A, 'rho': mat.rho, 'i': _n1, 'j': _n2})
         _b1.number_internal_points = 4  # setting this to have much less values for comparison
 
         # supports
@@ -134,8 +134,7 @@ class Single_Beam_Internal_Loads(unittest.TestCase):
     def test_concentrated_moment_bending(self):
         # beam internal loads
         self.structure.clear_loads()
-        self.structure.add_internal_loads(
-            beam=self.structure.beams[0], loadtype='concentrated moment', value=500, position=0.3)
+        self.structure.add_internal_loads(beam=self.structure.beams[0], loadtype='concentrated moment', value=500, position=0.3)
         self.structure.solver['linear static'].solve()
 
         # moment distribution

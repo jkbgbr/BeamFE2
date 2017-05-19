@@ -20,7 +20,7 @@ class Test_All_Results_1(unittest.TestCase):
         _nodes = [Node.Node(ID=x+1, coords=(500 * x, 0)) for x in range(7)]
         mat = Material.Steel()
         sect = sections.Rectangle(height=3, width=10)  # section
-        _beams = [HB.HermitianBeam2D(ID=x+1, E=mat.E, rho=mat.rho, I=sect.I['x'], A=sect.A, i=_nodes[x], j=_nodes[x+1]) for x in range(6)]
+        _beams = [HB.HermitianBeam2D(ID=x+1, E=mat.E, rho=mat.rho, I=sect.I.x, A=sect.A, i=_nodes[x], j=_nodes[x+1]) for x in range(6)]
         _supports = {1: ['uy'],
                      3: ['uy'],
                      5: ['uy'],
@@ -143,7 +143,7 @@ class Test_All_Results_2(unittest.TestCase):
         s1 = sections.Rectangle(height=100, width=100)  # section
         s2 = sections.Rectangle(height=200, width=200)  # section
         _sections = [s1, s1, s2, s1, s1, s1, s1, s1]
-        _beams = [HB.HermitianBeam2D(ID=x+1, E=mat.E, rho=mat.rho, I=_sections[x].I['x'], A=_sections[x].A, i=_nodes[y], j=_nodes[y+1]) for x, y in zip(range(8), range(1, len(_nodes.keys())))]
+        _beams = [HB.HermitianBeam2D(ID=x+1, E=mat.E, rho=mat.rho, I=_sections[x].I.x, A=_sections[x].A, i=_nodes[y], j=_nodes[y+1]) for x, y in zip(range(8), range(1, len(_nodes.keys())))]
         _supports = {1: ['ux', 'uy'],
                      9: ['ux', 'uy'],
                      }
@@ -243,7 +243,7 @@ class Test_All_Results_3(unittest.TestCase):
         _nodes = [Node.Node(ID=x+1, coords=(500 * x, 0)) for x in range(7)]
         mat = Material.Steel()
         sect = sections.Rectangle(height=3, width=10)  # section
-        _beams = [HB.HermitianBeam2D(ID=x+1, E=mat.E, rho=mat.rho, I=sect.I['x'], A=sect.A, i=_nodes[x], j=_nodes[x+1]) for x in range(6)]
+        _beams = [HB.HermitianBeam2D(ID=x+1, E=mat.E, rho=mat.rho, I=sect.I.x, A=sect.A, i=_nodes[x], j=_nodes[x+1]) for x in range(6)]
         _supports = {7: ['ux', 'uy', 'rotz']}
         cls.structure = Structure.Structure(beams=_beams, supports=_supports)
 
@@ -297,7 +297,7 @@ class Test_All_Results_4(unittest.TestCase):
         _nodes = [Node.Node(ID=x+1, coords=(500 * x, 0)) for x in range(7)]
         mat = Material.Steel()
         sect = sections.Rectangle(height=3, width=10)  # section
-        _beams = [HB.HermitianBeam2D(ID=x+1, E=mat.E, rho=mat.rho, I=sect.I['x'], A=sect.A, i=_nodes[x], j=_nodes[x+1]) for x in range(6)]
+        _beams = [HB.HermitianBeam2D(ID=x+1, E=mat.E, rho=mat.rho, I=sect.I.x, A=sect.A, i=_nodes[x], j=_nodes[x+1]) for x in range(6)]
         _supports = {7: ['ux', 'uy', 'rotz']}
         cls.structure = Structure.Structure(beams=_beams, supports=_supports)
 

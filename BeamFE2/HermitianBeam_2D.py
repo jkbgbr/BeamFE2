@@ -55,7 +55,7 @@ class HermitianBeam2D(object):
         self.j = j
         if crosssection is not None:
             self.A = crosssection.A
-            self.I = crosssection.I['x']
+            self.I = crosssection.I.x
         else:
             self.A = A
             self.I = I
@@ -64,10 +64,6 @@ class HermitianBeam2D(object):
         self.internal_loads = []
         self.mass_matrix = 'consistent'
 
-        # displacements are the result from the analysis. Its a dictionary, where the keys are
-        # the names of the analyses, and the results themselves are in the LOCAL system, separated
-        # according to DOF.
-        # self.displacements = None  # displacements in the GLOBAL system, provided by the solver
         self.results = {'linear static': None, 'modal': None, 'buckling': None}
 
     def __repr__(self):
@@ -123,22 +119,19 @@ class HermitianBeam2D(object):
         _dx = self.j.x - self.i.x
         return np.arctan2(_dy, _dx)
 
-    def add_internal_load(self, **kwargs):
-        _lt = kwargs['loadtype']
+    def add_internal_load(self, loadtype=None, **kwargs):
+        _lt = loadtype
         assert _lt in BL.BEAM_LOAD_TYPES
 
-        if _lt == 'uniform perpendicular force':
-            self.internal_loads.append(BL.UniformPerpendicularForce(beam=self, **kwargs))
-        elif _lt == 'uniform axial force':
-            self.internal_loads.append(BL.UniformAxialForce(beam=self, **kwargs))
-        elif _lt == 'concentrated perpendicular force':
-            self.internal_loads.append(BL.ConcentratedPerpendicularForce(beam=self, **kwargs))
-        elif _lt == 'concentrated axial force':
-            self.internal_loads.append(BL.ConcentratedAxialForce(beam=self, **kwargs))
-        elif _lt == 'concentrated moment':
-            self.internal_loads.append(BL.ConcentratedMoment(beam=self, **kwargs))
-
-        else:
+        command_pattern = {'uniform perpendicular force': BL.UniformPerpendicularForce,
+                           'uniform axial force': BL.UniformAxialForce,
+                           'concentrated perpendicular force': BL.ConcentratedPerpendicularForce,
+                           'concentrated axial force': BL.ConcentratedAxialForce,
+                           'concentrated moment': BL.ConcentratedMoment,
+                           }
+        try:
+            self.internal_loads.append(command_pattern[loadtype](beam=self, **kwargs))
+        except KeyError:
             raise NotImplementedError
 
     def reduce_internal_load(self, load):
@@ -160,7 +153,7 @@ class HermitianBeam2D(object):
         transformed back from the global.
         :return: 
         """
-        _ret = np.zeros([1, 6])
+        _ret = np.zeros([1, 2 * self.dof])
         for x in self.internal_loads:
             _ret += x.reactions_asvector
 

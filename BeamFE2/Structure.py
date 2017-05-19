@@ -241,8 +241,8 @@ class Structure(object):
         # currently no distinction between directions, defined massesact in all directions
         return self._mass_vector
 
-    def add_internal_loads(self, beam=None, **kwargs):
-        beam.add_internal_load(**kwargs)
+    def add_internal_loads(self, beam=None, loadtype=None, **kwargs):
+        beam.add_internal_load(loadtype=loadtype, **kwargs)
         for node in beam.nodes:
             dynam_as_dict = beam.reduce_internal_load(load=beam.internal_loads[-1])
             self.add_single_dynam_to_node(nodeID=node.ID, dynam=dynam_as_dict[node])

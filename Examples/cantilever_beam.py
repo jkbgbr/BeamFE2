@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from BeamFE2 import HermitianBeam_2D as HB
 from BeamFE2 import BeamSections as sections
 from BeamFE2 import Material
@@ -26,6 +25,7 @@ else:  # horizontal beam
 
 # beams
 section_column = sections.Rectangle(height=3, width=10)  # section
+print(section_column)
 mat = Material.Steel()
 rho = mat.rho
 EE = mat.E
