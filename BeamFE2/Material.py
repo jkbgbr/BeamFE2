@@ -8,26 +8,26 @@ Consult __init__.py for units
 VERY_LARGE_NUMBER = 1e40
 
 class Material(object):
-    def __init__(self, name=None):
-        self.name = name
+    def __init__(self):
+        self.name = self.__class__.__name__
 
 
 class LinearElasticMaterial(Material):
     # abstract class
-    def __init__(self, name='elastic material', E=None, nu=None, rho=None):
+    def __init__(self, E=None, nu=None, rho=None):
         assert E is not None
         assert 0 < E
         assert nu is not None
         assert 0 < nu
         assert nu < 0.5
         assert rho >= 0
-        super(LinearElasticMaterial, self).__init__(name=name)
+        super(LinearElasticMaterial, self).__init__()
         self._E = E  # the elastic modulus in N/m2
         self._nu = nu  # Poisson's ration, dimensionless
         self._rho = rho
 
     def __repr__(self):
-        return "LinearElasticMaterial(name='%s', E=%r, nu=%r, rho=%r)" % (self.name, self.E, self.nu, self.rho)
+        return "LinearElasticMaterial(E=%r, nu=%r, rho=%r)" % (self.E, self.nu, self.rho)
 
     @property
     def E(self):
@@ -58,8 +58,8 @@ class LinearElasticMaterial(Material):
 
 class Steel(LinearElasticMaterial):
     # ideal elastic steel
-    def __init__(self, name='steel'):
-        super(Steel, self).__init__(E=2.1e5, nu=0.3, name=name, rho=7.85e-9)
+    def __init__(self):
+        super(Steel, self).__init__(E=2.1e5, nu=0.3, rho=7.85e-9)
 
     def __repr__(self):
         return "Steel(E=%r, nu=%r, rho=%r)" % (self.E, self.nu, self.rho)
